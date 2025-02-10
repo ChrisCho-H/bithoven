@@ -1,0 +1,7 @@
+# .gitignore for rust-bitcoin repository workspace.
+
+# Lock files
+Cargo.lock
+
+# Build artifacts
+target

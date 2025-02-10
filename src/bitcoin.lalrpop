@@ -1,0 +1,17 @@
+use std::str::FromStr;
+
+grammar;
+
+pub Term: Result<i32, String> = {
+    <n:Num> => n,
+    "(" <t:Term> ")" => t,
+};
+
+Num: Result<i32, String> = <s:r"[0-9]+"> => {
+    let integer = i32::from_str(s).unwrap();
+    if integer == i32::MIN {
+        Err("overflow".to_string())
+    } else {
+        Ok(integer)
+    }
+};

@@ -1,0 +1,10 @@
+[package]
+name = "core"
+version = "0.1.0"
+edition = "2021"
+
+[build-dependencies]
+lalrpop = { version = "0.22.1" }
+
+[dependencies]
+lalrpop-util = { version = "0.22.1", features = ["lexer", "unicode"] }
