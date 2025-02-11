@@ -11,8 +11,11 @@ fn bitcoin() {
 }
 
 fn main() {
+    println!("{:?}", bitcoin::TermParser::new().parse("1").unwrap());
     println!(
         "{:?}",
-        bitcoin::TermParser::new().parse("(-2147483648)").unwrap()
+        bitcoin::ExprParser::new()
+            .parse("-1+2-(4+7)+(7-4)")
+            .unwrap()
     )
 }

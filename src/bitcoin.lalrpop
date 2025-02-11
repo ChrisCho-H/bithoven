@@ -2,16 +2,44 @@ use std::str::FromStr;
 
 grammar;
 
-pub Term: Result<i32, String> = {
-    <n:Num> => n,
-    "(" <t:Term> ")" => t,
+pub Expr: i64 = {
+    <l:Expr> "+" <r:Term> => l + r,
+    <l:Expr> "-" <r:Term> => l - r,
+    <t:Term> => t,  // Important: This allows a Term to be an Expr
 };
 
-Num: Result<i32, String> = <s:r"[0-9]+"> => {
-    let integer = i32::from_str(s).unwrap();
-    if integer == i32::MIN {
-        Err("overflow".to_string())
+pub Term: i64 = {
+    <f:Factor> => f, // Important: This allows a Factor to be a Term
+};
+
+pub Factor: i64 = {
+     <n:Num> => n,
+     "-" <f:Factor> => -f, // Unary minus at the Factor level
+    "(" <e:Expr> ")" => e,
+};
+
+
+Num: i64 = <s:r"[0-9]+"> => {
+    let integer = i64::from_str(s).unwrap();
+    // Number is 32 bit sign magnitude int, except when used as locktime.
+    // To determine whether locktime or not is beyond context-free grammar.
+    // Can be addressed when context analysis done
+    if integer <= i32::MIN as i64 || integer > u32::MAX as i64 {
+        panic!("overflow")
     } else {
-        Ok(integer)
+        integer
     }
 };
+
+pub Var: String = <r"[a-z]"> => <>.chars().next().unwrap().into();
+
+pub Lit: String = <l:r#""[a-z ]*""#> => l[1..l.len()-1].into();
+
+pub Eql: (String, String) = <Var> "=" <Lit> => (<>).into();
+/*
+pub Comm: () = <> => match <> {
+    r"\s*" => { }, // The default whitespace skipping is disabled if an `ignore pattern` is specified
+    r"//[^\n\r]*[\n\r]*" => { }, // Skip `// comments`
+    r"/\*[^*]*\*+(?:[^/*][^*]*\*+)*/" => { },  // Skip `/* comments */`
+}
+*/
