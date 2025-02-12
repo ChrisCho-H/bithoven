@@ -4,14 +4,14 @@ lalrpop_mod!(pub bitcoin); // synthesized by LALRPOP
 
 #[test]
 fn bitcoin() {
-    assert!(bitcoin::TermParser::new().parse("22").is_ok());
-    assert!(bitcoin::TermParser::new().parse("(22)").is_ok());
-    assert!(bitcoin::TermParser::new().parse("((((22))))").is_ok());
-    assert!(bitcoin::TermParser::new().parse("((22)").is_err());
+    assert!(bitcoin::ExprParser::new().parse("22").is_ok());
+    assert!(bitcoin::ExprParser::new().parse("(22)").is_ok());
+    assert!(bitcoin::ExprParser::new().parse("((((22))))").is_ok());
+    assert!(bitcoin::ExprParser::new().parse("((22)").is_err());
 }
 
 fn main() {
-    println!("{:?}", bitcoin::TermParser::new().parse("1").unwrap());
+    println!("{:?}", bitcoin::ExprParser::new().parse("1").unwrap());
     println!(
         "{:?}",
         bitcoin::ExprParser::new()
@@ -21,7 +21,8 @@ fn main() {
 
     println!(
         "{:?}",
-        bitcoin::EqlParser::new().parse(r#"z = "x y z""#).unwrap()
+        bitcoin::ExprParser::new()
+            .parse(r#"let z = "x y z""#)
+            .unwrap()
     )
-
 }

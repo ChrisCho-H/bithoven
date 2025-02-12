@@ -2,22 +2,29 @@ use std::str::FromStr;
 
 grammar;
 
-pub Expr: i64 = {
-    <l:Expr> "+" <r:Term> => l + r,
-    <l:Expr> "-" <r:Term> => l - r,
+pub Expr: String = {
+    <m:MathExpr> => m.to_string(),
+    <a:AssignExpr> => "(".to_owned() + &a.0 + ", " + &a.1 + ")",
+};
+
+MathExpr: i64 = {
+    <l:MathExpr> "+" <r:Term> => l + r,
+    <l:MathExpr> "-" <r:Term> => l - r,
     <t:Term> => t,  // Important: This allows a Term to be an Expr
 };
 
-pub Term: i64 = {
+AssignExpr: (String, String) = "let" <Var> "=" <Lit> => (<>).into();
+
+Term: i64 = {
     <f:Factor> => f, // Important: This allows a Factor to be a Term
 };
 
-pub Factor: i64 = {
+Factor: i64 = {
      <i:Integer> => i,
-    "(" <e:Expr> ")" => e,
+    "(" <e:MathExpr> ")" => e,
 };
 
-pub Integer: i64 = {
+Integer: i64 = {
      <n:Num> => n,
      "-" <n:Num> => -n, // Unary minus at the Integer level
 }
@@ -34,11 +41,9 @@ Num: i64 = <s:r"[0-9]+"> => {
     }
 };
 
-pub Var: String = <r"[a-z]"> => <>.chars().next().unwrap().into();
+Var: String = <r"[a-z]"> => <>.chars().next().unwrap().into();
 
-pub Lit: String = <l:r#""[a-z ]*""#> => l[1..l.len()-1].into();
-
-pub Eql: (String, String) = <Var> "=" <Lit> => (<>).into();
+Lit: String = <l:r#""[a-z ]*""#> => l[1..l.len()-1].into();
 /*
 pub Comm: () = <> => match <> {
     r"\s*" => { }, // The default whitespace skipping is disabled if an `ignore pattern` is specified
