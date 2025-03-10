@@ -2,10 +2,27 @@ use std::str::FromStr;
 
 grammar;
 
-pub Expr: String = {
-    <m:MathExpr> => m.to_string(),
-    <a:AssignExpr> => "(".to_owned() + &a.0 + ", " + &a.1 + ")",
+pub Comment: () = { 
+    r"\s*" => { }, // The default whitespace skipping is disabled if an `ignore pattern` is specified
+    r"//[^\n\r]*[\n\r]*" => { }, // Skip `// comments`
+    r"/\*[^*]*\*+(?:[^/*][^*]*\*+)*/" => { },  // Skip `/* comments */`
+}
+/*
+pub Script: Vec<Statement> = {
+    <stmts:Statement*> => stmts
+}
+*/
+pub Statement: String = {
+    <d:VarDeclarationStatement> => "(".to_owned() + &d.0 + ", " + &d.1 + ")",
     <s:SymbolTable> => s,
+    <e:Expr> => e,
+}
+
+VarDeclarationStatement: (String, String) = "let" <Identifier> "=" <Expr> => (<>).into();
+
+pub Expr: String = {
+    <l:Literal> => l,
+    <m:MathExpr> => m.to_string(),
 };
 
 MathExpr: i64 = {
@@ -13,8 +30,6 @@ MathExpr: i64 = {
     <l:MathExpr> "-" <r:Term> => l - r,
     <t:Term> => t,  // Important: This allows a Term to be an Expr
 };
-
-AssignExpr: (String, String) = "let" <Var> "=" <Lit> => (<>).into();
 
 Term: i64 = {
     <f:Factor> => f, // Important: This allows a Factor to be a Term
@@ -53,16 +68,20 @@ Num: i64 = <s:r"[0-9]+"> => {
     }
 };
 
-Var: String = <v:r"[a-zA-Z_][a-zA-Z0-9_]*"> => v.into();
+Identifier: String = <v:r"[a-zA-Z_][a-zA-Z0-9_]*"> => v.into();
 
-Lit: String = <l:r#""(\\\\|\\"|[^"\\])*""#> => l[1..l.len()-1].into();
+Literal: String = {
+    "true" => "true".to_string(),
+    "false" => "false".to_string(),
+    <s:StringLiteral> => s,
+}
+
+StringLiteral: String = <l:r#""(\\\\|\\"|[^"\\])*""#> => l[1..l.len()-1].into();
 
 
 SymbolTable: String = {
     "if" => "if".to_string(),
     "else" => "else".to_string(),
-    "true" => "true".to_string(),
-    "false" => "false".to_string(),
     "for" => "for".to_string(),
     "in" => "in".to_string(),
     "let" => "let".to_string(),
@@ -72,13 +91,7 @@ SymbolTable: String = {
     "function" => "function".to_string(),
     "this" => "this".to_string(),
 }
-/*
-Comm: () = match {
-    r"\s*" => { }, // The default whitespace skipping is disabled if an `ignore pattern` is specified
-    r"//[^\n\r]*[\n\r]*" => { }, // Skip `// comments`
-    r"/\*[^*]*\*+(?:[^/*][^*]*\*+)*/" => { },  // Skip `/* comments */`
-}
-*/
+
 // When there's Ambiguities between regular expressions,
 // Use a match declaration, which lets you control the precedence between regular expressions.
 // A match declaration lets you explicitly give the precedence between terminals
