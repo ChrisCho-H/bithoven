@@ -10,11 +10,18 @@ pub Statement: String = {
     <d:VarDeclarationStatement> => "(".to_owned() + &d.0 + ", " + &d.1 + ")",
     <e:ExprStatement> => e,
     <v:VerifyStatement> => "(".to_owned() + "verify, " + &v + ")",
+    <i:IfStatement> => "(".to_owned() + "control, " + &i + ")",
+    <b:BlockStatement> => "(".to_owned() + "block, " + &b + ")",
 }
 
+// No epsilon for Initalizer, don't neet to have Initializer rule
 VarDeclarationStatement: (String, String) = "let" <Identifier> "=" <Expr> ";" => (<>).into();
+// Need to have expression statement to avoid conflict of shift-reduce
 ExprStatement: String = <Expr> ";" => (<>).into();
+// Bitcoin specific language sytax. verify signature against public key
 VerifyStatement: String = "verify" <StringLiteral> ";" => (<>).into();
+IfStatement: String = "if" <Expr> <BlockStatement> "else" <BlockStatement> => format!("if {} {} else {}", <>);
+BlockStatement: String = "{" <s:Script> "}" => "{".to_owned() + &s.join("") + "}";
 
 pub Expr: String = {
     <l:Literal> => l,

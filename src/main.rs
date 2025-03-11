@@ -79,6 +79,16 @@ fn main() {
                 let num = -1+2-(4+7)+(7-4);
                 let _private_z_123 = false;
                 verify "03_public_key";
+                {
+                    let num = -1+2-(4+7)+(7-4);
+                    let _private_z_123 = false;
+                    verify "03_public_key";
+                    if 2+3-4 {
+                        verify "03_public_key";
+                    } else {
+                        verify "03_public_key";
+                    } 
+                }
                 "#
             )
             .unwrap()
