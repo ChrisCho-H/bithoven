@@ -20,13 +20,31 @@ VarDeclarationStatement: (String, String) = "let" <Identifier> "=" <Expr> ";" =>
 ExprStatement: String = <Expr> ";" => (<>).into();
 // Bitcoin specific language sytax. verify signature against public key
 VerifyStatement: String = "verify" <StringLiteral> ";" => (<>).into();
-IfStatement: String = "if" <Expr> <BlockStatement> "else" <BlockStatement> => format!("if {} {} else {}", <>);
+IfStatement: String = "if" <ConditionExpr> <BlockStatement> "else" <BlockStatement> => format!("if {} {} else {}", <>);
 BlockStatement: String = "{" <s:Script> "}" => "{".to_owned() + &s.join("") + "}";
 
 pub Expr: String = {
     <l:Literal> => l,
     <m:MathExpr> => m.to_string(),
 };
+
+// Support both OP_IF and OP_NOTIF
+ConditionExpr: bool = {
+    "!" "(" <c:CompareExpr> ")" => !c,
+    <c:CompareExpr> => c,
+}
+
+
+// By separating CmpExpr, you can ensure that boolean operators (&&, ||) only operate on boolean values, 
+// and arithmetic operators (+, -, *, /) only operate on numeric values.
+CompareExpr: bool = {
+    <l:Expr> "==" <r:Expr> => l == r,
+    <l:Expr> "!=" <r:Expr> => l != r,
+    <l:Expr> ">"  <r:Expr> => l > r,
+    <l:Expr> ">=" <r:Expr> => l >= r,
+    <l:Expr> "<"  <r:Expr> => l < r,
+    <l:Expr> "<=" <r:Expr> => l <= r,
+}
 
 MathExpr: i64 = {
     <l:MathExpr> "+" <r:Term> => l + r,
@@ -77,6 +95,29 @@ Literal: String = {
 
 StringLiteral: String = <l:r#""(\\\\|\\"|[^"\\])*""#> => l[1..l.len()-1].into();
 
+// Bitcoin integer is sign-magnitude integer.
+// Don't know need to differentiate yet.
+UnaryOp: String = {
+    "-" => "-".to_string(),
+    "~" => "~".to_string(),
+    "!" => "!".to_string(),
+}
+
+BinaryAddOp: String = {
+    "+"  => "+".to_string(),
+    "-"  => "-".to_string(),
+}
+
+BinaryRelOp: String = {
+    "==" => "!=".to_string(),
+    "!=" => "!=".to_string(),
+    ">"  => ">".to_string(),
+    ">=" => ">=".to_string(),
+    "<"  => "<".to_string(),
+    "<=" => "<=".to_string(),
+    "&&" => "&&".to_string(),
+    "||" => "||".to_string(),
+}
 
 SymbolTable: String = {
     "if" => "if".to_string(),
