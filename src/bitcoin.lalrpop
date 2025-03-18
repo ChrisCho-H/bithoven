@@ -20,7 +20,7 @@ pub StackParamList: Vec<String> = {
     => vec![], // epsilon production
 };
 pub StackParam: String = <i:Identifier> => i;
-pub MoreStackParams: String = "," <s:StackParam> => s;
+pub MoreStackParams: String = <c:Comma> <s:StackParam> => format!("{}", s);
 
 pub Statement: String = {
     <d:VarDeclarationStatement> => format!("(let, ({}, {}))", d.0, d.1),
@@ -142,6 +142,10 @@ Literal: String = {
 }
 
 StringLiteral: String = <l:r#""(\\\\|\\"|[^"\\])*""#> => l[1..l.len()-1].into();
+
+Comma: String = {
+    "," => ",".to_string(),
+}
 
 // Bitcoin integer is sign-magnitude integer.
 // Don't know need to differentiate yet.
