@@ -71,22 +71,22 @@ pub Expr: String = {
 };
 
 // Support both OP_IF and OP_NOTIF
-ConditionExpr: bool = {
-    <n:Not> "(" <c:CompareExpr> ")" => !c,
-    "(" <c:CompareExpr> ")" => c, // to support js like syntax(while redundant)
-    <c:CompareExpr> => c,
+ConditionExpr: String = {
+    <n:Not> "(" <c:CompareExpr> ")" => format!("(condition, ({}, {}))", <>),
+    "(" <c:CompareExpr> ")" => format!("(condition, ({}))", <>), // to support js like syntax(while redundant)
+    <c:CompareExpr> => format!("(condition, ({}))", <>),
 }
 
 
 // By separating CmpExpr, you can ensure that boolean operators (&&, ||) only operate on boolean values, 
 // and arithmetic operators (+, -, *, /) only operate on numeric values.
-CompareExpr: bool = {
-    <l:Expr> <e:Equal> <r:Expr> => l == r,
-    <l:Expr> <n:NotEqual> <r:Expr> => l != r,
-    <l:Expr> <g:Greater>  <r:Expr> => l > r,
-    <l:Expr> <ge:GreaterOrEqual> <r:Expr> => l >= r,
-    <l:Expr> <less:Less>  <r:Expr> => l < r,
-    <l:Expr> <less_or_equal:LessOrEqual> <r:Expr> => l <= r,
+CompareExpr: String = {
+    <l:Expr> <c:Equal> <r:Expr> => format!("(compare, {}, ({}, {}))", c, l, r),
+    <l:Expr> <c:NotEqual> <r:Expr> => format!("(compare, {}, ({}, {}))", c, l, r),
+    <l:Expr> <c:Greater>  <r:Expr> => format!("(compare, {}, {}, {}))", c, l, r),
+    <l:Expr> <c:GreaterOrEqual> <r:Expr> => format!("(compare, {}, ({}, {}))", c, l, r),
+    <l:Expr> <c:Less>  <r:Expr> => format!("(compare, {}, ({}, {}))", c, l, r),
+    <l:Expr> <c:LessOrEqual> <r:Expr> => format!("(compare, {}, ({}, {}))", c, l, r),
 }
 
 MathExpr: i64 = {
