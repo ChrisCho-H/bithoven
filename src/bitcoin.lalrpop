@@ -150,7 +150,7 @@ CloseBrace: String = "{" => "(".to_string();
 OpenBracket: String = "[" => "[".to_string();
 CloseBracket: String = "]" => "]".to_string();
 
-// Below are terminals
+// Below are terminals(more precisely, output terminals)
 // Must be leaf node of AST
 
 Identifier: String = <v:r"[a-zA-Z_][a-zA-Z0-9_]*"> => v.into();
@@ -168,12 +168,16 @@ UnsignedInteger: i64 = <s:r"[0-9]+"> => {
 };
 
 Literal: String = {
-    "true" => "true".to_string(),
-    "false" => "false".to_string(),
-    <string:StringLiteral> => string,
+    <b:BooleanLiteral> => b,
+    <s:StringLiteral> => s,
 }
 
 StringLiteral: String = <l:r#""(\\\\|\\"|[^"\\])*""#> => l[1..l.len()-1].into();
+
+BooleanLiteral: String = {
+    "true" => "true".to_string(),
+    "false" => "false".to_string(),
+}
 
 /*
 // Bitcoin integer is sign-magnitude integer.
