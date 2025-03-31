@@ -12,7 +12,6 @@ pub enum Statement {
     },
     BlockStatement(Vec<Statement>),
     PushDataStatement(String),
-    PanicStatement(String),
 }
 
 #[derive(Clone, Debug, PartialEq)]

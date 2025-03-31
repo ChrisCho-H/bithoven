@@ -28,7 +28,6 @@ pub Statement: Statement = {
     <e:ExprStatement> => Statement::ExprStatement(e),
     <i:IfStatement> => <>,
     <p:PushDataStatement> => Statement::PushDataStatement(format!("(push, {})", <>)),
-    <r:PanicStatement> => Statement::PanicStatement(format!("(panic, {})", <>)),
 }
 
 // No epsilon for Initalizer, don't neet to have Initializer rule
@@ -62,8 +61,6 @@ IfStatement: Statement = {
 BlockStatement: Vec<Statement> = "{" <s:Script> "}" => s;
 // Bitcoin specific language sytax. push data to stack. can be replaced [].push() later
 PushDataStatement: String = "push" <Literal> ";" => (<>).into();
-// Bitcoin specific language sytax. push data to stack. can be replaced [].push() later
-PanicStatement: String = "panic!();" => format!("{}", <>);
 
 // Bitcoin specific language sytax. verify signature against public key
 VerifyExpr: String = "verify" <StringLiteral> => format!("(verify, {})", <>);

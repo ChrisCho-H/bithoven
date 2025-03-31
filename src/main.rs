@@ -173,7 +173,6 @@ fn main() {
                     verify "pubkey_alice";
                 } else {
                     if sha256 "secret" != sha256 "stack![0]" {
-                        panic!();
                     }
                     verify "pubkey_bob";   
                 }
@@ -200,7 +199,6 @@ fn main() {
                     verify "pubkey_alice";
                 } else {
                     if sha256 "secret" != sha256 "second" {
-                        panic!();
                     }
                     verify "pubkey_bob";   
                 }
