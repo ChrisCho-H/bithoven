@@ -1,5 +1,8 @@
 use std::collections::HashMap;
 
+pub mod ast;
+
+use ast::*;
 use lalrpop_util::lalrpop_mod;
 
 lalrpop_mod!(pub bitcoin); // synthesized by LALRPOP
@@ -183,7 +186,7 @@ fn main() {
     }
 
     // UTXO: stack + scripts - bitcoin HTLC
-    let mut tuple: (Vec<String>, Vec<String>) = bitcoin::UTXOParser::new()
+    let mut tuple: (Vec<String>, Vec<Statement>) = bitcoin::UTXOParser::new()
         .parse(
             r#"
                 UTXO 
@@ -208,7 +211,7 @@ fn main() {
     println!("ast: {:?}", tuple.1);
 }
 
-fn symbol_table(ast: Vec<String>) -> HashMap<String, String> {
+fn symbol_table(ast: Vec<Statement>) -> HashMap<String, String> {
     let symbol_table: HashMap<String, String> = HashMap::new();
 
     symbol_table

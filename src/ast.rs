@@ -1,12 +1,18 @@
 #[derive(Clone, Debug, PartialEq)]
 pub enum Statement {
-    Variable {
-        name: String,
-        value: Box<Expression>,
+    VarDeclarationStatement {
+        identifier: String,
+        expr: String,
     },
-    Print {
-        value: Box<Expression>,
+    ExprStatement(String),
+    IfStatement {
+        condition_expr: String,
+        if_block: Vec<Statement>,
+        else_block: Option<Vec<Statement>>,
     },
+    BlockStatement(Vec<Statement>),
+    PushDataStatement(String),
+    PanicStatement(String),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -26,6 +32,4 @@ pub enum Operator {
     Sub,
     Mul,
     Div,
-    #[cfg(feature = "bit")]
-    Shl,
 }
