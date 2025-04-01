@@ -1,4 +1,4 @@
-use std::{collections::HashMap, ops::Deref};
+use std::{collections::HashMap};
 
 pub mod ast;
 
@@ -188,17 +188,13 @@ fn main() {
         .parse(
             r#"
                 UTXO 
-                (first: bool, second: string)
-                let pubkey_alice = "0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212";
-                let pubkey_bob = "0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212";
-                let secret = "secretRandomHex";
-                
+                (first: bool = true, second: string)                
                 older 2576085;
-                verify "pubkey_alice";
+                verify "0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212";
                 
                 verify sha256 secret != sha256 second;
 
-                if (sha256 secret != sha256 second) {}
+                if (sha256 "secretRandomHex" != sha256 second) {}
                 "#,
         )
         .unwrap();
@@ -206,29 +202,10 @@ fn main() {
     println!("ast: {:?}", utxo.output_script);
 
     let stack_table = stack_table(utxo.input_stack);
-    let symbol_table = symbol_table(utxo.output_script);
 
     println!("stack_table: {:?}", stack_table);
-    println!("symbol_table: {:?}", symbol_table);
     
     println!("stack_table: {:?}", stack_table.get("first"));
-    println!("stack_table: {:?}", symbol_table.get("pubkey_alice"));
-
-}
-
-fn symbol_table(ast: Vec<Statement>) -> HashMap<String, Expression> {
-    let mut symbol_table: HashMap<String, Expression> = HashMap::new();
-
-    for node in ast {
-        match node {
-            Statement::VarDeclarationStatement {identifier, expr} => {
-                symbol_table.insert(identifier.0, expr);
-            },
-            _ => {}
-        }
-    }
-
-    return symbol_table;
 }
 
 

@@ -25,27 +25,29 @@ pub StackParamList: Vec<StackParam> = {
     },
     => vec![], // epsilon production
 };
-pub StackParam: StackParam = <i:Identifier> <c:Colon> <t:Type> => {
-    StackParam {
-        identifier: i,
-        ty: t,
-    }
+pub StackParam: StackParam = {
+    <i:Identifier> <c:Colon> <t:Type> => {
+        StackParam {
+            identifier: i,
+            ty: t,
+            value: None,
+        }
+    },
+    <i:Identifier> <c:Colon> <t:Type> <a:Assign> <l:Literal> => {
+        StackParam {
+            identifier: i,
+            ty: t,
+            value: Some(l),
+        }
+    },
 };
 pub MoreStackParams: StackParam = <c:Comma> <s:StackParam> => s;
 
 pub Statement: Statement = {
-    <d:VarDeclarationStatement> => <>,
     <i:IfStatement> => <>,
     <b:BitcoinStatement> => <>,
 }
 
-// No epsilon for Initalizer, don't neet to have Initializer rule
-VarDeclarationStatement: Statement = "let" <i:Identifier> "=" <e:Expr> ";" => {
-    Statement::VarDeclarationStatement {
-        identifier: i,
-        expr: e,
-    }
-};
 // If statement follows semantics of bitcoin OP_(NOT)IF, OP_ELSE...
 // reference1: https://bitcoin.stackexchange.com/questions/103844/inner-working-of-op-if-and-op-else
 // reference2: https://bitcoin.stackexchange.com/questions/90868/does-bitcoin-script-support-nested-ifs-op-if-or-op-notif-inside-one-another
@@ -96,6 +98,12 @@ pub Expr: Expression = {
     <NumberLiteral> => Expression::NumberLiteral(<>),
     <BitcoinExpression>,
 };
+
+Literal: Literal = {
+    <BooleanLiteral> => Literal::BooleanLiteral(<>),
+    <StringLiteral> => Literal::StringLiteral(<>),
+    <NumberLiteral> => Literal::NumberLiteral(<>),
+}
 
 // Support both OP_IF and OP_NOTIF
 ConditionExpr: ConditionExpression = {

@@ -8,6 +8,7 @@ pub struct UTXO {
 pub struct StackParam {
     pub identifier: Identifier,
     pub ty: Type,
+    pub value: Option<Literal>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -19,11 +20,14 @@ pub enum Type {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub enum Literal {
+    NumberLiteral(i64),
+    BooleanLiteral(bool),
+    StringLiteral(String),
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub enum Statement {
-    VarDeclarationStatement {
-        identifier: Identifier,
-        expr: Expression,
-    },
     ExprStatement(Expression),
     IfStatement {
         condition_expr: ConditionExpression,
