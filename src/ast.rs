@@ -45,14 +45,20 @@ pub enum Expression {
     NumberLiteral(i64),
     BooleanLiteral(bool),
     StringLiteral(String),
-    CheckSigExpr(Box<Expression>),
-    Sha256Expr(Box<Expression>),
-    Ripemd160Expr(Box<Expression>),
+    CheckSigExpr(BitcoinExprArgs),
+    Sha256Expr(BitcoinExprArgs),
+    Ripemd160Expr(BitcoinExprArgs),
     MathExpression {
         lhs: Box<Expression>,
         op: BinaryMathOp,
         rhs: Box<Expression>,
     },
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum BitcoinExprArgs {
+    Variable(Identifier),
+    StringLiteral(String),
 }
 
 #[derive(Clone, Debug, PartialEq)]

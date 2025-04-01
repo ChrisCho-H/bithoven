@@ -35,7 +35,6 @@ pub MoreStackParams: StackParam = <c:Comma> <s:StackParam> => s;
 
 pub Statement: Statement = {
     <d:VarDeclarationStatement> => <>,
-    <e:ExprStatement> => <>,
     <i:IfStatement> => <>,
     <a:AfterStatement> => <>,
     <o:OlderStatement> => <>,
@@ -48,10 +47,6 @@ VarDeclarationStatement: Statement = "let" <i:Identifier> "=" <e:Expr> ";" => {
         identifier: i,
         expr: e,
     }
-};
-// Need to have expression statement to avoid conflict of shift-reduce
-ExprStatement: Statement = <e:Expr> ";" => {
-    Statement::ExprStatement(e)
 };
 // If statement follows semantics of bitcoin OP_(NOT)IF, OP_ELSE...
 // reference1: https://bitcoin.stackexchange.com/questions/103844/inner-working-of-op-if-and-op-else
@@ -73,6 +68,7 @@ IfStatement: Statement = {
     },
 };
 BlockStatement: Vec<Statement> = "{" <s:Script> "}" => s;
+// Below statements don't produce value(so, not expression), just perform an action.
 // Bitcoin specific language sytax. OP_CLTV. inspired by miniscript syntax.
 AfterStatement: Statement = "after" <u:UnsignedInteger> <s:SemiColon> => {
     Statement::AfterStatement(u as u32)
@@ -85,29 +81,17 @@ OlderStatement: Statement = "older" <u:UnsignedInteger> <s:SemiColon> => {
 VerifyStatement: Statement = "verify" <e:Expr> <s:SemiColon> => {
     Statement::VerifyStatement(e)
 };
-/*
-// Bitcoin specific language sytax. push data to stack. can be replaced [].push() later
-PushDataStatement: String = "push" <Literal> ";" => (<>).into();
-*/
 
 
 pub Expr: Expression = {
     <Identifier> => Expression::Variable(<>),
-    <BooleanLiteral>,
-    <StringLiteral>,
-    <NumberLiteral>,
+    <BooleanLiteral> => Expression::BooleanLiteral(<>),
+    <StringLiteral> => Expression::StringLiteral(<>),
+    <NumberLiteral> => Expression::NumberLiteral(<>),
     <CheckSigExpr>,
     <Sha256Expr>,
     <Ripemd160Expr>,
-    //<MathExpr>,
 };
-
-// Bitcoin specific language sytax. verify signature against public key
-CheckSigExpr: Expression = "checksig" <e:Expr> => Expression::CheckSigExpr(Box::new(e));
-// Bitcoin specific language sytax. OP_SHA256. inspired by miniscript syntax.
-Sha256Expr: Expression = "sha256" <e:Expr> => Expression::Sha256Expr(Box::new(e));
-// Bitcoin specific language sytax. OP_RIPEMD160. inspired by miniscript syntax.
-Ripemd160Expr: Expression = "ripemd160" <e:Expr> => Expression::Ripemd160Expr(Box::new(e));
 
 // Support both OP_IF and OP_NOTIF
 ConditionExpr: ConditionExpression = {
@@ -152,6 +136,20 @@ MathExpr: Expression = {
             rhs: Box::new(r),
         }
     }
+};
+
+// Below expressions produce value
+// Bitcoin specific language sytax. verify signature against public key
+CheckSigExpr: Expression = "checksig" <a:BitcoinExprArgs> => Expression::CheckSigExpr(a);
+// Bitcoin specific language sytax. OP_SHA256. inspired by miniscript syntax.
+Sha256Expr: Expression = "sha256" <a:BitcoinExprArgs> => Expression::Sha256Expr(a);
+// Bitcoin specific language sytax. OP_RIPEMD160. inspired by miniscript syntax.
+Ripemd160Expr: Expression = "ripemd160" <a:BitcoinExprArgs> => Expression::Ripemd160Expr(a);
+
+// Either variable or string
+pub BitcoinExprArgs: BitcoinExprArgs = {
+    <Identifier> => BitcoinExprArgs::Variable(<>),
+    <StringLiteral> => BitcoinExprArgs::StringLiteral(<>),
 };
 
 // Below are Token
@@ -201,15 +199,15 @@ Type: Type = {
 
 Identifier: Identifier = <v:r"[a-zA-Z_][a-zA-Z0-9_]*"> => Identifier(v.to_string());
 
-StringLiteral: Expression = <l:r#""(\\\\|\\"|[^"\\])*""#> => Expression::StringLiteral(l[1..l.len()-1].into());
+StringLiteral: String = <l:r#""(\\\\|\\"|[^"\\])*""#> => l[1..l.len()-1].into();
 
-BooleanLiteral: Expression = {
-    "true" => Expression::BooleanLiteral(true),
-    "false" => Expression::BooleanLiteral(false),
+BooleanLiteral: bool = {
+    "true" => true,
+    "false" => false,
 }
 
-NumberLiteral: Expression = {
-     <p:UnsignedInteger> => Expression::NumberLiteral(p),
+NumberLiteral: i64 = {
+     <p:UnsignedInteger> => p,
     // Unary minus at the Integer level(Precedence of fixed strings exists)
     // LALRPOP prefers to find the longest match first. 
     // After that, if there are two matches of equal length, it prefers the fixed string
@@ -220,7 +218,7 @@ NumberLiteral: Expression = {
        if p > i32::MAX as i64 {
            panic!("overflow")
        }
-       Expression::NumberLiteral(-p)
+       -p
     }
 };
 

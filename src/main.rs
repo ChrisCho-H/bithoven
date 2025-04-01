@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, ops::Deref};
 
 pub mod ast;
 
@@ -196,16 +196,48 @@ fn main() {
                 older 2576085;
                 verify "pubkey_alice";
                 
+                verify sha256 secret != sha256 second;
+
                 if (sha256 secret != sha256 second) {}
                 "#,
         )
         .unwrap();
     println!("stack: {:?}", utxo.input_stack);
     println!("ast: {:?}", utxo.output_script);
+
+    let stack_table = stack_table(utxo.input_stack);
+    let symbol_table = symbol_table(utxo.output_script);
+
+    println!("stack_table: {:?}", stack_table);
+    println!("symbol_table: {:?}", symbol_table);
+    
+    println!("stack_table: {:?}", stack_table.get("first"));
+    println!("stack_table: {:?}", symbol_table.get("pubkey_alice"));
+
 }
 
-fn symbol_table(ast: Vec<Statement>) -> HashMap<String, String> {
-    let symbol_table: HashMap<String, String> = HashMap::new();
+fn symbol_table(ast: Vec<Statement>) -> HashMap<String, Expression> {
+    let mut symbol_table: HashMap<String, Expression> = HashMap::new();
 
-    symbol_table
+    for node in ast {
+        match node {
+            Statement::VarDeclarationStatement {identifier, expr} => {
+                symbol_table.insert(identifier.0, expr);
+            },
+            _ => {}
+        }
+    }
+
+    return symbol_table;
+}
+
+
+fn stack_table(stack: Vec<StackParam>) -> HashMap<String, Type> {
+    let mut stack_table: HashMap<String, Type> = HashMap::new();
+
+    for input in stack {
+        stack_table.insert(input.identifier.0, input.ty);
+    }
+
+    stack_table
 }
