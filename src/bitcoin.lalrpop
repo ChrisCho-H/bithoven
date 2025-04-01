@@ -39,6 +39,7 @@ pub Statement: Statement = {
     <i:IfStatement> => <>,
     <a:AfterStatement> => <>,
     <o:OlderStatement> => <>,
+    <v:VerifyStatement> => <>,
 }
 
 // No epsilon for Initalizer, don't neet to have Initializer rule
@@ -80,13 +81,17 @@ AfterStatement: Statement = "after" <u:UnsignedInteger> <s:SemiColon> => {
 OlderStatement: Statement = "older" <u:UnsignedInteger> <s:SemiColon> => {
     Statement::OlderStatement(u as u32)
 };
+// Bitcoin specific language sytax. verify signature against public key
+VerifyStatement: Statement = "verify" <e:Expr> <s:SemiColon> => {
+    Statement::VerifyStatement(e)
+};
 /*
 // Bitcoin specific language sytax. push data to stack. can be replaced [].push() later
 PushDataStatement: String = "push" <Literal> ";" => (<>).into();
 */
 
 // Bitcoin specific language sytax. verify signature against public key
-VerifyExpr: String = "verify" <StringLiteral> => format!("(verify, {})", <>);
+CheckSigExpr: String = "checksig" <StringLiteral> => format!("(checksig, {})", <>);
 // Bitcoin specific language sytax. OP_SHA256. inspired by miniscript syntax.
 Sha256Expr: String = "sha256" <StringLiteral> => format!("(sha256, {})", <>);
 // Bitcoin specific language sytax. OP_RIPEMD160. inspired by miniscript syntax.
@@ -94,41 +99,53 @@ Ripemd160Expr: String = "ripemd160" <StringLiteral> => format!("(ripemd160, {})"
 
 
 pub Expr: String = {
+    <Identifier>,
     <Literal>,
-    <VerifyExpr>,
+    <CheckSigExpr>,
     <Sha256Expr>,
     <Ripemd160Expr>,
     <m:MathExpr> => m.to_string(),
 };
 
 // Support both OP_IF and OP_NOTIF
-ConditionExpr: String = {
-    <n:Not> "(" <c:CompareExpr> ")" => format!("(condition, ({}, {}))", <>),
-    "(" <c:CompareExpr> ")" => format!("(condition, ({}))", <>), // to support js like syntax(while redundant)
-    <c:CompareExpr> => format!("(condition, ({}))", <>),
+ConditionExpr: ConditionExpression = {
+    <n:Not> "(" <c:CompareExpr> ")" => {
+        ConditionExpression {
+            negate: true,
+            compare_expr: c
+        }
+    },
+    "(" <c:CompareExpr> ")" => {
+        ConditionExpression {
+            negate: false,
+            compare_expr: c
+        }
+    }, // to support js like syntax(while redundant)
+    <c:CompareExpr> => {
+        ConditionExpression {
+            negate: false,
+            compare_expr: c
+        }
+    },
 }
 
 
 // By separating CmpExpr, you can ensure that boolean operators (&&, ||) only operate on boolean values, 
 // and arithmetic operators (+, -, *, /) only operate on numeric values.
-CompareExpr: String = {
-    <l:Expr> <c:Equal> <r:Expr> => format!("(compare, {}, ({}, {}))", c, l, r),
-    <l:Expr> <c:NotEqual> <r:Expr> => format!("(compare, {}, ({}, {}))", c, l, r),
-    <l:Expr> <c:Greater>  <r:Expr> => format!("(compare, {}, {}, {}))", c, l, r),
-    <l:Expr> <c:GreaterOrEqual> <r:Expr> => format!("(compare, {}, ({}, {}))", c, l, r),
-    <l:Expr> <c:Less>  <r:Expr> => format!("(compare, {}, ({}, {}))", c, l, r),
-    <l:Expr> <c:LessOrEqual> <r:Expr> => format!("(compare, {}, ({}, {}))", c, l, r),
+CompareExpr: CompareExpression = {
+    <l:Expr> <c:BinaryCompareOp> <r:Expr> => {
+        CompareExpression {
+            lhs: l,
+            operator: c,
+            rhs: r,
+        }
+    }
 }
 
 MathExpr: i64 = {
-    <l:MathExpr> <p:Plus> <r:MathTerm> => l + r,
-    <l:MathExpr> <m:Minus> <r:MathTerm> => l - r,
-    <t:MathTerm> => t,  // Important: This allows a Term to be an Expr
-};
-
-// Might be redundant as not support multiplication/division
-MathTerm: i64 = {
-    <f:MathFactor> => f, // Important: This allows a Factor to be a Term
+    <l:MathExpr> <p:Plus> <r:MathFactor> => l + r,
+    <l:MathExpr> <m:Minus> <r:MathFactor> => l - r,
+    <t:MathFactor> => t,  // Important: This allows a Term to be an Expr
 };
 
 MathFactor: i64 = {
@@ -156,14 +173,20 @@ MathPrimary: i64 = {
 // Terminal sequence in the context of lexer(tokenizer)
 
 // Binary Ops(Minus can be both Unary and Binary)
+BinaryMathOp: BinaryMathOp = {
+    "+" => BinaryMathOp::Add,
+    "-" => BinaryMathOp::Sub,
+}
 Plus: String             = "+"  => "+".to_string();
 Minus: String            = "-"  => "-".to_string();
-Equal: String            = "==" => "==".to_string();
-NotEqual: String         = "!=" => "!=".to_string();
-Greater: String          = ">"  => ">".to_string();
-GreaterOrEqual: String   = ">=" => ">=".to_string();
-Less: String             = "<"  => "<".to_string();
-LessOrEqual: String      = "<=" => "<=".to_string();
+BinaryCompareOp: BinaryCompareOp = {
+    "==" => BinaryCompareOp::Equal,
+    "!=" => BinaryCompareOp::NotEqual,
+    ">"  => BinaryCompareOp::Greater,
+    ">=" => BinaryCompareOp::GreaterOrEqual,
+    "<"  => BinaryCompareOp::Less,
+    "<=" => BinaryCompareOp::LessOrEqual,
+};
 Assign: String           = "="  => "=".to_string();
 And: String              = "&&" => "&&".to_string();
 Or: String               = "||" => "||".to_string();

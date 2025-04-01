@@ -114,9 +114,9 @@ fn main() {
         bitcoin::ScriptParser::new()
             .parse(
                 r#"
-                let proved = verify "03_public_key";
+                let proved = checksig "03_public_key";
 
-                if verify "03_public_key" == true {
+                if checksig "03_public_key" == true {
                     let digest = sha256 "abc";
                     if sha256 "abc" == "digest" {
                     }
