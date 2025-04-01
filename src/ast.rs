@@ -1,4 +1,18 @@
 #[derive(Clone, Debug, PartialEq)]
+pub struct StackParam {
+    pub identifier: String,
+    pub ty: Type,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum Type {
+    Signature,
+    Number,
+    String,
+    Boolean,
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub enum Statement {
     VarDeclarationStatement {
         identifier: String,

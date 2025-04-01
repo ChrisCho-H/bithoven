@@ -3,7 +3,7 @@ use super::ast::*;
 
 grammar;
 
-pub UTXO: (Vec<String>, Vec<Statement>) = {
+pub UTXO: (Vec<StackParam>, Vec<Statement>) = {
     "UTXO" "(" <stack:StackParamList> ")" <script: Script> => (stack, script),
 }
 
@@ -12,7 +12,7 @@ pub Script: Vec<Statement> = {
 }
 
 // Bitcoin script sig(witness) stack
-pub StackParamList: Vec<String> = {
+pub StackParamList: Vec<StackParam> = {
     <first:StackParam> <more:MoreStackParams*> => {
         let mut stack = more;
         stack.insert(0, first);
@@ -20,8 +20,13 @@ pub StackParamList: Vec<String> = {
     },
     => vec![], // epsilon production
 };
-pub StackParam: String = <i:Identifier> => i;
-pub MoreStackParams: String = <c:Comma> <s:StackParam> => format!("{}", s);
+pub StackParam: StackParam = <i:Identifier> <c:Colon> <t:Type> => {
+    StackParam {
+        identifier: i,
+        ty: t,
+    }
+};
+pub MoreStackParams: StackParam = <c:Comma> <s:StackParam> => s;
 
 pub Statement: Statement = {
     <d:VarDeclarationStatement> => <>,
@@ -156,6 +161,7 @@ Negation: String         = "~"  => "~".to_string();
 
 // Puctuation
 Comma: String = "," => ",".to_string();
+Colon: String = ":" => ":".to_string();
 SemiColon: String = ";" => ";".to_string();
 OpenParen: String = "(" => "(".to_string();
 CloseParen: String = ")" => ")".to_string();
@@ -166,6 +172,13 @@ CloseBracket: String = "]" => "]".to_string();
 
 // Below are terminals(more precisely, output terminals)
 // Must be leaf node of AST
+
+Type: Type = {
+    "bool" => Type::Boolean,
+    "string" => Type::String,
+    "number" => Type::Number,
+    "signature" => Type::Signature,
+}
 
 Identifier: String = <v:r"[a-zA-Z_][a-zA-Z0-9_]*"> => v.into();
 

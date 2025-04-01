@@ -185,11 +185,11 @@ fn main() {
     }
 
     // UTXO: stack + scripts - bitcoin HTLC
-    let mut tuple: (Vec<String>, Vec<Statement>) = bitcoin::UTXOParser::new()
+    let mut tuple: (Vec<StackParam>, Vec<Statement>) = bitcoin::UTXOParser::new()
         .parse(
             r#"
                 UTXO 
-                (first, second)
+                (first: bool, second: string)
                 let pubkey_alice = "0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212";
                 let pubkey_bob = "0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212";
                 let secret = "secretRandomHex";
@@ -205,7 +205,7 @@ fn main() {
                 "#,
         )
         .unwrap();
-    println!("stack: {:?}", tuple.0.reverse());
+    println!("stack: {:?}", tuple.0);
     println!("ast: {:?}", tuple.1);
 }
 
