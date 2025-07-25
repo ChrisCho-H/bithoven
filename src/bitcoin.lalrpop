@@ -4,7 +4,7 @@ use super::ast::*;
 grammar;
 
 pub UTXO: UTXO = {
-    "UTXO" "(" <stack:StackParamList> ")" <script: Script> => {
+    "UTXO" "(" <stack:StackParamList> ")" "{" <script: Script> "}" => {
         UTXO {
             input_stack: stack,
             output_script: script,

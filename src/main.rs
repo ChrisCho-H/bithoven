@@ -190,37 +190,46 @@ let a: String = String::from("st");
     let mut utxo: UTXO = bitcoin::UTXOParser::new()
         .parse(
             r#"
-                UTXO 
-                (first: bool, second: string, third: signature, fourth: number)                
-                older 2576085;
-                
-                verify "0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212";
-                
-                verify sha256 "scret secrt" != sha256 second;
-
-                verify fourth >= 200;
-
-                if fourth {
-                    verify checksig third;
-                }
-
-                if second == "aaaaaaddddd" {
+                UTXO (first: bool, second: string, third: signature, fourth: number) {
                     older 2576085;
-                    verify "0345a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5211";
-                } else {
-                    verify sha256 "scret secrt" != sha256 second;
-                    verify "0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5213";
-                }
+                    after 122;
 
+                    verify checksig "0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212";
+
+                    verify sha256 "scret secrt" != sha256 second;
+
+                    verify fourth >= 200;
+
+                    if fourth {
+                        verify checksig third;
+                    }
+
+                    if second == "aaaaaaddddd" {
+                        older 2576085;
+                        verify checksig "0345a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5211";
+                    } else {
+                        verify sha256 "scret secrt" != sha256 second;
+                        verify checksig "0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5213";
+                    }
+                }
                 "#,
         )
         .unwrap();
-    println!("stack: {:?}", utxo.input_stack);
-    println!("ast: {:?}", utxo.output_script);
 
-    let stack_table = compile::stack_table(utxo.input_stack);
+    println!("stack");
+    for stack_item in utxo.input_stack {
+        println!("{:?}", stack_item);
+    }
+    println!("ast");
+    let script = compile(utxo.output_script.clone());
+    println!("{:?}", script);
+    for script_ast_node in utxo.output_script {
+        println!("{:?}", script_ast_node);
+    }
+    //println!("stack: {:?}", utxo.input_stack);
+    //println!("ast: {:?}", utxo.output_script);
 
-    println!("stack_table: {:?}", stack_table);
+    //let stack_table = compile::stack_table(utxo.input_stack);
 
-    test_bitcoin();
+    //println!("stack_table: {:?}", stack_table);
 }

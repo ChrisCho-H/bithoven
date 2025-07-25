@@ -21,13 +21,13 @@ pub enum Type {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Statement {
-    ExprStatement(Expression),
+    //ExprStatement(Expression),
     IfStatement {
         condition_expr: Expression,
         if_block: Vec<Statement>,
         else_block: Option<Vec<Statement>>,
     },
-    BlockStatement(Vec<Statement>),
+    //BlockStatement(Vec<Statement>),
     BitcoinStatement(BitcoinStatement),
 }
 

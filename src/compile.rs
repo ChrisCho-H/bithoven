@@ -20,8 +20,35 @@ pub fn push_bytes() {}
     - See the top 1 stack item.
 */
 
-// OP_IF, OP_NOTIF, OP_ELSE, OP_ENDIF, and OP_VERIFY.
-pub fn push_control() {}
+// Control: OP_IF, OP_NOTIF, OP_ELSE, OP_ENDIF, and OP_VERIFY.
+pub fn push_control_verify(script: &mut Vec<u8>, condition_expr: Expression) {
+    let builder = bitcoin::script::Builder::new().push_verify();
+
+    script.extend_from_slice(builder.as_bytes());
+}
+
+// Control: OP_IF, OP_NOTIF, OP_ELSE, OP_ENDIF, and OP_VERIFY.
+pub fn push_control_if(
+    script: &mut Vec<u8>,
+    condition_expr: Expression,
+    if_block: Vec<Statement>,
+    else_block: Option<Vec<Statement>>,
+) {
+    if else_block.is_none() {
+        let builder = bitcoin::script::Builder::new()
+            .push_opcode(bitcoin::opcodes::all::OP_IF)
+            .push_opcode(bitcoin::opcodes::all::OP_ENDIF);
+
+        script.extend_from_slice(builder.as_bytes());
+    } else {
+        let builder = bitcoin::script::Builder::new()
+            .push_opcode(bitcoin::opcodes::all::OP_IF)
+            .push_opcode(bitcoin::opcodes::all::OP_ELSE)
+            .push_opcode(bitcoin::opcodes::all::OP_ENDIF);
+
+        script.extend_from_slice(builder.as_bytes());
+    }
+}
 
 /*
     3. Length push
@@ -91,7 +118,29 @@ pub fn push_crypto() {}
 */
 
 // OP_CHECKLOCKTIMEVERIFY and OP_CHECKSEQUENCEVERIFY
-pub fn push_locktime() {}
+pub fn push_locktime(script: &mut Vec<u8>, operand: u32, op: LocktimeOp) {
+    match op {
+        LocktimeOp::Cltv => {
+            let height = bitcoin::locktime::absolute::Height::from_consensus(operand)
+                .expect("failed to parse block");
+            let builder = bitcoin::script::Builder::new()
+                .push_lock_time(bitcoin::locktime::absolute::LockTime::Blocks(height))
+                .push_opcode(bitcoin::opcodes::all::OP_CLTV)
+                .push_opcode(bitcoin::opcodes::all::OP_DROP);
+
+            script.extend_from_slice(builder.as_bytes());
+        }
+        LocktimeOp::Csv => {
+            let height = bitcoin::locktime::relative::Height::from_height(operand as u16);
+            let builder = bitcoin::script::Builder::new()
+                .push_sequence(bitcoin::locktime::relative::LockTime::Blocks(height).to_sequence())
+                .push_opcode(bitcoin::opcodes::all::OP_CSV)
+                .push_opcode(bitcoin::opcodes::all::OP_DROP);
+
+            script.extend_from_slice(builder.as_bytes());
+        }
+    }
+}
 
 // From compiled opcodes, add stack ops or re-order opcodes.
 pub fn stack_resolver() {}
@@ -110,15 +159,28 @@ pub fn stack_table(stack: Vec<StackParam>) -> HashMap<String, Type> {
     stack_table
 }
 
-pub fn compile(ast: Vec<Statement>) {
-    let script = bitcoin::Script::builder();
-}
+pub fn compile(ast: Vec<Statement>) -> Vec<u8> {
+    let mut bitcoin_script: Vec<u8> = Vec::new();
 
-pub fn test_bitcoin() {
-    let byte = [16; 1];
-    let a = bitcoin::Script::builder().push_slice(byte);
-    let b = bitcoin::Script::builder().push_int(4);
-
-    println!("{:?}", a.as_bytes());
-    println!("{:?}", b.as_bytes());
+    for node in ast {
+        match node {
+            Statement::BitcoinStatement(BitcoinStatement::LocktimeStatement { operand, op }) => {
+                push_locktime(&mut bitcoin_script, operand, op);
+            }
+            Statement::BitcoinStatement(BitcoinStatement::VerifyStatement(condition_expr)) => {
+                push_control_verify(&mut bitcoin_script, condition_expr);
+            }
+            Statement::IfStatement {
+                condition_expr,
+                if_block,
+                else_block,
+            } => {
+                push_control_if(&mut bitcoin_script, condition_expr, if_block, else_block);
+            }
+            _ => (),
+        }
+    }
+    let script = bitcoin::Script::from_bytes(&bitcoin_script);
+    println!("{:?}", script);
+    return bitcoin_script;
 }
