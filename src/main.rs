@@ -197,8 +197,13 @@ let a: String = String::from("st");
                     verify checksig "0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212";
 
                     verify sha256 "scret secrt" != sha256 second;
+                    verify !(sha256 "scret secrt" != sha256 second);
 
                     verify fourth >= 200;
+                    verify "abc";
+                    verify 16;
+                    verify 17;
+                    verify true;
 
                     if fourth {
                         verify checksig third;

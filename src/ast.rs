@@ -27,7 +27,7 @@ pub enum Statement {
         if_block: Vec<Statement>,
         else_block: Option<Vec<Statement>>,
     },
-    //BlockStatement(Vec<Statement>),
+    BlockStatement(Vec<Statement>),
     BitcoinStatement(BitcoinStatement),
 }
 
