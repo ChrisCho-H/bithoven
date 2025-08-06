@@ -104,6 +104,7 @@ pub Expression2: Expression = {
     <BooleanLiteral> => Expression::BooleanLiteral(<>),
     <StringLiteral> => Expression::StringLiteral(<>),
     <NumberLiteral> => Expression::NumberLiteral(<>),
+    "(" <Expression0> ")",
 };
 
 LiteralExpression: LiteralExpression = {
@@ -113,7 +114,7 @@ LiteralExpression: LiteralExpression = {
 }
 
 // Support both OP_IF and OP_NOTIF
-ConditionExpression: Expression = {
+ConditionExpression: Expression = {/*
     <u:UnaryMathOp> "(" <c:CompareExpression> ")" => {
         Expression::ConditionExpression {
             unary: Some(u),
@@ -125,7 +126,7 @@ ConditionExpression: Expression = {
             unary: None,
             compare_expr: c
         }
-    }, // to support js like syntax(while redundant)
+    }, // to support js like syntax(while redundant)*/
     <c:CompareExpression> => {
         Expression::ConditionExpression {
             unary: None,

@@ -45,6 +45,7 @@ fn main() {
                     }
 
                     verify ! abs negate -- ++ add sha256 ripemd160 add sha256 2 ripemd160 sha256 3 fourth;
+                    verify add (3 > 4) add (3 > 4) add (3 > 4) (3 < 4) >= 2;
                 }
                 "#,
         )
