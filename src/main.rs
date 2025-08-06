@@ -44,8 +44,8 @@ fn main() {
                         verify checksig "0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5213";
                     }
 
-                    verify ! abs negate -- ++ add sha256 ripemd160 add sha256 2 ripemd160 sha256 3 fourth;
-                    verify add (3 > 4) add (3 > 4) add (3 > 4) (3 < 4) >= 2;
+                    verify ! abs negate -- ++ sha256 ripemd160 sha256 (2 + ripemd160 sha256 3 + fourth);
+                    verify (3 > 4) + (3 > 4) + (3 > 4) + (3 < 4) >= 2;
                 }
                 "#,
         )

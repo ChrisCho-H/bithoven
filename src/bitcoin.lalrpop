@@ -93,18 +93,22 @@ pub Expression0: Expression = {
 };
 
 pub Expression1: Expression = {
-    <CryptoExpression>,
     <BinaryMathExpression>,
-    <UnaryMathExpression>,
     <Expression2>,
 };
 
 pub Expression2: Expression = {
+    <CryptoExpression>,
+    <UnaryMathExpression>,
+    <Expression3>,
+};
+
+pub Expression3: Expression = {
     <Identifier> => Expression::Variable(<>),
     <BooleanLiteral> => Expression::BooleanLiteral(<>),
     <StringLiteral> => Expression::StringLiteral(<>),
     <NumberLiteral> => Expression::NumberLiteral(<>),
-    "(" <Expression0> ")",
+    <o: OpenParen> <e: Expression0> <c: CloseParen> => e,
 };
 
 LiteralExpression: LiteralExpression = {
@@ -149,7 +153,7 @@ CompareExpression: CompareExpression = {
 }
 
 UnaryMathExpression: Expression = {
-    <op:UnaryMathOp> <operand:Expression1> => {
+    <op:UnaryMathOp> <operand:Expression2> => {
         Expression::UnaryMathExpression {
             op: op,
             operand: Box::new(operand),
@@ -157,25 +161,25 @@ UnaryMathExpression: Expression = {
     }
 };
 
-BinaryMathExpression: Expression = {/*
-    <l:Expression1> <c:InfixBinaryMathOp> <r:Expression1> => {
+BinaryMathExpression: Expression = {
+    <l:Expression1> <c:InfixBinaryMathOp> <r:Expression2> => {
         Expression::BinaryMathExpression {
             lhs: Box::new(l),
             op: c,
             rhs: Box::new(r),
         }
-    },*/
+    },/*
     <c:PostfixBinaryMathOp> <l:Expression1> <r:Expression1> => {
         Expression::BinaryMathExpression {
             lhs: Box::new(l),
             op: c,
             rhs: Box::new(r),
         }
-    }
+    }*/
 };
 
 CryptoExpression: Expression = {
-    <op:CryptoOp> <operand:Expression1> => {
+    <op:CryptoOp> <operand:Expression2> => {
         Expression::CryptoExpression {
             op: op,
             operand: Box::new(operand),
