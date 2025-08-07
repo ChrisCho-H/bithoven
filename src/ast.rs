@@ -21,20 +21,23 @@ pub enum Type {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Statement {
-    //ExprStatement(Expression),
     IfStatement {
         condition_expr: Expression,
         if_block: Vec<Statement>,
         else_block: Option<Vec<Statement>>,
     },
-    BlockStatement(Vec<Statement>),
-    BitcoinStatement(BitcoinStatement),
+    LocktimeStatement {
+        operand: u32,
+        op: LocktimeOp,
+    },
+    VerifyStatement(Expression),
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum BitcoinStatement {
-    LocktimeStatement { operand: u32, op: LocktimeOp },
-    VerifyStatement(Expression),
+pub struct IfStatement {
+    pub condition_expr: Expression,
+    pub if_block: Vec<Statement>,
+    pub else_block: Option<Vec<Statement>>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -104,18 +107,6 @@ pub struct CompareExpression {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum BinaryCompareOp {
-    Equal,
-    NotEqual,
-    Greater,
-    GreaterOrEqual,
-    Less,
-    LessOrEqual,
-    BoolOr,
-    BoolAnd,
-}
-
-#[derive(Clone, Debug, PartialEq)]
 pub struct CryptoExpression {
     pub operand: Box<Expression>,
     pub op: CryptoOp,
@@ -128,12 +119,15 @@ pub struct ByteExpression {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum UnaryMathOp {
-    Add,
-    Sub,
-    Negate,
-    Abs,
-    Not,
+pub enum BinaryCompareOp {
+    Equal,
+    NotEqual,
+    Greater,
+    GreaterOrEqual,
+    Less,
+    LessOrEqual,
+    BoolOr,
+    BoolAnd,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -142,6 +136,15 @@ pub enum BinaryMathOp {
     Sub,
     Max,
     Min,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum UnaryMathOp {
+    Add,
+    Sub,
+    Negate,
+    Abs,
+    Not,
 }
 
 #[derive(Clone, Debug, PartialEq)]

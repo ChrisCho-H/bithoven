@@ -320,10 +320,10 @@ pub fn compile(ast: Vec<Statement>) -> Vec<u8> {
 
 pub fn compile_statement(bitcoin_script: &mut Vec<u8>, stmt: Statement) {
     match stmt {
-        Statement::BitcoinStatement(BitcoinStatement::LocktimeStatement { operand, op }) => {
+        Statement::LocktimeStatement { operand, op } => {
             push_locktime(bitcoin_script, operand, op);
         }
-        Statement::BitcoinStatement(BitcoinStatement::VerifyStatement(condition_expr)) => {
+        Statement::VerifyStatement(condition_expr) => {
             // compile expression first
             compile_expression(bitcoin_script, condition_expr);
             // push verify at last
@@ -350,7 +350,6 @@ pub fn compile_statement(bitcoin_script: &mut Vec<u8>, stmt: Statement) {
             }
             push_control_end(bitcoin_script);
         }
-        _ => (),
     }
 }
 

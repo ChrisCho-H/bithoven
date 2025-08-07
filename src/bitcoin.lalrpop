@@ -44,8 +44,9 @@ pub StackParam: StackParam = {
 pub MoreStackParams: StackParam = <c:Comma> <s:StackParam> => s;
 
 pub Statement: Statement = {
-    <i:IfStatement> => <>,
-    <b:BitcoinStatement> => <>,
+    <IfStatement>,
+    <LocktimeStatement>,
+    <VerifyStatement>,
 }
 
 // If statement follows semantics of bitcoin OP_(NOT)IF, OP_ELSE...
@@ -69,22 +70,17 @@ IfStatement: Statement = {
 };
 BlockStatement: Vec<Statement> = "{" <s:Script> "}" => s;
 
-BitcoinStatement: Statement = {
-    <LocktimeStatement> => Statement::BitcoinStatement(<>),
-    <VerifyStatement> => Statement::BitcoinStatement(<>),
-}
-
 
 // Below statements don't produce value(so, not expression), just perform an action.
-LocktimeStatement: BitcoinStatement = <l:LocktimeOp> <u:UnsignedInteger> <s:SemiColon> => {
-    BitcoinStatement::LocktimeStatement {
-        op: l,
-        operand: u as u32
+LocktimeStatement: Statement = <op:LocktimeOp> <operand:UnsignedInteger> <s:SemiColon> => {
+    Statement::LocktimeStatement {
+        op: op,
+        operand: operand as u32
     }
 };
 // Bitcoin specific language sytax. verify signature against public key
-VerifyStatement: BitcoinStatement = "verify" <e:Expression0> <s:SemiColon> => {
-    BitcoinStatement::VerifyStatement(e)
+VerifyStatement: Statement = "verify" <e:Expression0> <s:SemiColon> => {
+    Statement::VerifyStatement(e)
 };
 
 pub Expression0: Expression = {
