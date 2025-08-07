@@ -139,20 +139,20 @@ UnaryMathExpression: Expression = {
 };
 
 BinaryMathExpression: Expression = {
-    <l:Expression1> <c:InfixBinaryMathOp> <r:Expression2> => {
+    <l:Expression1> <op:InfixBinaryMathOp> <r:Expression2> => {
         Expression::BinaryMathExpression {
             lhs: Box::new(l),
-            op: c,
+            op: op,
             rhs: Box::new(r),
         }
-    },/*
-    <c:PostfixBinaryMathOp> <l:Expression1> <r:Expression1> => {
+    },
+    <op:PostfixBinaryMathOp> <p1: OpenParen> <l:Expression1> <c: Comma> <r:Expression2> <p2: CloseParen> => {
         Expression::BinaryMathExpression {
             lhs: Box::new(l),
-            op: c,
+            op: op,
             rhs: Box::new(r),
         }
-    }*/
+    }
 };
 
 CryptoExpression: Expression = {
@@ -183,9 +183,6 @@ InfixBinaryMathOp: BinaryMathOp = {
     "-" => BinaryMathOp::Sub, // OP_SUB
 }
 // 2. postfix(Reverse Polish Notation)
-// Separate to mitigate ambiguity when face "-".
-// First, the parser could execute the production of BinaryMathOp("-") Expr Expr.
-// Alternatively, the parser could shift the `r#"[0-9]+"#` token and later use it to construct a UnsignedInteger.
 PostfixBinaryMathOp: BinaryMathOp = {
     "max" => BinaryMathOp::Max, // OP_MAX
     "min" => BinaryMathOp::Min, // OP_SUB

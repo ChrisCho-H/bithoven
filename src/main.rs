@@ -50,6 +50,10 @@ fn main() {
                     if (second == "abc") && (fourth >= 4) {
                         older 222;
                     }
+
+                    verify 2 - (-- -4);
+
+                    verify max(-2+3, 2);
                 }
                 "#,
         )
