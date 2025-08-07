@@ -70,6 +70,10 @@ pub enum Expression {
         operand: Box<Expression>,
         op: CryptoOp,
     },
+    ByteExpression {
+        operand: Box<Expression>,
+        op: ByteOp,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -77,12 +81,6 @@ pub enum LiteralExpression {
     NumberLiteral(i64),
     BooleanLiteral(bool),
     StringLiteral(String),
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct CryptoExpression {
-    pub operand: Box<Expression>,
-    pub op: CryptoOp,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -96,12 +94,6 @@ pub struct BinaryMathExpression {
     pub lhs: Box<Expression>,
     pub op: BinaryMathOp,
     pub rhs: Box<Expression>,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct ConditionExpression {
-    pub unary: Option<UnaryMathOp>,
-    pub compare_expr: CompareExpression,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -121,6 +113,18 @@ pub enum BinaryCompareOp {
     LessOrEqual,
     BoolOr,
     BoolAnd,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct CryptoExpression {
+    pub operand: Box<Expression>,
+    pub op: CryptoOp,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct ByteExpression {
+    pub operand: Box<Expression>,
+    pub op: ByteOp,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -145,6 +149,11 @@ pub enum CryptoOp {
     CheckSig,
     Sha256,
     Ripemd160,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum ByteOp {
+    Size,
 }
 
 #[derive(Clone, Debug, PartialEq)]

@@ -64,7 +64,15 @@ pub fn push_control_end(script: &mut Vec<u8>) {
 */
 
 // OP_SIZE.
-pub fn push_bytes_len() {}
+// This consumes operand here, while OP_SIZE itself doesn't consume.
+pub fn push_bytes_len(script: &mut Vec<u8>) {
+    let builder = bitcoin::script::Builder::new()
+        .push_opcode(bitcoin::opcodes::all::OP_SIZE)
+        .push_opcode(bitcoin::opcodes::all::OP_SWAP)
+        .push_opcode(bitcoin::opcodes::all::OP_DROP);
+
+    script.extend_from_slice(builder.as_bytes());
+}
 
 /*
     4. Compare push
@@ -394,15 +402,21 @@ pub fn compile_expression(bitcoin_script: &mut Vec<u8>, expr: Expression) {
         Expression::UnaryMathExpression { operand, op } => {
             // recursive to compile condition expression
             compile_expression(bitcoin_script, *operand);
-            // push compare opcode
+            // push math unary opcode
             push_math_unary(bitcoin_script, op);
         }
         Expression::BinaryMathExpression { lhs, op, rhs } => {
             // recursive to compile condition expression
             compile_expression(bitcoin_script, *lhs);
             compile_expression(bitcoin_script, *rhs);
-            // push compare opcode
+            // push math binary opcode
             push_math_binary(bitcoin_script, op);
+        }
+        Expression::ByteExpression { operand, op: _ } => {
+            // recursive to compile condition expression
+            compile_expression(bitcoin_script, *operand);
+            // push byte opcode
+            push_bytes_len(bitcoin_script);
         }
         _ => (),
     }

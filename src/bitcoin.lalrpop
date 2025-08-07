@@ -98,8 +98,9 @@ pub Expression1: Expression = {
 };
 
 pub Expression2: Expression = {
-    <CryptoExpression>,
     <UnaryMathExpression>,
+    <CryptoExpression>,
+    <ByteExpression>,
     <Expression3>,
 };
 
@@ -164,6 +165,15 @@ CryptoExpression: Expression = {
     }
 }
 
+ByteExpression: Expression = {
+    <op:ByteOp> <operand:Expression2> => {
+        Expression::ByteExpression {
+            op: op,
+            operand: Box::new(operand),
+        }
+    }
+}
+
 // Below are Token
 // Terminal sequence in the context of lexer(tokenizer)
 
@@ -205,14 +215,16 @@ CryptoOp: CryptoOp = {
     "ripemd160" => CryptoOp::Ripemd160, // OP_RIPEMD160
 }
 
+ByteOp: ByteOp = {
+    "len" => ByteOp::Size, // OP_SIZE
+}
+
 LocktimeOp: LocktimeOp = {
     "older" => LocktimeOp::Cltv, // OP_CHECKLOCKTIMEVERIFY
     "after" => LocktimeOp::Csv, // OP_CHECKSEQUENCEVERIFY
 }
 
 Assign: String           = "="  => "=".to_string();
-And: String              = "&&" => "&&".to_string();
-Or: String               = "||" => "||".to_string();
 
 // Puctuation
 Comma: String = "," => ",".to_string();

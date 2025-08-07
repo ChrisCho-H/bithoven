@@ -53,7 +53,7 @@ fn main() {
 
                     verify 2 - (-- -4);
 
-                    verify max(-2+3, 2);
+                    verify max(-2+3, len "abc");
                 }
                 "#,
         )
