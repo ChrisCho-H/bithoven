@@ -1,3 +1,8 @@
+use bitcoin::opcodes::all::{
+    OP_CHECKMULTISIG, OP_CHECKMULTISIGVERIFY, OP_CHECKSIG, OP_CHECKSIGVERIFY, OP_EQUAL,
+    OP_EQUALVERIFY, OP_HASH160, OP_HASH256, OP_RIPEMD160, OP_SHA256, OP_VERIFY,
+};
+
 use crate::ast::*;
 use std::{collections::HashMap, io::Read};
 
@@ -293,10 +298,6 @@ pub fn push_locktime(script: &mut Vec<u8>, operand: u32, op: LocktimeOp) {
 // From compiled opcodes, add stack ops or re-order opcodes.
 pub fn stack_resolver() {}
 
-// From compiled opcodes, optimize opcodes.
-// e.g. OP_EQUAL + OP_VERIFY => OP_EQUALVERIFY
-pub fn opcode_optimizer() {}
-
 pub fn stack_table(stack: Vec<StackParam>) -> HashMap<String, Type> {
     let mut stack_table: HashMap<String, Type> = HashMap::new();
 
@@ -313,9 +314,11 @@ pub fn compile(ast: Vec<Statement>) -> Vec<u8> {
     for node in ast {
         compile_statement(&mut bitcoin_script, node);
     }
-    let script = bitcoin::Script::from_bytes(&bitcoin_script);
+    let optimized_script = opcode_optimizer(bitcoin_script);
+
+    let script = bitcoin::Script::from_bytes(&optimized_script);
     println!("{:?}", script);
-    return bitcoin_script;
+    return optimized_script;
 }
 
 pub fn compile_statement(bitcoin_script: &mut Vec<u8>, stmt: Statement) {
@@ -428,4 +431,63 @@ pub fn compile_expression(bitcoin_script: &mut Vec<u8>, expr: Expression) {
         }
         _ => (),
     }
+}
+
+// From compiled opcodes, optimize opcodes.
+// e.g. OP_EQUAL + OP_VERIFY => OP_EQUALVERIFY
+pub fn opcode_optimizer(bitcoin_script: Vec<u8>) -> Vec<u8> {
+    let mut optimized_script: Vec<u8> = vec![];
+    let mut i = 0;
+    // loop except the last element
+    while i < bitcoin_script.len() - 1 {
+        let op = bitcoin_script[i];
+
+        match bitcoin::Opcode::from(op) {
+            OP_EQUAL => {
+                let next = bitcoin::Opcode::from(bitcoin_script[i + 1]);
+                if next == OP_VERIFY {
+                    optimized_script.push(OP_EQUALVERIFY.to_u8());
+                    i += 2;
+                    continue;
+                }
+            }
+            OP_CHECKSIG => {
+                let next = bitcoin::Opcode::from(bitcoin_script[i + 1]);
+                if next == OP_VERIFY {
+                    optimized_script.push(OP_CHECKSIGVERIFY.to_u8());
+                    i += 2;
+                    continue;
+                }
+            }
+            OP_CHECKMULTISIG => {
+                let next = bitcoin::Opcode::from(bitcoin_script[i + 1]);
+                if next == OP_VERIFY {
+                    optimized_script.push(OP_CHECKMULTISIGVERIFY.to_u8());
+                    i += 2;
+                    continue;
+                }
+            }
+            OP_SHA256 => {
+                let next = bitcoin::Opcode::from(bitcoin_script[i + 1]);
+                if next == OP_RIPEMD160 {
+                    optimized_script.push(OP_HASH160.to_u8());
+                    i += 2;
+                    continue;
+                }
+                if next == OP_SHA256 {
+                    optimized_script.push(OP_HASH256.to_u8());
+                    i += 2;
+                    continue;
+                }
+            }
+            //OP_NOT => {},
+            _ => {}
+        }
+        optimized_script.push(op);
+        i += 1;
+    }
+
+    optimized_script.push(bitcoin_script[bitcoin_script.len() - 1]);
+
+    return optimized_script;
 }

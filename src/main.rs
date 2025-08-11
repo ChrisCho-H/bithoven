@@ -16,7 +16,7 @@ lalrpop_mod!(pub bitcoin); // synthesized by LALRPOP
 fn bitcoin() {}
 
 fn main() {
-    let bitcom = read_bitcom("./p2pkh.bitcom".to_string());
+    let bitcom = read_bitcom("./htlc.bitcom".to_string());
     // UTXO: stack + scripts - bitcoin HTLC
     let mut utxo: UTXO = bitcoin::UTXOParser::new().parse(&bitcom).unwrap();
 
