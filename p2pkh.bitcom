@@ -1,0 +1,4 @@
+UTXO (sig: signature, pubkey: string) {
+    verify sha256 ripemd160 pubkey == "8e286e7daaf856ef7e0bf36bd1c0aabb498f2500";
+    checksig pubkey;
+}

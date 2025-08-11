@@ -1,0 +1,9 @@
+UTXO (condition: bool, preimage: string, alice_or_bob: signature) {
+    if condition {
+        older 2576085;
+        checksig "0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212";
+    } else {
+        verify sha256 sha256 preimage == "53de742e2e323e3290234052a702458589c30d2c813bf9f866bef1b651c4e45f";
+        checksig "0345a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5211";
+    }
+}

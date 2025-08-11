@@ -1,0 +1,27 @@
+UTXO (first: bool, second: string, third: signature, fourth: number) {
+    older 2576085;
+    after 122;
+    verify checksig "0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212";
+    verify sha256 "scret secrt" != sha256 second;
+    verify !(sha256 "scret secrt" != sha256 second);
+    verify fourth >= 200;
+    verify "abc";
+    verify 16;
+    verify 17;
+    verify true;
+    if second == "aaaaaaddddd" {
+        older 2576085;
+        verify checksig "0345a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5211";
+    } else {
+        verify sha256 "scret secrt" != sha256 second;
+        verify checksig "0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5213";
+    }
+    verify ! abs negate -- ++ sha256 ripemd160 sha256 (2 + ripemd160 sha256 3 + fourth);
+    verify (3 > 4) + (3 > 4) + (3 > 4) + (3 < 4) >= 2;
+    if (second == "abc") && (fourth >= 4) {
+        older 222;
+    }
+    verify 2 - -- -4;
+    verify max(-2+3, len "abc");
+    verify sha256(len(--sha256(2) - -- -4));
+}
