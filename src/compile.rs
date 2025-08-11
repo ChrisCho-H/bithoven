@@ -373,6 +373,12 @@ pub fn compile_expression(bitcoin_script: &mut Vec<u8>, expr: Expression) {
                 } => {
                     compile_expression(bitcoin_script, *operand);
                 }
+                Expression::UnaryMathExpression { operand: _, op: _ } => {
+                    compile_expression(bitcoin_script, *operand);
+                }
+                Expression::ByteExpression { operand: _, op: _ } => {
+                    compile_expression(bitcoin_script, *operand);
+                }
                 Expression::CryptoExpression { op: _, operand: _ } => {
                     compile_expression(bitcoin_script, *operand);
                 }

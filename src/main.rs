@@ -51,9 +51,11 @@ fn main() {
                         older 222;
                     }
 
-                    verify 2 - (-- -4);
+                    verify 2 - -- -4;
 
                     verify max(-2+3, len "abc");
+
+                    verify sha256(len(--sha256(2) - -- -4));
                 }
                 "#,
         )
