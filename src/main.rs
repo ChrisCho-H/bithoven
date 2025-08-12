@@ -8,7 +8,7 @@ use lalrpop_util::lalrpop_mod;
 use clap::Parser;
 use std::fs;
 
-lalrpop_mod!(pub bitcoin); // synthesized by LALRPOP
+lalrpop_mod!(pub bithoven); // synthesized by LALRPOP
 
 /// A simple program to demonstrate argument parsing
 #[derive(Parser, Debug)]
@@ -22,23 +22,23 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    let bitcom = read_bitcom(args.path);
+    let bithoven = read_bithoven(args.path);
     // UTXO: stack + scripts - bitcoin HTLC
-    let utxo: Bitcom = bitcoin::BitcomParser::new().parse(&bitcom).unwrap();
+    let utxo: Bithoven = bithoven::BithovenParser::new().parse(&bithoven).unwrap();
 
     let script = compile(utxo.output_script.clone(), &utxo.pragma.target);
     println!("PRAGMA: {:?}", utxo.pragma);
     println!("STACK: {:?}", utxo.input_stack);
     println!("AST: {:?}", utxo.output_script);
 
-    println!("{:?}", script);
+    println!("{:?}", bitcoin::Script::from_bytes(&script).to_asm_string());
 }
 
-fn read_bitcom(file_path: String) -> String {
+fn read_bithoven(file_path: String) -> String {
     // Attempt to read the file
-    let bytes = fs::read(file_path).expect("Not Bitcom file.");
+    let bytes = fs::read(file_path).expect("Not Bithoven file.");
 
     str::from_utf8(&bytes)
-        .expect("Bitcom file should consist of utf8.")
+        .expect("Bithoven file should consist of utf8.")
         .to_string()
 }

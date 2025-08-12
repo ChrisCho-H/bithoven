@@ -1,5 +1,5 @@
-pragma bitcom version 0.0.1;
-pragma bitcom target segwit;
+pragma bithoven version 0.0.1;
+pragma bithoven target segwit;
 
 (condition: bool, preimage: string, alice_or_bob: signature) 
 {

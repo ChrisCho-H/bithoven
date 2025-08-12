@@ -1,5 +1,5 @@
 #[derive(Debug, PartialEq)]
-pub struct Bitcom {
+pub struct Bithoven {
     pub pragma: Pragma,
     pub input_stack: Vec<StackParam>,
     pub output_script: Vec<Statement>,

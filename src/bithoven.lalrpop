@@ -3,11 +3,11 @@ use super::ast::*;
 
 grammar;
 
-pub Bitcom: Bitcom = {
+pub Bithoven: Bithoven = {
     "pragma" <language: Language> "version" <version: Version> <sc1: SemiColon>
     "pragma" <language2: Language> "target" <target: Target> <sc2: SemiColon>
     "(" <stack:StackParamList> ")" "{" <script: Script> "}" => {
-        Bitcom {
+        Bithoven {
             pragma: Pragma {
                 language, version, target
             },
@@ -18,7 +18,7 @@ pub Bitcom: Bitcom = {
 }
 
 pub Language: String = {
-    "bitcom" => "bitcom".to_string(),
+    "bithoven" => "bithoven".to_string(),
 }
 
 pub Version: String = {
