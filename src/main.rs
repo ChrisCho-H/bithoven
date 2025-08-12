@@ -7,16 +7,25 @@ use ast::*;
 use compile::*;
 use lalrpop_util::lalrpop_mod;
 
+use clap::Parser;
 use std::fs;
 use std::io;
 
 lalrpop_mod!(pub bitcoin); // synthesized by LALRPOP
 
-#[test]
-fn bitcoin() {}
+/// A simple program to demonstrate argument parsing
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    /// path to file to compile
+    #[arg(short, long)]
+    path: String,
+}
 
 fn main() {
-    let bitcom = read_bitcom("./multisig.bitcom".to_string());
+    let args = Args::parse();
+
+    let bitcom = read_bitcom(args.path);
     // UTXO: stack + scripts - bitcoin HTLC
     let mut utxo: Bitcom = bitcoin::BitcomParser::new().parse(&bitcom).unwrap();
 
