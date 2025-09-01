@@ -71,10 +71,6 @@ pub enum Expression {
     NumberLiteral(i64),
     BooleanLiteral(bool),
     StringLiteral(String),
-    MultiSigExpression {
-        m: i64,
-        n: Vec<String>,
-    },
     CompareExpression {
         lhs: Box<Expression>,
         op: BinaryCompareOp,
@@ -89,9 +85,13 @@ pub enum Expression {
         op: BinaryMathOp,
         rhs: Box<Expression>,
     },
-    CryptoExpression {
+    UnaryCryptoExpression {
         operand: Box<Expression>,
-        op: CryptoOp,
+        op: UnaryCryptoOp,
+    },
+    CheckSigExpression {
+        operand: Box<Factor>,
+        op: CheckSigOp,
     },
     ByteExpression {
         operand: Box<Expression>,
@@ -104,12 +104,6 @@ pub enum LiteralExpression {
     NumberLiteral(i64),
     BooleanLiteral(bool),
     StringLiteral(String),
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct MultiSigExpression {
-    pub m: i64,
-    pub n: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -133,9 +127,15 @@ pub struct CompareExpression {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct CryptoExpression {
+pub struct CheckSigExpression {
+    pub op: CheckSigOp,
+    pub operand: Box<Factor>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct UnaryCryptoExpression {
     pub operand: Box<Expression>,
-    pub op: CryptoOp,
+    pub op: UnaryCryptoOp,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -176,8 +176,12 @@ pub enum UnaryMathOp {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum CryptoOp {
+pub enum CheckSigOp {
     CheckSig,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum UnaryCryptoOp {
     Sha256,
     Ripemd160,
 }
@@ -191,4 +195,28 @@ pub enum ByteOp {
 pub enum LocktimeOp {
     Cltv,
     Csv,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum Factor {
+    SingleSigFactor {
+        sig: Box<Expression>,
+        pubkey: Box<Expression>,
+    },
+    MultiSigFactor {
+        m: u32,
+        n: Vec<SingleSigFactor>,
+    },
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct SingleSigFactor {
+    pub sig: Box<Expression>,
+    pub pubkey: Box<Expression>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct MultiSigFactor {
+    pub m: u32,
+    pub n: Vec<SingleSigFactor>,
 }

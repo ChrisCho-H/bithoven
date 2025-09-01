@@ -253,39 +253,16 @@ pub fn push_math_ternary() {}
     - Pop the top 1 stack item.
     - Push new single stack item.
 */
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum CheckSigType {
-    Single,
-    Multi,
-    Add,
-}
-
 // OP_RIPEMD160, OP_SHA1, OP_SHA256, OP_HASH160, OP_HASH256,
-// OP_CHECKSIG, OP_CHECKMULTISIG, OP_CHECKSIGADD
-pub fn push_crypto(script: &mut Vec<u8>, op: CryptoOp, check_sig_ty: Option<CheckSigType>) {
+pub fn push_crypto_unary(script: &mut Vec<u8>, op: UnaryCryptoOp) {
     match op {
-        CryptoOp::CheckSig => {
-            // If it's none,
-            if check_sig_ty.is_none() {
-                ()
-            }
-            let builder =
-                bitcoin::script::Builder::new().push_opcode(match check_sig_ty.unwrap() {
-                    CheckSigType::Single => bitcoin::opcodes::all::OP_CHECKSIG,
-                    CheckSigType::Multi => bitcoin::opcodes::all::OP_CHECKMULTISIG,
-                    CheckSigType::Add => bitcoin::opcodes::all::OP_CHECKSIGADD,
-                });
-
-            script.extend_from_slice(builder.as_bytes());
-        }
-        CryptoOp::Sha256 => {
+        UnaryCryptoOp::Sha256 => {
             let builder =
                 bitcoin::script::Builder::new().push_opcode(bitcoin::opcodes::all::OP_SHA256);
 
             script.extend_from_slice(builder.as_bytes());
         }
-        CryptoOp::Ripemd160 => {
+        UnaryCryptoOp::Ripemd160 => {
             let builder =
                 bitcoin::script::Builder::new().push_opcode(bitcoin::opcodes::all::OP_RIPEMD160);
 
@@ -294,8 +271,33 @@ pub fn push_crypto(script: &mut Vec<u8>, op: CryptoOp, check_sig_ty: Option<Chec
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub enum CheckSigType {
+    Single,
+    Multi,
+    Add,
+}
+
 /*
-    8. Locktime push
+    8. Check Signature push
+    - See the top m + n stack item.
+    - Pop the top m + n stack item.
+    - Push new single stack item.
+*/
+
+// OP_CHECKSIG, OP_CHECKMULTISIG, OP_CHECKSIGADD
+pub fn push_checksig(script: &mut Vec<u8>, check_sig_ty: CheckSigType) {
+    let builder = bitcoin::script::Builder::new().push_opcode(match check_sig_ty {
+        CheckSigType::Single => bitcoin::opcodes::all::OP_CHECKSIG,
+        CheckSigType::Multi => bitcoin::opcodes::all::OP_CHECKMULTISIG,
+        CheckSigType::Add => bitcoin::opcodes::all::OP_CHECKSIGADD,
+    });
+
+    script.extend_from_slice(builder.as_bytes());
+}
+
+/*
+    9. Locktime push
     - See the top 1 stack item.
     - Pop the top 1 stack item.
 */
@@ -406,66 +408,31 @@ pub fn compile_statement(bitcoin_script: &mut Vec<u8>, stmt: Statement, target: 
 // The challenge is when we face the identifier, the given inputs.
 pub fn compile_expression(bitcoin_script: &mut Vec<u8>, expr: Expression, target: &Target) {
     match expr {
-        Expression::CryptoExpression { operand, op } => {
+        Expression::CheckSigExpression { operand, op: _ } => {
+            compile_factor(bitcoin_script, *operand.to_owned(), target);
             match *operand {
-                Expression::MultiSigExpression { m, n: _ } => {
-                    if op != CryptoOp::CheckSig {
-                        panic!("Vector is only allowed for multi sig");
-                    }
-                    compile_expression(bitcoin_script, *operand, target);
-                    // push multisig here
-                    if target == &Target::Legacy || target == &Target::Segwit {
-                        push_crypto(
-                            bitcoin_script,
-                            CryptoOp::CheckSig,
-                            Some(CheckSigType::Multi),
-                        );
-                    } else if target == &Target::Taproot {
-                        // Final Key pushes Number and OP_NUMEQUAL
-                        // push m
-                        push_int(bitcoin_script, m);
-                        // OP_NUMEQUAL
-                        push_compare(bitcoin_script, BinaryCompareOp::NumEqual);
-                    }
+                Factor::SingleSigFactor { sig: _, pubkey: _ } => {
+                    push_checksig(bitcoin_script, CheckSigType::Single);
                 }
-                _ => {
-                    // To do. need to panic for wrong operand for crypto op
-                    compile_expression(bitcoin_script, *operand, target);
-                    push_crypto(bitcoin_script, op, Some(CheckSigType::Single));
+                Factor::MultiSigFactor { m: _, n: _ } => {
+                    match *target {
+                        Target::Taproot => {
+                            // Final Key OP_NUMEQUAL
+                            // OP_NUMEQUAL
+                            push_compare(bitcoin_script, BinaryCompareOp::NumEqual);
+                        }
+                        // Legacy & Segwit
+                        _ => {
+                            push_checksig(bitcoin_script, CheckSigType::Multi);
+                        }
+                    }
                 }
             }
         }
-        Expression::MultiSigExpression { m, n } => {
-            match target {
-                Target::Taproot => {
-                    // push pubkey
-                    for (i, data) in n.iter().enumerate() {
-                        push_bytes(bitcoin_script, data.to_string());
-                        push_crypto(
-                            bitcoin_script,
-                            CryptoOp::CheckSig,
-                            // 1st key pushes OP_CHECKSIG
-                            if i == 0 {
-                                Some(CheckSigType::Single)
-                            } else {
-                                // Other push OP_CHECKSIGADD
-                                Some(CheckSigType::Add)
-                            },
-                        )
-                    }
-                }
-                _ => {
-                    let num = n.len() as i64;
-                    // push m
-                    push_int(bitcoin_script, m);
-                    // push pubkey
-                    for data in n {
-                        push_bytes(bitcoin_script, data);
-                    }
-                    // push n
-                    push_int(bitcoin_script, num);
-                }
-            }
+        Expression::UnaryCryptoExpression { operand, op } => {
+            // To do. need to panic for wrong operand for crypto op
+            compile_expression(bitcoin_script, *operand, target);
+            push_crypto_unary(bitcoin_script, op);
         }
         Expression::CompareExpression { lhs, op, rhs } => {
             // recursive to compile condition expression
@@ -507,6 +474,82 @@ pub fn compile_expression(bitcoin_script: &mut Vec<u8>, expr: Expression, target
             push_int(bitcoin_script, data);
         }
         _ => (),
+    }
+}
+
+pub fn compile_factor(bitcoin_script: &mut Vec<u8>, factor: Factor, target: &Target) {
+    match factor {
+        Factor::SingleSigFactor { sig, pubkey } => {
+            // For sig, no need to push any but check the type(must be from stack)
+            match *sig {
+                Expression::Variable(_) => (),
+                _ => {
+                    panic!("Signature should be from argument(stack).")
+                }
+            }
+            match *pubkey {
+                Expression::StringLiteral(_) => {
+                    compile_expression(bitcoin_script, *pubkey, target);
+                }
+                _ => {
+                    // Could be changed to embrace variable later
+                    panic!("Public key should be from string literal.")
+                }
+            }
+        }
+        Factor::MultiSigFactor { m, n } => {
+            match target {
+                Target::Taproot => {
+                    // push pubkey
+                    for (i, e) in n.iter().enumerate() {
+                        let data = e.to_owned();
+                        compile_factor(
+                            bitcoin_script,
+                            Factor::SingleSigFactor {
+                                sig: data.sig,
+                                pubkey: data.pubkey,
+                            },
+                            target,
+                        );
+                        push_checksig(
+                            bitcoin_script,
+                            // 1st key pushes OP_CHECKSIG
+                            if i == 0 {
+                                CheckSigType::Single
+                            } else {
+                                // Other push OP_CHECKSIGADD
+                                CheckSigType::Add
+                            },
+                        )
+                    }
+                    // push m
+                    push_int(bitcoin_script, m as i64);
+                }
+                // Legacy & Segwit
+                _ => {
+                    let num = n.len() as i64;
+                    // push m
+                    push_int(bitcoin_script, m as i64);
+                    // push pubkey in reverse order.
+                    // If args are (sig1, ..., sig_n),
+                    // and expression is checksig [m, (sig1, pub1), ..., (sig_n, pub_n)]
+                    // OP_CHECKMULTISIG requires the sig list in the same order of pubkeys.
+                    for e in n.iter().rev() {
+                        let data = e.to_owned();
+                        compile_factor(
+                            bitcoin_script,
+                            Factor::SingleSigFactor {
+                                sig: data.sig,
+                                pubkey: data.pubkey,
+                            },
+                            target,
+                        );
+                    }
+                    // push n
+                    push_int(bitcoin_script, num);
+                }
+            }
+        }
     }
 }
 

@@ -157,7 +157,8 @@ pub Expression1: Expression = {
 
 pub Expression2: Expression = {
     <UnaryMathExpression>,
-    <CryptoExpression>,
+    <UnaryCryptoExpression>,
+    <CheckSigExpression>,
     <ByteExpression>,
     <Expression3>,
 };
@@ -214,15 +215,24 @@ BinaryMathExpression: Expression = {
     }
 };
 
-CryptoExpression: Expression = {
-    <op:CryptoOp> <operand:Expression2> => {
-        Expression::CryptoExpression {
+UnaryCryptoExpression: Expression = {
+    <op:UnaryCryptoOp> <operand:Expression2> => {
+        Expression::UnaryCryptoExpression {
             op: op,
             operand: Box::new(operand),
         }
     },
-    <op:CryptoOp> <operand:MultiSigExpression> => {
-        Expression::CryptoExpression {
+}
+
+CheckSigExpression: Expression = {
+    <op:CheckSigOp> <operand: SingleSigFactor> => {
+        Expression::CheckSigExpression {
+            op: op,
+            operand: Box::new(Factor::SingleSigFactor { sig: operand.sig, pubkey: operand.pubkey }),
+        }
+    },
+    <op:CheckSigOp> <operand:MultiSigFactor> => {
+        Expression::CheckSigExpression {
             op: op,
             operand: Box::new(operand),
         }
@@ -273,10 +283,13 @@ BinaryCompareOp: BinaryCompareOp = {
     "&&" => BinaryCompareOp::BoolAnd, // OP_LESSTHANOREQUAL
 };
 
-CryptoOp: CryptoOp = {
-    "checksig" => CryptoOp::CheckSig, // OP_CHECKSIG
-    "sha256" => CryptoOp::Sha256, // OP_SHA256
-    "ripemd160" => CryptoOp::Ripemd160, // OP_RIPEMD160
+CheckSigOp: CheckSigOp = {
+    "checksig" => CheckSigOp::CheckSig, // OP_CHECKSIG
+}
+
+UnaryCryptoOp: UnaryCryptoOp = {
+    "sha256" => UnaryCryptoOp::Sha256, // OP_SHA256
+    "ripemd160" => UnaryCryptoOp::Ripemd160, // OP_RIPEMD160
 }
 
 ByteOp: ByteOp = {
@@ -350,16 +363,25 @@ UnsignedInteger: i64 = <s:r"[0-9]+"> => {
 };
 
 // For multi-sig
-MultiSigExpression: Expression = {
-    <o: OpenBracket> <m:UnsignedInteger> <n:StringLiteralComma*> <c: CloseBracket> => {
-        Expression::MultiSigExpression{
-            m: m,
+MultiSigFactor: Factor = {
+    <o: OpenBracket> <m:UnsignedInteger> <n:CommaSingleSigFactor*> <c: CloseBracket> => {
+        Factor::MultiSigFactor{
+            m: m as u32,
             n: n,
         }
     }
 };
 
-pub StringLiteralComma: String = <c:Comma> <s:StringLiteral> => s;
+SingleSigFactor: SingleSigFactor = {
+    <o: OpenParen> <sig:Expression3> <comma:Comma> <pubkey:Expression3> <c: CloseParen> => {
+        SingleSigFactor {
+            sig: Box::new(sig),
+            pubkey: Box::new(pubkey),
+        }
+    }
+}
+
+pub CommaSingleSigFactor: SingleSigFactor = <c:Comma> <f:SingleSigFactor> => f;
 
 pub Comment: () = { 
     r"\s*" => { }, // The default whitespace skipping is disabled if an `ignore pattern` is specified
