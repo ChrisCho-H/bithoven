@@ -405,13 +405,21 @@ pub fn compile_statement(bitcoin_script: &mut Vec<u8>, stmt: Statement, target: 
 // The challenge is when we face the identifier, the given inputs.
 pub fn compile_expression(bitcoin_script: &mut Vec<u8>, expr: Expression, target: &Target) {
     match expr {
-        Expression::CheckSigExpression { operand, op: _ } => {
+        Expression::CheckSigExpression {
+            loc: _,
+            operand,
+            op: _,
+        } => {
             compile_factor(bitcoin_script, *operand.to_owned(), target);
             match *operand {
-                Factor::SingleSigFactor { sig: _, pubkey: _ } => {
+                Factor::SingleSigFactor {
+                    loc: _,
+                    sig: _,
+                    pubkey: _,
+                } => {
                     push_checksig(bitcoin_script, CheckSigType::Single);
                 }
-                Factor::MultiSigFactor { m: _, n: _ } => {
+                Factor::MultiSigFactor { loc: _, m: _, n: _ } => {
                     match *target {
                         Target::Taproot => {
                             // Final Key OP_NUMEQUAL
@@ -426,12 +434,21 @@ pub fn compile_expression(bitcoin_script: &mut Vec<u8>, expr: Expression, target
                 }
             }
         }
-        Expression::UnaryCryptoExpression { operand, op } => {
+        Expression::UnaryCryptoExpression {
+            loc: _,
+            operand,
+            op,
+        } => {
             // To do. need to panic for wrong operand for crypto op
             compile_expression(bitcoin_script, *operand, target);
             push_crypto_unary(bitcoin_script, op);
         }
-        Expression::LogicalExpression { lhs, op, rhs } => {
+        Expression::LogicalExpression {
+            loc: _,
+            lhs,
+            op,
+            rhs,
+        } => {
             // recursive to compile condition expression
             compile_expression(bitcoin_script, *lhs, target);
             push_to_alt_stack(bitcoin_script);
@@ -440,7 +457,12 @@ pub fn compile_expression(bitcoin_script: &mut Vec<u8>, expr: Expression, target
             // push logical opcode
             push_logical(bitcoin_script, op);
         }
-        Expression::CompareExpression { lhs, op, rhs } => {
+        Expression::CompareExpression {
+            loc: _,
+            lhs,
+            op,
+            rhs,
+        } => {
             // recursive to compile condition expression
             compile_expression(bitcoin_script, *lhs, target);
             push_to_alt_stack(bitcoin_script);
@@ -449,13 +471,22 @@ pub fn compile_expression(bitcoin_script: &mut Vec<u8>, expr: Expression, target
             // push compare opcode
             push_compare(bitcoin_script, op);
         }
-        Expression::UnaryMathExpression { operand, op } => {
+        Expression::UnaryMathExpression {
+            loc: _,
+            operand,
+            op,
+        } => {
             // recursive to compile condition expression
             compile_expression(bitcoin_script, *operand, target);
             // push math unary opcode
             push_math_unary(bitcoin_script, op);
         }
-        Expression::BinaryMathExpression { lhs, op, rhs } => {
+        Expression::BinaryMathExpression {
+            loc: _,
+            lhs,
+            op,
+            rhs,
+        } => {
             // recursive to compile condition expression
             compile_expression(bitcoin_script, *lhs, target);
             push_to_alt_stack(bitcoin_script);
@@ -464,19 +495,23 @@ pub fn compile_expression(bitcoin_script: &mut Vec<u8>, expr: Expression, target
             // push math binary opcode
             push_math_binary(bitcoin_script, op);
         }
-        Expression::ByteExpression { operand, op: _ } => {
+        Expression::ByteExpression {
+            loc: _,
+            operand,
+            op: _,
+        } => {
             // recursive to compile condition expression
             compile_expression(bitcoin_script, *operand, target);
             // push byte opcode
             push_bytes_len(bitcoin_script);
         }
-        Expression::StringLiteral(data) => {
+        Expression::StringLiteral(_loc, data) => {
             push_bytes(bitcoin_script, data);
         }
-        Expression::BooleanLiteral(data) => {
+        Expression::BooleanLiteral(_loc, data) => {
             push_int(bitcoin_script, data.into());
         }
-        Expression::NumberLiteral(data) => {
+        Expression::NumberLiteral(_loc, data) => {
             push_int(bitcoin_script, data);
         }
         _ => (),
@@ -485,16 +520,20 @@ pub fn compile_expression(bitcoin_script: &mut Vec<u8>, expr: Expression, target
 
 pub fn compile_factor(bitcoin_script: &mut Vec<u8>, factor: Factor, target: &Target) {
     match factor {
-        Factor::SingleSigFactor { sig, pubkey } => {
+        Factor::SingleSigFactor {
+            loc: _,
+            sig,
+            pubkey,
+        } => {
             // For sig, no need to push any but check the type(must be from stack)
             match *sig {
-                Expression::Variable(_) => (),
+                Expression::Variable(..) => (),
                 _ => {
                     panic!("Signature should be from argument(stack).")
                 }
             }
             match *pubkey {
-                Expression::StringLiteral(_) => {
+                Expression::StringLiteral(..) => {
                     compile_expression(bitcoin_script, *pubkey, target);
                 }
                 _ => {
@@ -503,20 +542,13 @@ pub fn compile_factor(bitcoin_script: &mut Vec<u8>, factor: Factor, target: &Tar
                 }
             }
         }
-        Factor::MultiSigFactor { m, n } => {
+        Factor::MultiSigFactor { loc, m, n } => {
             match target {
                 Target::Taproot => {
                     // push pubkey
                     for (i, e) in n.iter().enumerate() {
                         let data = e.to_owned();
-                        compile_factor(
-                            bitcoin_script,
-                            Factor::SingleSigFactor {
-                                sig: data.sig,
-                                pubkey: data.pubkey,
-                            },
-                            target,
-                        );
+                        compile_factor(bitcoin_script, data, target);
                         push_checksig(
                             bitcoin_script,
                             // 1st key pushes OP_CHECKSIG
@@ -542,14 +574,7 @@ pub fn compile_factor(bitcoin_script: &mut Vec<u8>, factor: Factor, target: &Tar
                     // OP_CHECKMULTISIG requires the sig list in the same order of pubkeys.
                     for e in n.iter().rev() {
                         let data = e.to_owned();
-                        compile_factor(
-                            bitcoin_script,
-                            Factor::SingleSigFactor {
-                                sig: data.sig,
-                                pubkey: data.pubkey,
-                            },
-                            target,
-                        );
+                        compile_factor(bitcoin_script, data, target);
                     }
                     // push n
                     push_int(bitcoin_script, num);

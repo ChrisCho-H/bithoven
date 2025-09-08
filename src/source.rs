@@ -18,6 +18,33 @@ impl Locatable for Statement {
     }
 }
 
+impl Locatable for Expression {
+    fn loc_mut(&mut self) -> &mut Location {
+        match self {
+            Expression::Variable(loc, ..) => loc,
+            Expression::NumberLiteral(loc, ..) => loc,
+            Expression::BooleanLiteral(loc, ..) => loc,
+            Expression::StringLiteral(loc, ..) => loc,
+            Expression::LogicalExpression { loc, .. } => loc,
+            Expression::CompareExpression { loc, .. } => loc,
+            Expression::UnaryMathExpression { loc, .. } => loc,
+            Expression::BinaryMathExpression { loc, .. } => loc,
+            Expression::UnaryCryptoExpression { loc, .. } => loc,
+            Expression::CheckSigExpression { loc, .. } => loc,
+            Expression::ByteExpression { loc, .. } => loc,
+        }
+    }
+}
+
+impl Locatable for Factor {
+    fn loc_mut(&mut self) -> &mut Location {
+        match self {
+            Factor::SingleSigFactor { loc, .. } => loc,
+            Factor::MultiSigFactor { loc, .. } => loc,
+        }
+    }
+}
+
 // 1. Get line and column for each statement's location(span)
 
 /// Builds an index of the starting byte offset for each line in the source code.
@@ -39,30 +66,82 @@ pub fn get_line_and_column(line_index: &[usize], byte_offset: usize) -> (usize, 
     (line, column)
 }
 
-/// Recursively walks the AST and populates the line and column numbers.
-pub fn set_stmt_location(ast: &mut Vec<Statement>, line_index: &[usize]) {
+pub fn set_ast_location(ast: &mut Vec<Statement>, line_index: &[usize]) {
     for stmt in ast {
-        // Get a mutable reference to the location using our new trait method.
-        let loc = stmt.loc_mut();
+        set_stmt_location(stmt, line_index);
+    }
+}
 
-        // Perform the update logic once.
-        let (line, column) = get_line_and_column(line_index, loc.start);
-        loc.line = line;
-        loc.column = column;
+/// Recursively walks the AST and populates the line and column numbers.
+pub fn set_stmt_location(stmt: &mut Statement, line_index: &[usize]) {
+    // Get a mutable reference to the location using our new trait method.
+    let loc = stmt.loc_mut();
 
-        // recursive
-        if let Statement::IfStatement {
+    // Perform the update logic once.
+    let (line, column) = get_line_and_column(line_index, loc.start);
+    loc.line = line;
+    loc.column = column;
+
+    match stmt {
+        Statement::VerifyStatement(_loc, expr) => {
+            set_expr_location(expr, line_index);
+        }
+        Statement::ExpressionStatement(_loc, expr) => {
+            set_expr_location(expr, line_index);
+        }
+        Statement::IfStatement {
+            loc: _,
+            condition_expr: expr,
             if_block,
             else_block,
-            ..
-        } = stmt
-        {
-            set_stmt_location(if_block, line_index);
+        } => {
+            set_expr_location(expr, line_index);
+            // recursive
+            for if_stmt in if_block {
+                set_stmt_location(if_stmt, line_index);
+            }
             if let Some(else_b) = else_block.as_mut() {
-                set_stmt_location(else_b, line_index);
+                for else_stmt in else_b {
+                    set_stmt_location(else_stmt, line_index);
+                }
             }
         }
+        _ => (),
     }
+}
+
+/// Recursively walks the AST and populates the line and column numbers.
+pub fn set_expr_location(expr: &mut Expression, line_index: &[usize]) {
+    // Get a mutable reference to the location using our new trait method.
+    let loc = expr.loc_mut();
+
+    // Perform the update logic once.
+    let (line, column) = get_line_and_column(line_index, loc.start);
+    loc.line = line;
+    loc.column = column;
+
+    // Set factor for expression which does have factor as child node
+    match expr {
+        Expression::CheckSigExpression {
+            loc: _,
+            operand,
+            op: _,
+        } => {
+            set_factor_location(&mut *operand, line_index);
+        }
+        _ => (),
+    }
+}
+
+/// Recursively walks the AST and populates the line and column numbers.
+pub fn set_factor_location(factor: &mut Factor, line_index: &[usize]) {
+    // Get a mutable reference to the location using our new trait method.
+    let loc = factor.loc_mut();
+
+    // Perform the update logic once.
+    let (line, column) = get_line_and_column(line_index, loc.start);
+    loc.line = line;
+    loc.column = column;
 }
 
 // 2. Remove all the comments from source code

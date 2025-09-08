@@ -39,7 +39,7 @@ fn parse(source: String) -> Result<Bithoven, ()> {
     let line_index = build_line_index(&source);
     match bithoven::BithovenParser::new().parse(&source) {
         Ok(mut utxo) => {
-            set_stmt_location(&mut utxo.output_script, &line_index);
+            set_ast_location(&mut utxo.output_script, &line_index);
             Ok(utxo)
         }
         Err(e) => {

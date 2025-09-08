@@ -19,19 +19,32 @@ pub enum Target {
     Taproot,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct StackParam {
     pub identifier: Identifier,
     pub ty: Type,
     pub value: Option<LiteralExpression>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+
+pub struct Identifier(pub String);
+
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+
 pub enum Type {
     Signature,
     Number,
     String,
     Boolean,
+}
+
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+
+pub enum LiteralExpression {
+    NumberLiteral(i64),
+    BooleanLiteral(bool),
+    StringLiteral(String),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -60,105 +73,49 @@ pub enum Statement {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct IfStatement {
-    pub loc: Location,
-    pub condition_expr: Expression,
-    pub if_block: Vec<Statement>,
-    pub else_block: Option<Vec<Statement>>,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct LocktimeStatement {
-    pub loc: Location,
-    pub operand: u32,
-    pub op: LocktimeOp,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct Identifier(pub String);
-
-#[derive(Clone, Debug, PartialEq)]
 pub enum Expression {
-    Variable(Identifier),
-    NumberLiteral(i64),
-    BooleanLiteral(bool),
-    StringLiteral(String),
+    Variable(Location, Identifier),
+    NumberLiteral(Location, i64),
+    BooleanLiteral(Location, bool),
+    StringLiteral(Location, String),
     LogicalExpression {
+        loc: Location,
         lhs: Box<Expression>,
         op: BinaryLogicalOp,
         rhs: Box<Expression>,
     },
     CompareExpression {
+        loc: Location,
         lhs: Box<Expression>,
         op: BinaryCompareOp,
         rhs: Box<Expression>,
     },
     UnaryMathExpression {
+        loc: Location,
         operand: Box<Expression>,
         op: UnaryMathOp,
     },
     BinaryMathExpression {
+        loc: Location,
         lhs: Box<Expression>,
         op: BinaryMathOp,
         rhs: Box<Expression>,
     },
     UnaryCryptoExpression {
+        loc: Location,
         operand: Box<Expression>,
         op: UnaryCryptoOp,
     },
     CheckSigExpression {
+        loc: Location,
         operand: Box<Factor>,
         op: CheckSigOp,
     },
     ByteExpression {
+        loc: Location,
         operand: Box<Expression>,
         op: ByteOp,
     },
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum LiteralExpression {
-    NumberLiteral(i64),
-    BooleanLiteral(bool),
-    StringLiteral(String),
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct UnaryMathExpression {
-    pub operand: Box<Expression>,
-    pub op: UnaryMathOp,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct BinaryMathExpression {
-    pub lhs: Box<Expression>,
-    pub op: BinaryMathOp,
-    pub rhs: Box<Expression>,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct CompareExpression {
-    pub lhs: Box<Expression>,
-    pub op: BinaryCompareOp,
-    pub rhs: Box<Expression>,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct CheckSigExpression {
-    pub op: CheckSigOp,
-    pub operand: Box<Factor>,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct UnaryCryptoExpression {
-    pub operand: Box<Expression>,
-    pub op: UnaryCryptoOp,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct ByteExpression {
-    pub operand: Box<Expression>,
-    pub op: ByteOp,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -221,23 +178,13 @@ pub enum LocktimeOp {
 #[derive(Clone, Debug, PartialEq)]
 pub enum Factor {
     SingleSigFactor {
+        loc: Location,
         sig: Box<Expression>,
         pubkey: Box<Expression>,
     },
     MultiSigFactor {
+        loc: Location,
         m: u32,
-        n: Vec<SingleSigFactor>,
+        n: Vec<Factor>,
     },
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct SingleSigFactor {
-    pub sig: Box<Expression>,
-    pub pubkey: Box<Expression>,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct MultiSigFactor {
-    pub m: u32,
-    pub n: Vec<SingleSigFactor>,
 }

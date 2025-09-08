@@ -146,10 +146,10 @@ pub Expression3: Expression = {
 };
 
 pub Expression4: Expression = {
-    <Identifier> => Expression::Variable(<>),
-    <BooleanLiteral> => Expression::BooleanLiteral(<>),
-    <StringLiteral> => Expression::StringLiteral(<>),
-    <NumberLiteral> => Expression::NumberLiteral(<>),
+    <l:@L> <e:Identifier> <r:@R> => Expression::Variable(Location{start: l, end: r, line: 0, column: 0}, e),
+    <l:@L> <e:BooleanLiteral> <r:@R> => Expression::BooleanLiteral(Location{start: l, end: r, line: 0, column: 0}, e),
+    <l:@L> <e:StringLiteral> <r:@R> => Expression::StringLiteral(Location{start: l, end: r, line: 0, column: 0}, e),
+    <l:@L> <e:NumberLiteral> <r:@R> => Expression::NumberLiteral(Location{start: l, end: r, line: 0, column: 0}, e),
     <o: OpenParen> <e: Expression0> <c: CloseParen> => e,
 };
 
@@ -160,11 +160,12 @@ LiteralExpression: LiteralExpression = {
 }
 
 LogicalExpression: Expression = {
-    <l:Expression0> <c:BinaryLogicalOp> <r:Expression1> => {
+    <l:@L> <lhs:Expression0> <c:BinaryLogicalOp> <rhs:Expression1> <r:@R> => {
         Expression::LogicalExpression {
-            lhs: Box::new(l),
+            loc: Location{start: l, end: r, line: 0, column: 0},
+            lhs: Box::new(lhs),
             op: c,
-            rhs: Box::new(r),
+            rhs: Box::new(rhs),
         }
     }
 }
@@ -172,18 +173,20 @@ LogicalExpression: Expression = {
 // By separating CmpExpr, you can ensure that boolean operators (&&, ||) only operate on boolean values, 
 // and arithmetic operators (+, -, *, /) only operate on numeric values.
 CompareExpression: Expression = {
-    <l:Expression2> <c:BinaryCompareOp> <r:Expression2> => {
+    <l:@L> <lhs:Expression2> <c:BinaryCompareOp> <rhs:Expression2> <r:@R> => {
         Expression::CompareExpression {
-            lhs: Box::new(l),
+            loc: Location{start: l, end: r, line: 0, column: 0},
+            lhs: Box::new(lhs),
             op: c,
-            rhs: Box::new(r),
+            rhs: Box::new(rhs),
         }
     }
 }
 
 UnaryMathExpression: Expression = {
-    <op:UnaryMathOp> <operand:Expression3> => {
+    <l:@L> <op:UnaryMathOp> <operand:Expression3> <r:@R> => {
         Expression::UnaryMathExpression {
+            loc: Location{start: l, end: r, line: 0, column: 0},
             op: op,
             operand: Box::new(operand),
         }
@@ -191,25 +194,28 @@ UnaryMathExpression: Expression = {
 };
 
 BinaryMathExpression: Expression = {
-    <l:Expression2> <op:InfixBinaryMathOp> <r:Expression3> => {
+    <l:@L> <lhs:Expression2> <op:InfixBinaryMathOp> <rhs:Expression3> <r:@R> => {
         Expression::BinaryMathExpression {
-            lhs: Box::new(l),
+            loc: Location{start: l, end: r, line: 0, column: 0},
+            lhs: Box::new(lhs),
             op: op,
-            rhs: Box::new(r),
+            rhs: Box::new(rhs),
         }
     },
-    <op:PostfixBinaryMathOp> <p1: OpenParen> <l:Expression2> <c: Comma> <r:Expression3> <p2: CloseParen> => {
+    <l:@L> <op:PostfixBinaryMathOp> <p1: OpenParen> <lhs:Expression2> <c: Comma> <rhs:Expression3> <p2: CloseParen> <r:@R> => {
         Expression::BinaryMathExpression {
-            lhs: Box::new(l),
+            loc: Location{start: l, end: r, line: 0, column: 0},
+            lhs: Box::new(lhs),
             op: op,
-            rhs: Box::new(r),
+            rhs: Box::new(rhs),
         }
     }
 };
 
 UnaryCryptoExpression: Expression = {
-    <op:UnaryCryptoOp> <operand:Expression3> => {
+    <l:@L> <op:UnaryCryptoOp> <operand:Expression3> <r:@R> => {
         Expression::UnaryCryptoExpression {
+            loc: Location{start: l, end: r, line: 0, column: 0},
             op: op,
             operand: Box::new(operand),
         }
@@ -217,14 +223,16 @@ UnaryCryptoExpression: Expression = {
 }
 
 CheckSigExpression: Expression = {
-    <op:CheckSigOp> <operand: SingleSigFactor> => {
+    <l:@L> <op:CheckSigOp> <operand: SingleSigFactor> <r:@R> => {
         Expression::CheckSigExpression {
+            loc: Location{start: l, end: r, line: 0, column: 0},
             op: op,
-            operand: Box::new(Factor::SingleSigFactor { sig: operand.sig, pubkey: operand.pubkey }),
+            operand: Box::new(operand),
         }
     },
-    <op:CheckSigOp> <operand:MultiSigFactor> => {
+    <l:@L> <op:CheckSigOp> <operand:MultiSigFactor> <r:@R> => {
         Expression::CheckSigExpression {
+            loc: Location{start: l, end: r, line: 0, column: 0},
             op: op,
             operand: Box::new(operand),
         }
@@ -232,13 +240,37 @@ CheckSigExpression: Expression = {
 }
 
 ByteExpression: Expression = {
-    <op:ByteOp> <operand:Expression3> => {
+    <l:@L> <op:ByteOp> <operand:Expression3> <r:@R> => {
         Expression::ByteExpression {
+            loc: Location{start: l, end: r, line: 0, column: 0},
             op: op,
             operand: Box::new(operand),
         }
     }
 }
+
+// For multi-sig
+MultiSigFactor: Factor = {
+    <l:@L> <o: OpenBracket> <m:UnsignedInteger> <n:CommaSingleSigFactor*> <c: CloseBracket> <r:@R> => {
+        Factor::MultiSigFactor{
+            loc: Location{start: l, end: r, line: 0, column: 0},
+            m: m as u32,
+            n: n,
+        }
+    }
+};
+
+SingleSigFactor: Factor = {
+    <l:@L> <o: OpenParen> <sig:Expression4> <comma:Comma> <pubkey:Expression4> <c: CloseParen> <r:@R> => {
+        Factor::SingleSigFactor {
+            loc: Location{start: l, end: r, line: 0, column: 0},
+            sig: Box::new(sig),
+            pubkey: Box::new(pubkey),
+        }
+    }
+}
+
+pub CommaSingleSigFactor: Factor = <c:Comma> <f:SingleSigFactor> => f;
 
 // Below are Token
 // Terminal sequence in the context of lexer(tokenizer)
@@ -356,27 +388,6 @@ UnsignedInteger: i64 = <s:r"[0-9]+"> => {
         integer
     }
 };
-
-// For multi-sig
-MultiSigFactor: Factor = {
-    <o: OpenBracket> <m:UnsignedInteger> <n:CommaSingleSigFactor*> <c: CloseBracket> => {
-        Factor::MultiSigFactor{
-            m: m as u32,
-            n: n,
-        }
-    }
-};
-
-SingleSigFactor: SingleSigFactor = {
-    <o: OpenParen> <sig:Expression4> <comma:Comma> <pubkey:Expression4> <c: CloseParen> => {
-        SingleSigFactor {
-            sig: Box::new(sig),
-            pubkey: Box::new(pubkey),
-        }
-    }
-}
-
-pub CommaSingleSigFactor: SingleSigFactor = <c:Comma> <f:SingleSigFactor> => f;
 
 pub Comment: () = { 
     r"\s*" => { }, // The default whitespace skipping is disabled if an `ignore pattern` is specified
