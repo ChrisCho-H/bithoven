@@ -129,6 +129,48 @@ pub fn set_expr_location(expr: &mut Expression, line_index: &[usize]) {
         } => {
             set_factor_location(&mut *operand, line_index);
         }
+        Expression::UnaryCryptoExpression {
+            loc: _,
+            operand,
+            op,
+        } => set_expr_location(operand, line_index),
+        Expression::LogicalExpression {
+            loc: _,
+            lhs,
+            op,
+            rhs,
+        } => {
+            set_expr_location(lhs, line_index);
+            set_expr_location(rhs, line_index);
+        }
+        Expression::CompareExpression {
+            loc: _,
+            lhs,
+            op,
+            rhs,
+        } => {
+            set_expr_location(lhs, line_index);
+            set_expr_location(rhs, line_index);
+        }
+        Expression::UnaryMathExpression {
+            loc: _,
+            operand,
+            op,
+        } => set_expr_location(operand, line_index),
+        Expression::BinaryMathExpression {
+            loc: _,
+            lhs,
+            op,
+            rhs,
+        } => {
+            set_expr_location(lhs, line_index);
+            set_expr_location(rhs, line_index);
+        }
+        Expression::ByteExpression {
+            loc: _,
+            operand,
+            op: _,
+        } => set_expr_location(operand, line_index),
         _ => (),
     }
 }
@@ -142,6 +184,31 @@ pub fn set_factor_location(factor: &mut Factor, line_index: &[usize]) {
     let (line, column) = get_line_and_column(line_index, loc.start);
     loc.line = line;
     loc.column = column;
+    match factor {
+        Factor::SingleSigFactor {
+            loc: _,
+            sig,
+            pubkey,
+        } => {
+            set_expr_location(sig, line_index);
+            set_expr_location(pubkey, line_index);
+        }
+        Factor::MultiSigFactor { loc: _, m: _, n } => {
+            for factor in n {
+                match factor {
+                    Factor::SingleSigFactor {
+                        loc: _,
+                        sig,
+                        pubkey,
+                    } => {
+                        set_expr_location(sig, line_index);
+                        set_expr_location(pubkey, line_index);
+                    }
+                    _ => continue,
+                }
+            }
+        }
+    }
 }
 
 // 2. Remove all the comments from source code

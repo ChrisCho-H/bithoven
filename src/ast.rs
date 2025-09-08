@@ -21,9 +21,17 @@ pub enum Target {
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct StackParam {
+    pub loc: Location,
     pub identifier: Identifier,
     pub ty: Type,
-    pub value: Option<LiteralExpression>,
+}
+
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+pub struct Location {
+    pub start: usize,
+    pub end: usize,
+    pub line: usize,
+    pub column: usize,
 }
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -37,22 +45,6 @@ pub enum Type {
     Number,
     String,
     Boolean,
-}
-
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
-
-pub enum LiteralExpression {
-    NumberLiteral(i64),
-    BooleanLiteral(bool),
-    StringLiteral(String),
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct Location {
-    pub start: usize,
-    pub end: usize,
-    pub line: usize,
-    pub column: usize,
 }
 
 #[derive(Clone, Debug, PartialEq)]

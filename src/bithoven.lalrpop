@@ -56,20 +56,13 @@ pub StackParamList: Vec<StackParam> = {
     => vec![], // epsilon production
 };
 pub StackParam: StackParam = {
-    <i:Identifier> <c:Colon> <t:Type> => {
+    <l:@L> <i:Identifier> <c:Colon> <t:Type> <r:@R> => {
         StackParam {
+            loc: Location{start: l, end: r, line: 0, column: 0},
             identifier: i,
             ty: t,
-            value: None,
         }
-    },
-    <i:Identifier> <c:Colon> <t:Type> <a:Assign> <l:LiteralExpression> => {
-        StackParam {
-            identifier: i,
-            ty: t,
-            value: Some(l),
-        }
-    },
+    }
 };
 pub MoreStackParams: StackParam = <c:Comma> <s:StackParam> => s;
 
@@ -152,12 +145,6 @@ pub Expression4: Expression = {
     <l:@L> <e:NumberLiteral> <r:@R> => Expression::NumberLiteral(Location{start: l, end: r, line: 0, column: 0}, e),
     <o: OpenParen> <e: Expression0> <c: CloseParen> => e,
 };
-
-LiteralExpression: LiteralExpression = {
-    <BooleanLiteral> => LiteralExpression::BooleanLiteral(<>),
-    <StringLiteral> => LiteralExpression::StringLiteral(<>),
-    <NumberLiteral> => LiteralExpression::NumberLiteral(<>),
-}
 
 LogicalExpression: Expression = {
     <l:@L> <lhs:Expression0> <c:BinaryLogicalOp> <rhs:Expression1> <r:@R> => {
