@@ -2,10 +2,22 @@ use crate::ast::*;
 
 pub trait Locatable {
     fn loc_mut(&mut self) -> &mut Location;
+    fn loc(self) -> Location;
 }
 
 impl Locatable for Statement {
     fn loc_mut(&mut self) -> &mut Location {
+        match self {
+            // For struct variants with a named `loc` field
+            Statement::IfStatement { loc, .. } => loc,
+            Statement::LocktimeStatement { loc, .. } => loc,
+
+            // For tuple-struct variants, access by index
+            Statement::VerifyStatement(loc, ..) => loc,
+            Statement::ExpressionStatement(loc, ..) => loc,
+        }
+    }
+    fn loc(self) -> Location {
         match self {
             // For struct variants with a named `loc` field
             Statement::IfStatement { loc, .. } => loc,
@@ -34,10 +46,31 @@ impl Locatable for Expression {
             Expression::ByteExpression { loc, .. } => loc,
         }
     }
+    fn loc(self) -> Location {
+        match self {
+            Expression::Variable(loc, ..) => loc,
+            Expression::NumberLiteral(loc, ..) => loc,
+            Expression::BooleanLiteral(loc, ..) => loc,
+            Expression::StringLiteral(loc, ..) => loc,
+            Expression::LogicalExpression { loc, .. } => loc,
+            Expression::CompareExpression { loc, .. } => loc,
+            Expression::UnaryMathExpression { loc, .. } => loc,
+            Expression::BinaryMathExpression { loc, .. } => loc,
+            Expression::UnaryCryptoExpression { loc, .. } => loc,
+            Expression::CheckSigExpression { loc, .. } => loc,
+            Expression::ByteExpression { loc, .. } => loc,
+        }
+    }
 }
 
 impl Locatable for Factor {
     fn loc_mut(&mut self) -> &mut Location {
+        match self {
+            Factor::SingleSigFactor { loc, .. } => loc,
+            Factor::MultiSigFactor { loc, .. } => loc,
+        }
+    }
+    fn loc(self) -> Location {
         match self {
             Factor::SingleSigFactor { loc, .. } => loc,
             Factor::MultiSigFactor { loc, .. } => loc,

@@ -13,7 +13,7 @@ pub struct Scope {
     pub branch: usize,
 
     /// The value of being evaluated(returning) in this scope
-    pub return_value: bool,
+    pub return_value: Option<Statement>,
 }
 
 // Symbol to build symbol table from stack
@@ -64,7 +64,7 @@ pub fn build_symbol_table(
 }
 
 pub fn analyze(
-    ast: Vec<Statement>,
+    ast: &Vec<Statement>,
     input: Vec<Vec<StackParam>>,
     target: &Target,
 ) -> Result<(), CompileError> {
@@ -73,7 +73,7 @@ pub fn analyze(
         scope_vec.push(Scope {
             symbol_table: build_symbol_table(&stack)?,
             branch: branch,
-            return_value: false,
+            return_value: None,
         });
     }
 
@@ -87,20 +87,20 @@ pub fn analyze(
 }
 
 pub fn analyze_statement(
-    ast: Vec<Statement>,
+    ast: &Vec<Statement>,
     scope_vec: &mut Vec<Scope>,
     target: &Target,
     mut branch: usize,
 ) -> Result<usize, CompileError> {
     // Check statements in global scope of current branch.
-    for stmt in ast.clone() {
-        match stmt.clone() {
+    for (i, stmt) in ast.iter().enumerate() {
+        check_flow(stmt.to_owned(), scope_vec, branch)?;
+        match stmt {
             Statement::LocktimeStatement { loc, operand, op } => {}
             Statement::VerifyStatement(loc, expr) => {
                 check_variable(expr, &mut scope_vec[branch].symbol_table)?
             }
             Statement::ExpressionStatement(loc, expr) => {
-                check_flow(stmt, loc, scope_vec, branch)?;
                 check_variable(expr, &mut scope_vec[branch].symbol_table)?;
             }
             Statement::IfStatement {
@@ -111,10 +111,10 @@ pub fn analyze_statement(
             } => {
                 // Check No statement after if/else block,
                 // as it can be placed before if/else block.
-                let mut last = ast.last().unwrap().to_owned();
-                if last != stmt {
+                let last = ast.last().unwrap().to_owned();
+                if i != ast.len() - 1 {
                     return Err(CompileError {
-                        loc: last.loc_mut().to_owned(),
+                        loc: last.to_owned().loc(),
                         kind: ErrorKind::UnreachableCode(format!(
                             "No statement after if/else block but: {:?}.",
                             last
@@ -122,10 +122,15 @@ pub fn analyze_statement(
                     });
                 }
                 check_variable(condition_expr, &mut scope_vec[branch].symbol_table)?;
-                branch = analyze_statement(if_block, scope_vec, target, branch)?;
+                branch = analyze_statement(&if_block, scope_vec, target, branch)?;
                 if else_block.is_some() {
                     branch += 1;
-                    branch = analyze_statement(else_block.unwrap(), scope_vec, target, branch)?;
+                    branch = analyze_statement(
+                        else_block.to_owned().unwrap().as_ref(),
+                        scope_vec,
+                        target,
+                        branch,
+                    )?;
                 }
             }
         }
@@ -139,7 +144,7 @@ pub fn analyze_statement(
 // Unconsumed Variable Check
 // Check order of consumption(stack position)
 pub fn check_variable(
-    expression: Expression,
+    expression: &Expression,
     symbol_table: &mut HashMap<String, Symbol>,
 ) -> Result<(), CompileError> {
     match expression {
@@ -148,7 +153,7 @@ pub fn check_variable(
             // 1. Check the existence of variable
             if symbol_table.get(&id_string).is_none() {
                 return Err(CompileError {
-                    loc: loc,
+                    loc: expression.to_owned().loc(),
                     kind: ErrorKind::UndefinedVariable(format!(
                         "Undefined variable: {:?}.",
                         id_string
@@ -159,7 +164,7 @@ pub fn check_variable(
             // 2. Check the consumption of variable
             if item.consume_count != 0 {
                 return Err(CompileError {
-                    loc: loc,
+                    loc: expression.to_owned().loc(),
                     kind: ErrorKind::VariableConsumed(format!(
                         "Consumed variable: {:?}.",
                         id_string
@@ -182,14 +187,14 @@ pub fn check_variable(
             loc: _,
             operand,
             op: _,
-        } => match *operand {
+        } => match &**operand {
             Factor::SingleSigFactor {
                 loc: _,
                 sig,
                 pubkey,
             } => {
-                check_variable(*sig, symbol_table)?;
-                check_variable(*pubkey, symbol_table)
+                check_variable(&sig, symbol_table)?;
+                check_variable(&pubkey, symbol_table)
             }
             Factor::MultiSigFactor { loc: _, m: _, n } => {
                 for factor in n {
@@ -199,8 +204,8 @@ pub fn check_variable(
                             sig,
                             pubkey,
                         } => {
-                            check_variable(*sig, symbol_table)?;
-                            check_variable(*pubkey, symbol_table)?;
+                            check_variable(&sig, symbol_table)?;
+                            check_variable(&pubkey, symbol_table)?;
                         }
                         _ => continue,
                     }
@@ -213,15 +218,15 @@ pub fn check_variable(
             loc: _,
             operand,
             op,
-        } => check_variable(*operand, symbol_table),
+        } => check_variable(&operand, symbol_table),
         Expression::LogicalExpression {
             loc: _,
             lhs,
             op,
             rhs,
         } => {
-            check_variable(*lhs, symbol_table)?;
-            check_variable(*rhs, symbol_table)
+            check_variable(&lhs, symbol_table)?;
+            check_variable(&rhs, symbol_table)
         }
         Expression::CompareExpression {
             loc: _,
@@ -229,28 +234,28 @@ pub fn check_variable(
             op,
             rhs,
         } => {
-            check_variable(*lhs, symbol_table)?;
-            check_variable(*rhs, symbol_table)
+            check_variable(&lhs, symbol_table)?;
+            check_variable(&rhs, symbol_table)
         }
         Expression::UnaryMathExpression {
             loc: _,
             operand,
             op,
-        } => check_variable(*operand, symbol_table),
+        } => check_variable(&operand, symbol_table),
         Expression::BinaryMathExpression {
             loc: _,
             lhs,
             op,
             rhs,
         } => {
-            check_variable(*lhs, symbol_table)?;
-            check_variable(*rhs, symbol_table)
+            check_variable(&lhs, symbol_table)?;
+            check_variable(&rhs, symbol_table)
         }
         Expression::ByteExpression {
             loc: _,
             operand,
             op: _,
-        } => check_variable(*operand, symbol_table),
+        } => check_variable(&operand, symbol_table),
         _ => Ok(()),
     }
 }
@@ -262,34 +267,35 @@ pub fn check_type(expression: Expression) {}
 // Unreachable Code Detection
 // No sequential if/else block
 // No statement after if/else block
+// No statement after return statement
 pub fn check_flow(
     statement: Statement,
-    loc: Location,
     scope_vec: &mut Vec<Scope>,
     branch: usize,
 ) -> Result<(), CompileError> {
-    if branch != 0 && !scope_vec[branch - 1].return_value {
+    // Check return statment exists.
+    if branch != 0 && scope_vec[branch - 1].return_value.is_none() {
         return Err(CompileError {
-            loc: loc,
+            loc: statement.to_owned().loc(),
             kind: ErrorKind::NoReturn(format!(
                 "Return statement must exist for each possible execution path: {:?}.",
                 statement
             )),
         });
     }
+    //
+    if scope_vec[branch].return_value.is_some() {
+        return Err(CompileError {
+            loc: statement.to_owned().loc(),
+            kind: ErrorKind::UnreachableCode(format!(
+                "Unreachable code after return statement: {:?}. Move return statement at the last scope of execution path",
+                statement
+            )),
+        });
+    }
     match statement {
-        Statement::ExpressionStatement(loc, expr) => {
-            if scope_vec[branch].return_value {
-                return Err(CompileError {
-                    loc: loc.clone(),
-                    kind: ErrorKind::MultipleReturn(format!(
-                        "Return statement can be only one for each possible execution path: {:?}.",
-                        expr
-                    )),
-                });
-            }
-            // mark as returned(as no more return value accepted - only one item can remain after all final evaluation)
-            scope_vec[branch].return_value = true;
+        Statement::ExpressionStatement(_, _) => {
+            scope_vec[branch].return_value = Some(statement);
             Ok(())
         }
         _ => Ok(()),
