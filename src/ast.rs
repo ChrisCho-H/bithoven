@@ -196,7 +196,7 @@ pub enum ErrorKind {
     InvalidConsumptionOrder { expected: String, found: String },
 
     // Type Errors
-    TypeMismatch { expected: Type, found: Type },
+    TypeMismatch(String),
     InvalidOperation(String),
     IntegerOverflow(String),
 

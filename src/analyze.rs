@@ -209,7 +209,7 @@ pub fn check_variable(
                             pubkey,
                         } => {
                             check_variable(&sig, symbol_table)?;
-                            check_variable(&pubkey, symbol_table)?;
+                            check_variable(&pubkey, symbol_table)?
                         }
                         _ => continue,
                     }
@@ -309,14 +309,34 @@ pub fn check_flow(
 // "==" and "!=" of CompareExpression branches OP_EQUAL(string) and OP_NUMEQUAL(number) up to type.
 pub fn check_type(
     expression: &Expression,
-    symbol_table: &mut HashMap<String, Symbol>,
+    symbol_table: &HashMap<String, Symbol>,
 ) -> Result<(), CompileError> {
     match expression {
         Expression::CheckSigExpression {
             loc: _,
             operand,
             op: _,
-        } => Ok(()),
+        } => match &**operand {
+            Factor::SingleSigFactor {
+                loc: _,
+                sig,
+                pubkey,
+            } => check_type_sig_pubkey(sig, pubkey, symbol_table),
+            Factor::MultiSigFactor { loc: _, m: _, n } => {
+                for factor in n {
+                    match factor {
+                        Factor::SingleSigFactor {
+                            loc: _,
+                            sig,
+                            pubkey,
+                        } => check_type_sig_pubkey(sig, pubkey, symbol_table)?,
+                        _ => continue,
+                    }
+                }
+
+                return Ok(());
+            }
+        },
         Expression::LogicalExpression {
             loc: _,
             lhs,
@@ -402,7 +422,7 @@ pub fn check_type(
 
 pub fn check_type_numeric(
     expression: &Expression,
-    symbol_table: &mut HashMap<String, Symbol>,
+    symbol_table: &HashMap<String, Symbol>,
 ) -> Result<(), CompileError> {
     match expression.to_owned() {
         // Throw error for non-numeric evaluated expression.
@@ -469,7 +489,7 @@ pub fn check_type_numeric(
 
 pub fn check_type_string(
     expression: &Expression,
-    symbol_table: &mut HashMap<String, Symbol>,
+    symbol_table: &HashMap<String, Symbol>,
 ) -> Result<(), CompileError> {
     match expression.to_owned() {
         // StringLiteral is just string.
@@ -500,6 +520,51 @@ pub fn check_type_string(
                 kind: ErrorKind::InvalidOperation(format!(
                     "Operand must be string but: {:?}.",
                     expression,
+                )),
+            });
+        }
+    }
+}
+
+pub fn check_type_sig_pubkey(
+    sig: &Expression,
+    pubkey: &Expression,
+    symbol_table: &HashMap<String, Symbol>,
+) -> Result<(), CompileError> {
+    // Only variable of type "signature" can be sig.
+    match sig {
+        Expression::Variable(loc, id) => {
+            let id_string = id.0.to_owned();
+            let var_type = symbol_table.get(&id_string).unwrap().ty.to_owned();
+            if var_type != Type::Signature {
+                return Err(CompileError {
+                    loc: sig.to_owned().loc(),
+                    kind: ErrorKind::InvalidOperation(format!(
+                        "Signature must be type of signature but: {:?}.",
+                        sig,
+                    )),
+                });
+            }
+        }
+        _ => {
+            return Err(CompileError {
+                loc: sig.to_owned().loc(),
+                kind: ErrorKind::TypeMismatch(format!(
+                    "Signature must be from arguments but: {:?}.",
+                    sig
+                )),
+            });
+        }
+    };
+    // Only string literal can be pubkey.
+    match pubkey {
+        Expression::StringLiteral(..) => Ok(()),
+        _ => {
+            return Err(CompileError {
+                loc: pubkey.to_owned().loc(),
+                kind: ErrorKind::TypeMismatch(format!(
+                    "Public Key must be from string literal but: {:?}.",
+                    pubkey
                 )),
             });
         }
