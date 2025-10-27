@@ -9,14 +9,14 @@ pragma bithoven target segwit;
     verify 2-4 < max (2, (3 + 4));
     verify ++2 + (len sha256 sha256 1 == ((sha256 num1 == sha256 num2) == len ripemd160 num3));
     verify 2+ 4 == !(sha256 "scret secrt" != sha256 preimage_not);
-    verify (1 > 2) + (3 > 4) + (2 > 3) == 2; 
+    verify (1 > 2) + (3 > 4) + (2 > 3) == 0; 
     verify 2 + 2 + 2; 
     older 2576085;
     after 122;
     verify checksig (sig_alice, "0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212");
     verify sha256 "scret secrt" != sha256 preimage;
-    verify 2+ 4 == !(sha256 "scret secrt" != sha256 "not_equal");
-    verify 2 >= 200;
+    verify 2+ 4 != !(sha256 "scret secrt" != sha256 "not_equal");
+    verify !(2 >= 200);
     verify "abc";
     verify 16;
     verify 17;
@@ -28,7 +28,7 @@ pragma bithoven target segwit;
     verify max(-2+3, len "abc");
     if (str2 == "bithoven2") && (4 >= 4) {
         older 222;
-        return checksig (sig_carol, "0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5213");
+        return (3 > 4) + (3 > 4) + (3 > 4) + (3 < 4) >= 2;
     } else {
         return sha256(len(--sha256(2) - -- negate num4));
     }
