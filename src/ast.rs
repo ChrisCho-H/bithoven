@@ -204,8 +204,7 @@ pub enum ErrorKind {
     TypeMismatch(String),
     InvalidOperation(String),
 
-    // Bitcoin-Specific Errors
-    NoSigRequired(String),
+    // Bitcoin Consensus Errors
     StackDepthExceeded(String),
     OpcodeCountExceeded(String),
     DustOutputCreated(String),
@@ -219,6 +218,8 @@ pub enum ErrorKind {
     // Security Errors
     IntegerOverflow(String),
     UselessSig(String),
+    MalformedPubkey(String),
+    NoSigRequired(String),
 }
 
 use std::fmt;

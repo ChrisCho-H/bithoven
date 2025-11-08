@@ -607,7 +607,7 @@ pub fn check_type_sig_pubkey(
 
             Err(CompileError {
                 loc: loc.to_owned(),
-                kind: ErrorKind::TypeMismatch(format!("Public key is malformed: {:?}.", data)),
+                kind: ErrorKind::MalformedPubkey(format!("Public key is malformed: {:?}.", data)),
             })
         }
         _ => {
