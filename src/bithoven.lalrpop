@@ -237,7 +237,7 @@ ByteExpression: Expression = {
 }
 
 // For multi-sig
-MultiSigFactor: Factor = {
+pub MultiSigFactor: Factor = {
     <l:@L> <o: OpenBracket> <m:UnsignedInteger> <n:CommaSingleSigFactor*> <c: CloseBracket> <r:@R> => {
         Factor::MultiSigFactor{
             loc: Location{start: l, end: r, line: 0, column: 0},
@@ -247,7 +247,7 @@ MultiSigFactor: Factor = {
     }
 };
 
-SingleSigFactor: Factor = {
+pub SingleSigFactor: Factor = {
     <l:@L> <o: OpenParen> <sig:Expression4> <comma:Comma> <pubkey:Expression4> <c: CloseParen> <r:@R> => {
         Factor::SingleSigFactor {
             loc: Location{start: l, end: r, line: 0, column: 0},
@@ -311,8 +311,8 @@ ByteOp: ByteOp = {
 }
 
 LocktimeOp: LocktimeOp = {
-    "older" => LocktimeOp::Cltv, // OP_CHECKLOCKTIMEVERIFY
-    "after" => LocktimeOp::Csv, // OP_CHECKSEQUENCEVERIFY
+    "after" => LocktimeOp::Cltv, // OP_CHECKLOCKTIMEVERIFY
+    "older" => LocktimeOp::Csv, // OP_CHECKSEQUENCEVERIFY
 }
 
 Assign: String           = "="  => "=".to_string();
@@ -339,16 +339,16 @@ Type: Type = {
     "signature" => Type::Signature,
 }
 
-Identifier: Identifier = <v:r"[a-zA-Z_][a-zA-Z0-9_]*"> => Identifier(v.to_string());
+pub Identifier: Identifier = <v:r"[a-zA-Z_][a-zA-Z0-9_]*"> => Identifier(v.to_string());
 
-StringLiteral: String = <l:r#""(\\\\|\\"|[^"\\])*""#> => l[1..l.len()-1].into();
+pub StringLiteral: String = <l:r#""(\\\\|\\"|[^"\\])*""#> => l[1..l.len()-1].into();
 
-BooleanLiteral: bool = {
+pub BooleanLiteral: bool = {
     "true" => true,
     "false" => false,
 }
 
-NumberLiteral: i64 = {
+pub NumberLiteral: i64 = {
      <p:UnsignedInteger> => p,
     // Unary minus at the Integer level(Precedence of fixed strings exists)
     // LALRPOP prefers to find the longest match first. 
@@ -356,7 +356,7 @@ NumberLiteral: i64 = {
     "-" <p:UnsignedInteger> => -p,
 };
 
-UnsignedInteger: i64 = <s:r"[0-9]+"> => {
+pub UnsignedInteger: i64 = <s:r"[0-9]+"> => {
     i64::from_str(s).unwrap()
 };
 
