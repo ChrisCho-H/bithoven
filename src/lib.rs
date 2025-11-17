@@ -1,6 +1,8 @@
 pub mod analyze;
+pub mod analyze_test;
 pub mod ast;
 pub mod compile;
+pub mod parser_test;
 pub mod source;
 
 use ast::*;
