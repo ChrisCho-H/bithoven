@@ -9,6 +9,7 @@ mod tests {
     use crate::ast::*; // Import AST definitions
     use crate::bithoven::BithovenParser; // Import the LALRPOP Parser
     use std::collections::HashMap;
+    use std::fs;
 
     // --- MOCK HELPERS (for unit tests) ---
     // These functions create mock AST nodes to make tests cleaner.
@@ -713,5 +714,135 @@ mod tests {
             parsed.input_stack,
             &parsed.pragma.target,
         );
+    }
+
+    #[test]
+    fn test_full_program() {
+        // Create a single parser instance to reuse
+        let parser = BithovenParser::new();
+        let example_dir = "example/";
+
+        // 1. Read the directory
+        let entries = fs::read_dir(example_dir).expect(&format!(
+            "Failed to read '{}' directory. Make sure it exists at the project root.",
+            example_dir
+        ));
+
+        let mut file_count = 0;
+
+        // 2. Iterate over each file in the directory
+        for entry in entries {
+            let entry = entry.expect("Failed to read directory entry");
+            let path = entry.path();
+
+            // 3. Filter for files that end with ".bithoven"
+            if path.is_file() && path.extension().map_or(false, |s| s == "bithoven") {
+                let file_path_str = path.to_str().unwrap_or("invalid_path");
+                println!("--- Testing file: {} ---", file_path_str);
+                file_count += 1;
+
+                // 4. Read the file content
+                let input = fs::read_to_string(&path)
+                    .expect(&format!("Failed to read test file: {}", file_path_str));
+
+                // 5. Parse the content
+                // We don't use assert_parses! here because we want to
+                // provide a custom error message that includes the filename.
+                let parsed = parser.parse(&input).unwrap_or_else(|e| {
+                    panic!(
+                        "\n\nFailed to parse example file: {}\n\nParse Error: {:?}\n\n",
+                        file_path_str, e
+                    )
+                });
+
+                // 6. Analyze all
+                analyze(
+                    &parsed.output_script,
+                    parsed.input_stack,
+                    &parsed.pragma.target,
+                )
+                .expect("Analyze Error: ");
+            }
+        }
+        // 6. A final sanity check
+        assert!(
+            file_count > 0,
+            "No '.bithoven' files were found in the 'example/' directory. The test did not run."
+        );
+
+        println!("\nSuccessfully parsed all {} example files.", file_count);
+    }
+
+    #[test]
+    #[should_panic] // This test should panic because it states unused variable HELLO.
+    fn test_analyze_unused_variable() {
+        // This tests for a bug in the analyzer itself.
+        let input = r#"
+            pragma bithoven version 0.0.1;
+            pragma bithoven target segwit;
+            // ERROR: HELLO is unsed.
+            (condition: bool, sig_alice: signature, HELLO: string)
+            (condition: bool, preimage: string, sig_bob: signature)
+            {
+                // If want to spend if branch, condition witness item should be true.
+                if condition {
+                    // Relative locktime for 1000 block confirmation.
+                    older 1000;
+                    // If locktime satisfied, alice can redeem by providing signature.
+                    return checksig (sig_alice, "0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212");
+                } else {
+                    // Bob needs to provide secret preimage to unlock hash lock.
+                    verify sha256 sha256 preimage == "53de742e2e323e3290234052a702458589c30d2c813bf9f866bef1b651c4e45f";
+                    // If hashlock satisfied, bob can redeem by providing signature.
+                    return checksig (sig_bob, "0345a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212");
+                }
+            }
+        "#;
+        // The parser succeeds
+        let parser = BithovenParser::new();
+        let parsed = parser.parse(input).expect("Parser failed");
+
+        analyze(
+            &parsed.output_script,
+            parsed.input_stack,
+            &parsed.pragma.target,
+        ).expect("Analyze Error: ");
+    }
+
+    #[test]
+    #[should_panic] // This test should panic because it used consumed variable "contintion" in second branch.
+    fn test_analyze_used_variable_in_before_stack() {
+        // This tests for a bug in the analyzer itself.
+        let input = r#"
+            pragma bithoven version 0.0.1;
+            pragma bithoven target segwit;
+            (condition: bool, sig_alice: signature)
+            (condition: bool, preimage: string, sig_bob: signature)
+            {
+                // If want to spend if branch, condition witness item should be true.
+                if condition {
+                    // Relative locktime for 1000 block confirmation.
+                    older 1000;
+                    // If locktime satisfied, alice can redeem by providing signature.
+                    return checksig (sig_alice, "0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212");
+                } else {
+                    // ERROR: condition is already consumed in before branch.
+                    verify condition == true;
+                    // Bob needs to provide secret preimage to unlock hash lock.
+                    verify sha256 sha256 preimage == "53de742e2e323e3290234052a702458589c30d2c813bf9f866bef1b651c4e45f";
+                    // If hashlock satisfied, bob can redeem by providing signature.
+                    return checksig (sig_bob, "0345a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212");
+                }
+            }
+        "#;
+        // The parser succeeds
+        let parser = BithovenParser::new();
+        let parsed = parser.parse(input).expect("Parser failed");
+        
+        analyze(
+            &parsed.output_script,
+            parsed.input_stack,
+            &parsed.pragma.target,
+        ).expect("Analyze Error: ");
     }
 }

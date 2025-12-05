@@ -5,8 +5,8 @@ pragma bithoven target segwit;
     This example is to show how complicated nested if/else can be achieved
 */
 (condition: bool, sig_alice: signature, sig_carol: signature)
-(condition: bool, sig_alice: signature, preimage: string, sig_dylan: signature)
-(condition: bool, preimage: string, sig_bob: signature)
+(condition: bool, sig_alice: signature, preimage_dylan: string, sig_dylan: signature)
+(condition: bool, preimage_bob: string, sig_bob: signature)
 {
     verify true;
     if condition {
@@ -16,11 +16,11 @@ pragma bithoven target segwit;
             older 2576085;
             return checksig (sig_carol, "0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212");
         } else {
-            verify sha256 sha256 preimage == "53de742e2e323e3290234052a702458589c30d2c813bf9f866bef1b651c4e45f";
+            verify sha256 sha256 preimage_dylan == "53de742e2e323e3290234052a702458589c30d2c813bf9f866bef1b651c4e45f";
             return checksig (sig_dylan, "0345a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212");
         }
     } else {
-        verify sha256 sha256 preimage == "53de742e2e323e3290234052a702458589c30d2c813bf9f866bef1b651c4e45f";
+        verify sha256 sha256 preimage_bob == "53de742e2e323e3290234052a702458589c30d2c813bf9f866bef1b651c4e45f";
         return checksig (sig_bob, "0345a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212");
     }
 }

@@ -91,6 +91,11 @@ pub fn analyze(
     analyze_statement(ast, &mut scope_vec, target, 0)?;
     check_flow(ast)?;
 
+    // Check unused variable at last.
+    for (i, stack) in input.iter().enumerate() {
+        check_unused_variable(&stack, &scope_vec[i].symbol_table)?;
+    }
+
     Ok(())
 }
 
@@ -127,6 +132,14 @@ pub fn analyze_statement(
                 branch = analyze_statement(&if_block, scope_vec, target, branch)?;
                 if else_block.is_some() {
                     branch += 1;
+                    // Mark consumed variable before checkout to new stack branch.
+                    let [before, current]: &mut [Scope; 2] = (&mut scope_vec[branch - 1..=branch])
+                        .try_into()
+                        .expect("Non existing stack look up.");
+                    let before_stack = &mut before.symbol_table;
+                    let current_stack = &mut current.symbol_table;
+                    mark_consumed_stack(before_stack, current_stack)?;
+
                     branch = analyze_statement(
                         else_block.to_owned().unwrap().as_ref(),
                         scope_vec,
@@ -138,6 +151,48 @@ pub fn analyze_statement(
         }
     }
     Ok(branch)
+}
+
+pub fn check_unused_variable(
+    stack_vec: &Vec<StackParam>,
+    stack_table: &HashMap<String, Symbol>,
+) -> Result<(), CompileError> {
+    for e in stack_vec {
+        // If consume count is 0, it's unconsumed.
+        if stack_table
+            .get(&e.identifier.0)
+            .is_some_and(|v| v.consume_count == 0)
+        {
+            return Err(CompileError {
+                loc: e.to_owned().loc(),
+                kind: ErrorKind::UnusedVariable(format!("Variable unsed: {:?}.", e.identifier)),
+            });
+        }
+    }
+    return Ok(());
+}
+
+pub fn mark_consumed_stack(
+    before_stack: &mut HashMap<String, Symbol>,
+    current_stack: &mut HashMap<String, Symbol>,
+) -> Result<(), CompileError> {
+    for (k, v) in before_stack {
+        if current_stack.get(k).is_some() {
+            let consumed_item = current_stack.get(k).unwrap().clone();
+
+            // Counter consume_count consumed in before stack(shared item).
+            current_stack.insert(
+                k.to_string(),
+                Symbol {
+                    ty: consumed_item.ty,
+                    consume_count: 1,
+                    stack_position: consumed_item.stack_position,
+                },
+            );
+        }
+    }
+
+    return Ok(());
 }
 
 // No sequential if/else block && No statement after if/else block.
