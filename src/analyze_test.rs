@@ -886,4 +886,60 @@ mod tests {
         )
         .expect("Analyze Error: ");
     }
+
+    #[test]
+    #[should_panic] // This test should panic because it used the value larger than u16::MAX for relative locktime.
+    fn test_relative_locktime_overflow() {
+        // This tests for a bug in the analyzer itself.
+        let input = r#"
+            pragma bithoven version 0.0.1;
+            pragma bithoven target segwit;
+
+            (sig_alice: signature)
+            {
+                // Relative locktime for 65,536 block height.
+                older 65536;
+                // If locktime satisfied, alice can redeem by providing signature.
+                return checksig (sig_alice, "0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212");
+            }
+        "#;
+        // The parser succeeds
+        let parser = BithovenParser::new();
+        let parsed = parser.parse(input).expect("Parser failed");
+
+        analyze(
+            &parsed.output_script,
+            parsed.input_stack,
+            &parsed.pragma.target,
+        )
+        .expect("Analyze Error: ");
+    }
+
+    #[test]
+    #[should_panic] // This test should panic because it used the value larger than u32::MAX for absolute locktime.
+    fn test_absolute_locktime_overflow() {
+        // This tests for a bug in the analyzer itself.
+        let input = r#"
+            pragma bithoven version 0.0.1;
+            pragma bithoven target segwit;
+
+            (sig_alice: signature)
+            {
+                // Absolute locktime for 4294967296 block height.
+                after 4294967296;
+                // If locktime satisfied, alice can redeem by providing signature.
+                return checksig (sig_alice, "0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212");
+            }
+        "#;
+        // The parser succeeds
+        let parser = BithovenParser::new();
+        let parsed = parser.parse(input).expect("Parser failed");
+
+        analyze(
+            &parsed.output_script,
+            parsed.input_stack,
+            &parsed.pragma.target,
+        )
+        .expect("Analyze Error: ");
+    }
 }

@@ -102,7 +102,7 @@ LocktimeStatement: Statement = <l:@L> <op:LocktimeOp> <operand:UnsignedInteger> 
     Statement::LocktimeStatement {
         loc: Location{start: l, end: r, line: 0, column: 0},
         op: op,
-        operand: operand as u32
+        operand: operand as i64
     }
 };
 // Bitcoin specific language sytax. verify signature against public key

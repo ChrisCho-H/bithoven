@@ -59,7 +59,7 @@ pub enum Statement {
     },
     LocktimeStatement {
         loc: Location,
-        operand: u32,
+        operand: i64,
         op: LocktimeOp,
     },
     VerifyStatement(Location, Expression),

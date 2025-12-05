@@ -108,7 +108,31 @@ pub fn analyze_statement(
     // Check statements in global scope of current branch.
     for stmt in ast {
         match stmt {
-            Statement::LocktimeStatement { loc, operand, op } => {}
+            Statement::LocktimeStatement { loc, operand, op } => {
+                // BIP 68: Relative locktime (CSV/older) is physically limited to 16 bits
+                // because it relies on the nSequence field's low 16 bits.
+                if matches!(op, LocktimeOp::Csv) {
+                    if *operand < 0 || *operand > u16::MAX as i64 {
+                        return Err(CompileError {
+                            loc: loc.to_owned(),
+                            kind: ErrorKind::IntegerOverflow(format!(
+                                "Relative locktime (older) cannot exceed 65,535 blocks due to BIP 68 limits but got: {}.",
+                            operand
+                            )),
+                        });
+                    }
+                }
+                // BIP112: Absoulte locktim is limited to u32::MAX
+                if *operand < 0 || *operand > u32::MAX as i64 {
+                    return Err(CompileError {
+                        loc: loc.to_owned(),
+                        kind: ErrorKind::IntegerOverflow(format!(
+                            "Locktime must be a 32-bit unsigned integer (0-4294967295), but got: {}.",
+                        operand
+                        )),
+                    });
+                }
+            }
             Statement::VerifyStatement(loc, expr) => {
                 check_variable(expr, &mut scope_vec[branch].symbol_table)?;
                 check_type(expr, &mut scope_vec[branch].symbol_table)?;

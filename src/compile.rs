@@ -308,13 +308,12 @@ pub fn push_checksig(script: &mut Vec<u8>, check_sig_ty: CheckSigType) {
 */
 
 // OP_CHECKLOCKTIMEVERIFY and OP_CHECKSEQUENCEVERIFY
-pub fn push_locktime(script: &mut Vec<u8>, operand: u32, op: LocktimeOp) {
+pub fn push_locktime(script: &mut Vec<u8>, operand: i64, op: LocktimeOp) {
     match op {
         LocktimeOp::Cltv => {
-            let height = bitcoin::locktime::absolute::Height::from_consensus(operand)
-                .expect("failed to parse block");
+            let locktime = bitcoin::locktime::absolute::LockTime::from_consensus(operand as u32);
             let builder = bitcoin::script::Builder::new()
-                .push_lock_time(bitcoin::locktime::absolute::LockTime::Blocks(height))
+                .push_lock_time(locktime)
                 .push_opcode(bitcoin::opcodes::all::OP_CLTV)
                 .push_opcode(bitcoin::opcodes::all::OP_DROP);
 
