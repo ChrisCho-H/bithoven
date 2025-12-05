@@ -81,19 +81,11 @@ mod tests {
     fn mock_symbol_table() -> HashMap<String, Symbol> {
         let mut table = HashMap::new();
         table.insert(
-            "a_sig".to_string(),
-            Symbol {
-                ty: Type::Signature,
-                consume_count: 0,
-                stack_position: 2,
-            },
-        );
-        table.insert(
             "a_num".to_string(),
             Symbol {
                 ty: Type::Number,
                 consume_count: 0,
-                stack_position: 1,
+                stack_position: 0,
             },
         );
         table.insert(
@@ -101,7 +93,15 @@ mod tests {
             Symbol {
                 ty: Type::Boolean,
                 consume_count: 0,
-                stack_position: 0,
+                stack_position: 1,
+            },
+        );
+        table.insert(
+            "a_sig".to_string(),
+            Symbol {
+                ty: Type::Signature,
+                consume_count: 0,
+                stack_position: 2,
             },
         );
         table.insert(
@@ -127,8 +127,8 @@ mod tests {
         assert_eq!(table.len(), 2);
         assert_eq!(table.get("a").unwrap().ty, Type::Number);
         assert_eq!(table.get("b").unwrap().ty, Type::Signature);
-        assert_eq!(table.get("a").unwrap().stack_position, 0);
-        assert_eq!(table.get("b").unwrap().stack_position, 1); // Is last, so position 0
+        assert_eq!(table.get("a").unwrap().stack_position, 1);
+        assert_eq!(table.get("b").unwrap().stack_position, 0); // Is last, so position 0
     }
 
     #[test]
@@ -218,6 +218,17 @@ mod tests {
     #[test]
     fn test_check_var_recursive_checksig() {
         let mut table = mock_symbol_table();
+
+        // Consume a_num and a_bool first.
+        let expr = Expression::BinaryMathExpression {
+            loc: loc(0, 0),
+            lhs: Box::new(var("a_num")),
+            op: BinaryMathOp::Add,
+            rhs: Box::new(var("a_bool")), // bools are numeric
+        };
+        check_variable(&expr, &mut table).unwrap();
+
+        // Then test checksig.
         let expr = checksig(var("a_sig"), var("a_str")); // pubkey can be a var here
 
         check_variable(&expr, &mut table).unwrap();
@@ -572,7 +583,7 @@ mod tests {
             pragma bithoven version 1.0.0;
             pragma bithoven target taproot;
             (sig_a: signature)
-            (sig_b: signature, preimage: string)
+            (preimage: string, sig_b: signature)
             {
                 if true {
                     return checksig(sig_a, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
@@ -806,7 +817,8 @@ mod tests {
             &parsed.output_script,
             parsed.input_stack,
             &parsed.pragma.target,
-        ).expect("Analyze Error: ");
+        )
+        .expect("Analyze Error: ");
     }
 
     #[test]
@@ -838,11 +850,40 @@ mod tests {
         // The parser succeeds
         let parser = BithovenParser::new();
         let parsed = parser.parse(input).expect("Parser failed");
-        
+
         analyze(
             &parsed.output_script,
             parsed.input_stack,
             &parsed.pragma.target,
-        ).expect("Analyze Error: ");
+        )
+        .expect("Analyze Error: ");
+    }
+
+    #[test]
+    #[should_panic] // This test should panic because it used variable in wrong order.
+    fn test_invalid_consumption_order() {
+        // This tests for a bug in the analyzer itself.
+        let input = r#"
+            pragma bithoven version 0.0.1;
+            pragma bithoven target segwit;
+            // sig_alice is declared first, but used in the second order.
+            (sig_alice: signature, preimage: string)
+            {
+                // Alice needs to provide secret preimage to unlock hash lock.
+                verify sha256 sha256 preimage == "53de742e2e323e3290234052a702458589c30d2c813bf9f866bef1b651c4e45f";
+                // If hashlock satisfied, alice can redeem by providing signature.
+                return checksig (sig_alice, "0345a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212");
+            }
+        "#;
+        // The parser succeeds
+        let parser = BithovenParser::new();
+        let parsed = parser.parse(input).expect("Parser failed");
+
+        analyze(
+            &parsed.output_script,
+            parsed.input_stack,
+            &parsed.pragma.target,
+        )
+        .expect("Analyze Error: ");
     }
 }

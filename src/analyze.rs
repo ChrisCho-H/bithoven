@@ -28,7 +28,6 @@ pub struct Symbol {
     pub stack_position: usize,
 }
 
-// To do. need to check multiple stacks and whether the order is accurate(following execution path)
 // Check the duplication here.
 // Check whether it has signature or not, which is crucial security property.
 pub fn build_symbol_table(
@@ -37,6 +36,7 @@ pub fn build_symbol_table(
     // Key is identifier
     let mut symbol_table: HashMap<String, Symbol> = HashMap::new();
     let mut has_sig: bool = false;
+    // Iterate in reverse to match stack LIFO order.
     for (i, stack_item) in stack_vec.iter().enumerate().rev() {
         let item = stack_item.to_owned();
 
@@ -58,7 +58,7 @@ pub fn build_symbol_table(
             Symbol {
                 ty: item.ty,
                 consume_count: 0,
-                stack_position: i,
+                stack_position: stack_vec.len() - 1 - i, // 0 is the top stack position.
             },
         );
     }
@@ -153,6 +153,7 @@ pub fn analyze_statement(
     Ok(branch)
 }
 
+// Check the existence of unused variable after analysis.
 pub fn check_unused_variable(
     stack_vec: &Vec<StackParam>,
     stack_table: &HashMap<String, Symbol>,
@@ -172,6 +173,7 @@ pub fn check_unused_variable(
     return Ok(());
 }
 
+// When checkout to next branch(stack), mark shared variables consumed.
 pub fn mark_consumed_stack(
     before_stack: &mut HashMap<String, Symbol>,
     current_stack: &mut HashMap<String, Symbol>,
@@ -294,7 +296,23 @@ pub fn check_variable(
                     )),
                 });
             }
-            // 3. Counter consume_count
+
+            // 3. Check whether there is unconsumed variable before this variable.
+            let is_invalid_consumption_order = symbol_table
+                .values()
+                .any(|v| v.stack_position < item.stack_position && v.consume_count == 0);
+            if is_invalid_consumption_order {
+                return Err(CompileError {
+                    loc: expression.to_owned().loc(),
+                    kind: ErrorKind::InvalidConsumptionOrder(format!(
+                        "Invalid Variable Consumption Order: {:?}th {:?} is used despite of preceding unused variable.",
+                        item.stack_position,
+                        id_string,
+                    )),
+                });
+            }
+
+            // 4. Counter consume_count
             symbol_table.insert(
                 id_string,
                 Symbol {
