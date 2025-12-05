@@ -198,6 +198,7 @@ pub enum ErrorKind {
     DuplicateVariable(String),
     UndefinedVariable(String),
     VariableConsumed(String),
+    UnusedVariable(String),
     InvalidConsumptionOrder(String),
 
     // Type Errors
