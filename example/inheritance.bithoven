@@ -1,0 +1,30 @@
+pragma bithoven version 0.0.1;
+pragma bithoven target segwit;
+
+(sig_owner: signature)
+(secret: string, sig_heir: signature)
+(sig_lawyer: signature, sig_audit: signature)
+{   
+    // Owner can redeem only by providing signature.
+    if checksig(sig_owner,
+        "03daed4f2be3a8bf278e70132fb0beb7522f570e144bf615c07e996d443dee8729") {
+            return true;
+    } 
+    else {
+        // Heir can redeem after 1000 block confirmation.
+        older 1000;
+        // For heir to redeem, he needs to provide both signature and secret.
+        if sha256(secret) == "daed4f2be3a8bf278e70132fb0beb7522f570e144bf615c07e996d443dee8729" 
+            && checksig(sig_heir, "0344d2b4706fee04f8718f3a411c9df0503cc7bc83488128187b016f12bfd36f4d") {
+                return true;
+        } 
+        else {
+            // Lawyer can redeem after 10000 block confirmation.
+            older 10000; 
+            // Lawyer and auditor needs to multisig.
+            return checksig[2, 
+                (sig_lawyer, "03daed4f2be3a8bf278e70132fb0beb7522f570e144bf615c07e996d443dee8729"), 
+                    (sig_audit, "03daed4f2be3a8bf278e70132fb0beb7522f570e144bf615c07e996d443dee8729")];
+        }
+    }
+}

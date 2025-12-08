@@ -1,0 +1,455 @@
+use std::str::FromStr;
+use super::ast::*;
+
+grammar;
+
+pub Bithoven: Bithoven = {
+    "pragma" <language: Language> "version" <version: Version> <sc1: SemiColon>
+    "pragma" <language2: Language> "target" <target: Target> <sc2: SemiColon>
+    <stack: MutlipleStack> "{" <script: Script> "}" => {
+        Bithoven {
+            pragma: Pragma {
+                language, version, target
+            },
+            input_stack: stack,
+            output_script: script,
+        }
+    }
+}
+
+pub Language: String = {
+    "bithoven" => "bithoven".to_string(),
+}
+
+pub Version: String = {
+    <one:UnsignedInteger> <d1:Dot> <two:UnsignedInteger> <d2:Dot> <three:UnsignedInteger> => {
+        one.to_string() + &d1 + &two.to_string() + &d2 + &three.to_string()
+    }
+}
+
+pub Target: Target = {
+    "legacy" => Target::Legacy,
+    "segwit" => Target::Segwit,
+    "taproot" => Target::Taproot,
+}
+
+pub Script: Vec<Statement> = {
+    <statement:Statement*> => statement,
+}
+
+pub MutlipleStack: Vec<Vec<StackParam>> = {
+    <stack:Stack*> => stack,
+}
+
+
+pub Stack: Vec<StackParam> = {
+    <o: OpenParen> <stack:StackParamList> <c: CloseParen> => stack,
+}
+
+// Bitcoin script sig(witness) stack
+pub StackParamList: Vec<StackParam> = {
+    <first:StackParam> <mut more:MoreStackParams*> => {
+        more.reverse();
+        more.push(first);
+        more
+    },
+    => vec![], // epsilon production
+};
+pub StackParam: StackParam = {
+    <l:@L> <i:Identifier> <c:Colon> <t:Type> <r:@R> => {
+        StackParam {
+            loc: Location{start: l, end: r, line: 0, column: 0},
+            identifier: i,
+            ty: t,
+        }
+    }
+};
+pub MoreStackParams: StackParam = <c:Comma> <s:StackParam> => s;
+
+pub Statement: Statement = {
+    <IfStatement>,
+    <LocktimeStatement>,
+    <VerifyStatement>,
+    <ExpressionStatement>,
+}
+
+// If statement follows semantics of bitcoin OP_(NOT)IF, OP_ELSE...
+// reference1: https://bitcoin.stackexchange.com/questions/103844/inner-working-of-op-if-and-op-else
+// reference2: https://bitcoin.stackexchange.com/questions/90868/does-bitcoin-script-support-nested-ifs-op-if-or-op-notif-inside-one-another
+IfStatement: Statement = {
+    <l:@L> "if" <c:Expression0> <b:BlockStatement> <r:@R> => {
+        Statement::IfStatement {
+            loc: Location{start: l, end: r, line: 0, column: 0},
+            condition_expr: c,
+            if_block: b,
+            else_block: None,
+        }
+    },
+    <l:@L> "if" <c:Expression0> <b1:BlockStatement> "else" <b2:BlockStatement> <r:@R> => {
+        Statement::IfStatement {
+            loc: Location{start: l, end: r, line: 0, column: 0},
+            condition_expr: c,
+            if_block: b1,
+            else_block: Some(b2),
+        }
+    },
+};
+BlockStatement: Vec<Statement> = "{" <s:Script> "}" => s;
+
+
+// Below statements don't produce value(so, not expression), just perform an action.
+LocktimeStatement: Statement = <l:@L> <op:LocktimeOp> <operand:UnsignedInteger> <r:@R> <s:SemiColon> => {
+    Statement::LocktimeStatement {
+        loc: Location{start: l, end: r, line: 0, column: 0},
+        op: op,
+        operand: operand as i64
+    }
+};
+// Bitcoin specific language sytax. verify signature against public key
+VerifyStatement: Statement = <l:@L> "verify" <e:Expression0> <r:@R> <s:SemiColon> => {
+    Statement::VerifyStatement(Location{start: l, end: r, line: 0, column: 0}, e)
+};
+
+// Allow expression statement
+ExpressionStatement: Statement = <l:@L> "return" <e:Expression0> <r:@R> <s:SemiColon> => {
+    Statement::ExpressionStatement(Location{start: l, end: r, line: 0, column: 0}, e)
+};
+
+pub Expression0: Expression = {
+    <LogicalExpression>,
+    <Expression1>,
+};
+
+pub Expression1: Expression = {
+    <CompareExpression>,
+    <Expression2>,
+};
+
+pub Expression2: Expression = {
+    <BinaryMathExpression>,
+    <Expression3>,
+};
+
+pub Expression3: Expression = {
+    <UnaryMathExpression>,
+    <UnaryCryptoExpression>,
+    <CheckSigExpression>,
+    <ByteExpression>,
+    <Expression4>,
+};
+
+pub Expression4: Expression = {
+    <l:@L> <e:Identifier> <r:@R> => Expression::Variable(Location{start: l, end: r, line: 0, column: 0}, e),
+    <l:@L> <e:BooleanLiteral> <r:@R> => Expression::BooleanLiteral(Location{start: l, end: r, line: 0, column: 0}, e),
+    <l:@L> <e:StringLiteral> <r:@R> => Expression::StringLiteral(Location{start: l, end: r, line: 0, column: 0}, e),
+    <l:@L> <e:NumberLiteral> <r:@R> => Expression::NumberLiteral(Location{start: l, end: r, line: 0, column: 0}, e),
+    <o: OpenParen> <e: Expression0> <c: CloseParen> => e,
+};
+
+LogicalExpression: Expression = {
+    <l:@L> <lhs:Expression0> <c:BinaryLogicalOp> <rhs:Expression1> <r:@R> => {
+        Expression::LogicalExpression {
+            loc: Location{start: l, end: r, line: 0, column: 0},
+            lhs: Box::new(lhs),
+            op: c,
+            rhs: Box::new(rhs),
+        }
+    }
+}
+
+// By separating CmpExpr, you can ensure that boolean operators (&&, ||) only operate on boolean values, 
+// and arithmetic operators (+, -, *, /) only operate on numeric values.
+CompareExpression: Expression = {
+    <l:@L> <lhs:Expression2> <c:BinaryCompareOp> <rhs:Expression2> <r:@R> => {
+        Expression::CompareExpression {
+            loc: Location{start: l, end: r, line: 0, column: 0},
+            lhs: Box::new(lhs),
+            op: c,
+            rhs: Box::new(rhs),
+        }
+    }
+}
+
+UnaryMathExpression: Expression = {
+    <l:@L> <op:UnaryMathOp> <operand:Expression3> <r:@R> => {
+        Expression::UnaryMathExpression {
+            loc: Location{start: l, end: r, line: 0, column: 0},
+            op: op,
+            operand: Box::new(operand),
+        }
+    }
+};
+
+BinaryMathExpression: Expression = {
+    <l:@L> <lhs:Expression2> <op:InfixBinaryMathOp> <rhs:Expression3> <r:@R> => {
+        Expression::BinaryMathExpression {
+            loc: Location{start: l, end: r, line: 0, column: 0},
+            lhs: Box::new(lhs),
+            op: op,
+            rhs: Box::new(rhs),
+        }
+    },
+    <l:@L> <op:PostfixBinaryMathOp> <p1: OpenParen> <lhs:Expression2> <c: Comma> <rhs:Expression3> <p2: CloseParen> <r:@R> => {
+        Expression::BinaryMathExpression {
+            loc: Location{start: l, end: r, line: 0, column: 0},
+            lhs: Box::new(lhs),
+            op: op,
+            rhs: Box::new(rhs),
+        }
+    }
+};
+
+UnaryCryptoExpression: Expression = {
+    <l:@L> <op:UnaryCryptoOp> <operand:Expression3> <r:@R> => {
+        Expression::UnaryCryptoExpression {
+            loc: Location{start: l, end: r, line: 0, column: 0},
+            op: op,
+            operand: Box::new(operand),
+        }
+    },
+}
+
+CheckSigExpression: Expression = {
+    <l:@L> <op:CheckSigOp> <operand: SingleSigFactor> <r:@R> => {
+        Expression::CheckSigExpression {
+            loc: Location{start: l, end: r, line: 0, column: 0},
+            op: op,
+            operand: Box::new(operand),
+        }
+    },
+    <l:@L> <op:CheckSigOp> <operand:MultiSigFactor> <r:@R> => {
+        Expression::CheckSigExpression {
+            loc: Location{start: l, end: r, line: 0, column: 0},
+            op: op,
+            operand: Box::new(operand),
+        }
+    }
+}
+
+ByteExpression: Expression = {
+    <l:@L> <op:ByteOp> <operand:Expression3> <r:@R> => {
+        Expression::ByteExpression {
+            loc: Location{start: l, end: r, line: 0, column: 0},
+            op: op,
+            operand: Box::new(operand),
+        }
+    }
+}
+
+// For multi-sig
+pub MultiSigFactor: Factor = {
+    <l:@L> <o: OpenBracket> <m:UnsignedInteger> <n:CommaSingleSigFactor*> <c: CloseBracket> <r:@R> => {
+        Factor::MultiSigFactor{
+            loc: Location{start: l, end: r, line: 0, column: 0},
+            m: m as u32,
+            n: n,
+        }
+    }
+};
+
+pub SingleSigFactor: Factor = {
+    <l:@L> <o: OpenParen> <sig:Expression4> <comma:Comma> <pubkey:Expression4> <c: CloseParen> <r:@R> => {
+        Factor::SingleSigFactor {
+            loc: Location{start: l, end: r, line: 0, column: 0},
+            sig: Box::new(sig),
+            pubkey: Box::new(pubkey),
+        }
+    }
+}
+
+pub CommaSingleSigFactor: Factor = <c:Comma> <f:SingleSigFactor> => f;
+
+// Below are Token
+// Terminal sequence in the context of lexer(tokenizer)
+
+// Unary Ops
+UnaryMathOp: UnaryMathOp = {
+    "++" => UnaryMathOp::Add, // OP_1ADD
+    "--" => UnaryMathOp::Sub, // OP_1SUB
+    "negate" => UnaryMathOp::Negate, // OP_NEGATE
+    "abs" => UnaryMathOp::Abs, // OP_ABS
+    "!" => UnaryMathOp::Not, // OP_NOT
+}
+
+// Binary Ops(Minus can be both Unary and Binary)
+// 1. infix
+InfixBinaryMathOp: BinaryMathOp = {
+    "+" => BinaryMathOp::Add, // OP_ADD
+    "-" => BinaryMathOp::Sub, // OP_SUB
+}
+// 2. postfix(Reverse Polish Notation)
+PostfixBinaryMathOp: BinaryMathOp = {
+    "max" => BinaryMathOp::Max, // OP_MAX
+    "min" => BinaryMathOp::Min, // OP_SUB
+}
+
+BinaryLogicalOp: BinaryLogicalOp = {
+    "||" => BinaryLogicalOp::BoolOr, // OP_BOOLOR
+    "&&" => BinaryLogicalOp::BoolAnd, // OP_BOOLAND
+};
+
+BinaryCompareOp: BinaryCompareOp = {
+    "==" => BinaryCompareOp::Equal, // OP_EQUAL
+    "!=" => BinaryCompareOp::NotEqual, // OP_EQUAL OP_NOT
+    ">"  => BinaryCompareOp::Greater, // OP_GREATERTHAN
+    ">=" => BinaryCompareOp::GreaterOrEqual, // OP_GREATERTHANOREQUAL
+    "<"  => BinaryCompareOp::Less, // OP_LESSTHAN
+    "<=" => BinaryCompareOp::LessOrEqual, // OP_LESSTHANOREQUAL
+};
+
+CheckSigOp: CheckSigOp = {
+    "checksig" => CheckSigOp::CheckSig, // OP_CHECKSIG
+}
+
+UnaryCryptoOp: UnaryCryptoOp = {
+    "sha256" => UnaryCryptoOp::Sha256, // OP_SHA256
+    "ripemd160" => UnaryCryptoOp::Ripemd160, // OP_RIPEMD160
+}
+
+ByteOp: ByteOp = {
+    "len" => ByteOp::Size, // OP_SIZE
+}
+
+LocktimeOp: LocktimeOp = {
+    "after" => LocktimeOp::Cltv, // OP_CHECKLOCKTIMEVERIFY
+    "older" => LocktimeOp::Csv, // OP_CHECKSEQUENCEVERIFY
+}
+
+Assign: String           = "="  => "=".to_string();
+
+// Puctuation
+Dot: String = "." => ".".to_string();
+Comma: String = "," => ",".to_string();
+Colon: String = ":" => ":".to_string();
+SemiColon: String = ";" => ";".to_string();
+OpenParen: String = "(" => "(".to_string();
+CloseParen: String = ")" => ")".to_string();
+OpenBrace: String = "{" => "{".to_string();
+CloseBrace: String = "}" => "}".to_string();
+OpenBracket: String = "[" => "[".to_string();
+CloseBracket: String = "]" => "]".to_string();
+
+// Below are terminals(more precisely, output terminals)
+// Must be leaf node of AST
+
+Type: Type = {
+    "bool" => Type::Boolean,
+    "string" => Type::String,
+    "number" => Type::Number,
+    "signature" => Type::Signature,
+}
+
+pub BooleanLiteral: bool = {
+    "true" => true,
+    "false" => false,
+}
+
+pub NumberLiteral: i64 = {
+     <p:UnsignedInteger> => p,
+    // Unary minus at the Integer level(Precedence of fixed strings exists)
+    // LALRPOP prefers to find the longest match first. 
+    // After that, if there are two matches of equal length, it prefers the fixed string
+    "-" <p:UnsignedInteger> => -p,
+};
+
+pub Identifier: Identifier = <v:"IDENTIFIER"> => Identifier(v.to_string());
+pub StringLiteral: String = <l:"STRING_LITERAL"> => l[1..l.len()-1].into();
+pub UnsignedInteger: i64 = <s:"UNSIGNED_INTEGER"> => {
+    i64::from_str(s).unwrap()
+};
+
+// --- LEXER DEFINITION (MATCH BLOCK) ---
+// This block controls the lexer, including comments.
+
+match {
+    // 1. IGNORE PATTERNS:
+    // These are skipped by the parser.
+    r"\s*" => { },
+    r"//[^\n\r]*[\n\r]*" => { },
+    r"/\*[^*]*\*+(?:[^/*][^*]*\*+)*/" => { },
+
+} else {
+    // 2. TOKEN DEFINITIONS:
+    // These regexes are converted into the terminals
+    // that your `pub` rules above now reference.
+    
+    // "STRING_LITERAL"
+    r#""(\\\\|\\"|[^"\\])*""# => "STRING_LITERAL",
+    
+    // "UNSIGNED_INTEGER"
+    r"[0-9]+" => "UNSIGNED_INTEGER",
+
+    // --- KEYWORDS ---
+    // We must list all keywords that look like identifiers *before*
+    // the main "IDENTIFIER" rule. This gives them priority.
+    "pragma" => "pragma",
+    "version" => "version",
+    "target" => "target",
+    "bithoven" => "bithoven",
+    "legacy" => "legacy",
+    "segwit" => "segwit",
+    "taproot" => "taproot",
+    "if" => "if",
+    "else" => "else",
+    "return" => "return",
+    "verify" => "verify",
+    "older" => "older",
+    "after" => "after",
+    "negate" => "negate",
+    "abs" => "abs",
+    "max" => "max",
+    "min" => "min",
+    "checksig" => "checksig",
+    "sha256" => "sha256",
+    "ripemd160" => "ripemd160",
+    "len" => "len",
+    "bool" => "bool",
+    "string" => "string",
+    "number" => "number",
+    "signature" => "signature",
+    "true" => "true",
+    "false" => "false",
+
+    // --- PUNCTUATION ---
+    // All other string literals must also be defined here.
+    "=" => "=",
+    "." => ".",
+    "," => ",",
+    ":" => ":",
+    ";" => ";",
+    "(" => "(",
+    ")" => ")",
+    "{" => "{",
+    "}" => "}",
+    "[" => "[",
+    "]" => "]",
+    "++" => "++",
+    "--" => "--",
+    "!" => "!",
+    "+" => "+",
+    "-" => "-",
+    "||" => "||",
+    "&&" => "&&",
+    "==" => "==",
+    "!=" => "!=",
+    ">"  => ">",
+    ">=" => ">=",
+    "<"  => "<",
+    "<=" => "<=",
+    
+    // "IDENTIFIER"
+    // This MUST come last, after all keywords.
+    r"[a-zA-Z_][a-zA-Z0-9_]*" => "IDENTIFIER",
+}
+
+// When there's Ambiguities between regular expressions,
+// Use a match declaration, which lets you control the precedence between regular expressions.
+// A match declaration lets you explicitly give the precedence between terminals
+/*
+match {
+    r"[0-9]+"
+} else {
+    r"\w+",
+    _
+}
+*/

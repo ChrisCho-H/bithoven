@@ -1,0 +1,35 @@
+pragma bithoven version 0.0.1;
+pragma bithoven target segwit;
+
+(sig_alice: signature, preimage: string, preimage_not: string, 
+    num1: number, num2: number, num3: number, str: string)
+(sig_alice: signature, preimage: string, preimage_not: string, 
+    num1: number, num2: number, num3: number, str: string, num4: number)
+{
+    verify 2-4 < max (2, (3 + 4));
+    verify checksig (sig_alice, "0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212");
+    verify sha256 "scret secrt" != sha256 preimage;
+    verify 2+ 4 == !(sha256 "scret secrt" != sha256 preimage_not);
+    verify ++2 + (len sha256 sha256 1 == ((sha256 num1 == sha256 num2) == len ripemd160 num3));
+    verify (1 > 2) + (3 > 4) + (2 > 3) == 0; 
+    verify 2 + 2 + 2; 
+    older 65535;
+    after 122;
+    verify 2+ 4 != !(sha256 "scret secrt" != sha256 "not_equal");
+    verify !(2 >= 200);
+    verify "abc";
+    verify 16;
+    verify 17;
+    verify true;
+    
+    verify ! abs negate -- ++ len sha256 ripemd160 sha256 (2 + ripemd160 sha256 3 + 2);
+    verify (3 > 4) + (3 > 4) + (3 > 4) + (3 < 4) >= 2;
+    verify 2 - -- -4;
+    verify max(-2+3, len "abc");
+    if (str == "bithoven2") && (4 >= 4) {
+        older 222;
+        return (3 > 4) + (3 > 4) + (3 > 4) + (3 < 4) >= 2;
+    } else {
+        return sha256(len(--sha256(2) - -- negate num4));
+    }
+}
