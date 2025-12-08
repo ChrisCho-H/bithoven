@@ -1,9 +1,12 @@
-pub mod analyze;
-pub mod analyze_test;
-pub mod ast;
-pub mod compile;
-pub mod parser_test;
-pub mod source;
+mod analyze;
+mod analyze_test;
+mod ast;
+mod compile;
+mod parser_test;
+mod source;
+
+// Re-export only type for error.
+pub use ast::{CompileError, ErrorKind, Location};
 
 use ast::*;
 use compile::*;
@@ -21,7 +24,7 @@ use lalrpop_util::ParseError;
 use std::fmt::Debug;
 use std::result::Result;
 
-lalrpop_mod!(pub bithoven); // synthesized by LALRPOP
+lalrpop_mod!(bithoven); // synthesized by LALRPOP
 
 // Define the data structure you want to write to JSON
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -62,7 +65,7 @@ impl BithovenOutput {
     }
 }
 
-pub fn parse(source: String) -> Result<Bithoven, CompileError> {
+fn parse(source: String) -> Result<Bithoven, CompileError> {
     let line_index = build_line_index(&source);
     match bithoven::BithovenParser::new().parse(&source) {
         Ok(mut utxo) => {
@@ -104,18 +107,28 @@ pub fn parse(source: String) -> Result<Bithoven, CompileError> {
         }
     }
 }
-
+/// Compiles Bithoven source code into Bitcoin Script.
+///
+/// # Arguments
+///
+/// * `source` - A string containing the source code
+///
+/// # Returns
+///
+/// A `BithovenOutput` containing ASM, Hex, and Bytes.
 #[wasm_bindgen]
-pub fn parse_compile_analyze(source: String) -> Result<BithovenOutput, JsValue> {
-    // UTXO: stack + scripts - bitcoin HTLC
+pub fn compile_program(source: String) -> Result<BithovenOutput, CompileError> {
+    // Parse
     let utxo: Bithoven = parse(source)?;
 
+    // Analyze
     analyze(
         &utxo.output_script,
         utxo.input_stack.clone(),
         &utxo.pragma.target,
     )?;
 
+    // Compile
     let script = compile(utxo.output_script.clone(), &utxo.pragma.target);
 
     Ok(BithovenOutput::new(

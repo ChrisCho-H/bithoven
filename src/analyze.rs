@@ -190,7 +190,7 @@ pub fn check_unused_variable(
         {
             return Err(CompileError {
                 loc: e.to_owned().loc(),
-                kind: ErrorKind::UnusedVariable(format!("Variable unsed: {:?}.", e.identifier)),
+                kind: ErrorKind::UnusedVariable(format!("Variable unused: {:?}.", e.identifier)),
             });
         }
     }

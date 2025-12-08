@@ -2,9 +2,19 @@
 name = "bithoven"
 version = "0.0.1"
 edition = "2021"
+description = "A smart contract language for composing powerful and secure instruments on Bitcoin."
+license = "MIT"
+repository = "https://github.com/ChrisCho-H/bithoven"
+homepage = "https://github.com/ChrisCho-H/bithoven"
+documentation = "https://docs.rs/bithoven"
+readme = "README.md"
+keywords = ["bitcoin", "compiler", "smart-contracts", "blockchain"]
+categories = ["compilers", "command-line-utilities"]
 
 [lib]
-crate-type = ["cdylib"]
+name = "bithoven"
+path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
 
 [build-dependencies]
 lalrpop = { version = "0.22.1" }
