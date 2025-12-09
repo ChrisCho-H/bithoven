@@ -2,8 +2,8 @@ pragma bithoven version 0.0.1;
 pragma bithoven target segwit;
 
 (sig_owner: signature)
-(secret: string, sig_heir: signature)
-(sig_lawyer: signature, sig_audit: signature)
+(sig_owner: signature, secret: string, sig_heir: signature)
+(sig_owner: signature, secret: string, sig_heir: signature, sig_lawyer: signature, sig_audit: signature)
 {   
     // Owner can redeem only by providing signature.
     if checksig(sig_owner,
