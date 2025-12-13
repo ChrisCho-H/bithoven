@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "deploy-home": "gh-pages -d ./ --add",
+    "deploy-docs": "gh-pages -d ./ --dest docs --add"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
+  }
+}
