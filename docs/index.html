@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bithoven Developer Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <style>
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+
+      /* Syntax Highlighting Mockup */
+      .code-keyword {
+        color: #d73a49;
+        font-weight: bold;
+      } /* Pragma, return, if, else */
+      .code-type {
+        color: #eb7dff;
+      } /* signature, bool, string */
+      .code-function {
+        color: #9c67ff;
+      } /* checksig, older, after, sha256 */
+      .code-string {
+        color: orange;
+      } /* "..." */
+      .code-comment {
+        color: #6a737d;
+        font-style: italic;
+      } /* // ... */
+      .code-number {
+        color: #63acff;
+      } /* 1000 */
+
+      /* Smooth Scroll behavior */
+      html {
+        scroll-behavior: smooth;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 text-gray-800 font-sans antialiased">
+    <!-- Navbar -->
+    <nav
+      class="fixed top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm"
+    >
+      <div class="px-3 py-3 lg:px-5 lg:pl-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center justify-start rtl:justify-end">
+            <button
+              id="sidebar-toggle"
+              type="button"
+              class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg lg:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200"
+            >
+              <span class="sr-only">Open sidebar</span>
+              <svg
+                class="w-6 h-6"
+                aria-hidden="true"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  clip-rule="evenodd"
+                  fill-rule="evenodd"
+                  d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"
+                ></path>
+              </svg>
+            </button>
+            <a href="#" class="flex ms-2 md:ms-4 items-center">
+              <span
+                class="flex items-center justify-center w-4 h-4 rounded text-white mr-3"
+              >
+                🎼
+              </span>
+              <span
+                class="self-center text-xl font-bold sm:text-2xl whitespace-nowrap text-gray-900"
+                >₿ithoven
+                <span class="text-xs font-normal text-gray-500 ml-1"
+                  >v0.0.1</span
+                ></span
+              >
+            </a>
+          </div>
+          <div class="flex items-center gap-4">
+            <a
+              href="https://bithoven-lang.github.io/bithoven/ide/"
+              target="_blank"
+              class="hidden sm:inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300"
+            >
+              <i class="fas fa-code mr-2"></i> Online IDE
+            </a>
+            <a
+              href="https://github.com/ChrisCho-H/bithoven"
+              target="_blank"
+              class="text-gray-500 hover:text-gray-900"
+            >
+              <i class="fab fa-github text-xl"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <aside
+      id="logo-sidebar"
+      class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-white border-r border-gray-200 lg:translate-x-0"
+      aria-label="Sidebar"
+    >
+      <div class="h-full px-3 pb-4 overflow-y-auto bg-white">
+        <ul class="space-y-2 font-medium text-sm">
+          <li>
+            <a
+              href="#introduction"
+              class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group"
+            >
+              <span class="ms-3">1. Introduction</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="#getting-started"
+              class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group"
+            >
+              <span class="ms-3">2. Getting Started</span>
+            </a>
+            <ul class="pl-6 mt-1 space-y-1 text-gray-500">
+              <li>
+                <a href="#installation" class="hover:text-blue-600 block py-1"
+                  >Installation</a
+                >
+              </li>
+              <li>
+                <a href="#ide" class="hover:text-blue-600 block py-1"
+                  >Online IDE</a
+                >
+              </li>
+            </ul>
+          </li>
+          <li>
+            <a
+              href="#structure"
+              class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group"
+            >
+              <span class="ms-3">3. Structure of a Contract</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="#basics"
+              class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group"
+            >
+              <span class="ms-3">4. Language Basics</span>
+            </a>
+            <ul class="pl-6 mt-1 space-y-1 text-gray-500">
+              <li>
+                <a href="#pragmas" class="hover:text-blue-600 block py-1"
+                  >Pragmas</a
+                >
+              </li>
+              <li>
+                <a href="#types" class="hover:text-blue-600 block py-1"
+                  >Types</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#stack-definitions"
+                  class="hover:text-blue-600 block py-1"
+                  >Stack Definitions</a
+                >
+              </li>
+            </ul>
+          </li>
+          <li>
+            <a
+              href="#control-flow"
+              class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group"
+            >
+              <span class="ms-3">5. Control Flow</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="#primitives"
+              class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group"
+            >
+              <span class="ms-3">6. Bitcoin Primitives</span>
+            </a>
+            <ul class="pl-6 mt-1 space-y-1 text-gray-500">
+              <li>
+                <a href="#timelocks" class="hover:text-blue-600 block py-1"
+                  >Time Locks</a
+                >
+              </li>
+              <li>
+                <a href="#crypto" class="hover:text-blue-600 block py-1"
+                  >Cryptography</a
+                >
+              </li>
+            </ul>
+          </li>
+          <li>
+            <a
+              href="#security"
+              class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group"
+            >
+              <span class="ms-3">7. Security Features</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="#examples"
+              class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group"
+            >
+              <span class="ms-3">8. Examples</span>
+            </a>
+            <ul class="pl-6 mt-1 space-y-1 text-gray-500">
+              <li>
+                <a href="#example-htlc" class="hover:text-blue-600 block py-1"
+                  >HTLC</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#example-inheritance"
+                  class="hover:text-blue-600 block py-1"
+                  >Inheritance Plan</a
+                >
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="p-4 lg:ml-64 pt-20 max-w-4xl mx-auto">
+      <!-- Hero Section -->
+      <div class="mb-10 border-b pb-10">
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-4">
+          Bithoven Developer Guide
+        </h1>
+        <p class="text-xl text-gray-600">
+          A guide to building safe, expressive smart contracts on Bitcoin.
+        </p>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <span
+            class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded border border-blue-400"
+            >Version 0.0.1</span
+          >
+          <span
+            class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded border border-green-400"
+            >Beta</span
+          >
+          <span
+            class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded border border-gray-400"
+            >Legacy / Segwit / Taproot</span
+          >
+        </div>
+      </div>
+
+      <!-- 1. Introduction -->
+      <section id="introduction" class="mb-16">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b">
+          1. Introduction
+        </h2>
+        <p class="mb-4 text-gray-700 leading-relaxed">
+          <strong>Bithoven</strong> is a high-level, imperative programming
+          language designed for Bitcoin smart contracts. It bridges the gap
+          between complex contract logic and the low-level stack machine of the
+          Bitcoin Virtual Machine (VM).
+        </p>
+        <p class="mb-6 text-gray-700 leading-relaxed">
+          Unlike writing raw Bitcoin Script—which is notoriously difficult and
+          error-prone—Bithoven allows you to write readable, auditable code with
+          modern control flow (<code
+            class="bg-gray-100 px-1 rounded text-red-600 text-sm"
+            >if/else</code
+          >), named variables, and built-in safety checks. It compiles down to
+          highly optimized native Bitcoin Script.
+        </p>
+
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+          <p class="font-bold text-blue-800 mb-1">Why Bithoven?</p>
+          <ul class="list-disc list-inside text-blue-700 text-sm space-y-1">
+            <li>
+              <strong>Imperative Syntax:</strong> Use familiar control flow
+              instead of mental stack juggling.
+            </li>
+            <li>
+              <strong>Formal Safety:</strong> The compiler prevents
+              "anyone-can-spend" bugs and signature reuse.
+            </li>
+            <li>
+              <strong>Zero-Cost Abstraction:</strong> Compiles to efficient
+              opcodes with minimal overhead.
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 2. Getting Started -->
+      <section id="getting-started" class="mb-16">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b">
+          2. Getting Started
+        </h2>
+
+        <h3 id="installation" class="text-xl font-semibold text-gray-800 mb-3">
+          Installation
+        </h3>
+        <p class="mb-4 text-gray-700">
+          You can install the Bithoven compiler via the command line or package
+          managers.
+        </p>
+
+        <div
+          class="bg-gray-900 rounded-lg p-4 mb-6 text-white font-mono text-sm overflow-x-auto shadow-lg"
+        >
+          <div
+            class="flex justify-between items-center mb-2 text-gray-400 text-xs border-b border-gray-700 pb-2"
+          >
+            <span>Terminal</span>
+            <button
+              class="hover:text-white"
+              onclick="copyToClipboard('install-code')"
+            >
+              <i class="far fa-copy"></i>
+            </button>
+          </div>
+          <div id="install-code">
+            <span class="text-green-400"># For Rust Users</span>
+            <br />cargo add bithoven
+            <br />
+            <br /><span class="text-green-400"># For Node.js Users</span>
+            <br />npm install bithoven
+            <br />
+            <br /><span class="text-green-400"># CLI Tool</span> <br />cargo
+            install bithoven
+          </div>
+        </div>
+
+        <h3 id="ide" class="text-xl font-semibold text-gray-800 mb-3">
+          Online IDE
+        </h3>
+        <p class="mb-4 text-gray-700">
+          Try Bithoven instantly in your browser without installation:
+        </p>
+        <a
+          href="https://bithoven-lang.github.io/bithoven/ide/"
+          target="_blank"
+          class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
+        >
+          Go to Bithoven Online IDE
+          <i class="fas fa-external-link-alt ml-2 text-sm"></i>
+        </a>
+      </section>
+
+      <!-- 3. Structure -->
+      <section id="structure" class="mb-16">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b">
+          3. Structure of a Contract
+        </h2>
+        <p class="mb-4 text-gray-700">
+          A Bithoven contract (file extension
+          <code class="bg-gray-100 text-gray-800 text-sm px-1 rounded"
+            >.bithoven</code
+          >) consists of three main parts:
+        </p>
+        <ol class="list-decimal list-inside space-y-2 mb-6 text-gray-700">
+          <li><strong>Pragmas:</strong> Compiler directives.</li>
+          <li>
+            <strong>Stack Definitions:</strong> The expected input variables
+            (Witness data).
+          </li>
+          <li><strong>Logic Block:</strong> The executable code.</li>
+        </ol>
+
+        <h4 class="font-bold text-gray-800 mb-2">Example: Single Signature</h4>
+        <div
+          class="bg-gray-50 border border-gray-200 rounded-lg p-4 font-mono text-sm overflow-x-auto"
+        >
+          <span class="code-comment">// 1. Pragmas</span>
+          <br /><span class="code-keyword">pragma</span> bithoven version 0.0.1;
+          <br /><span class="code-keyword">pragma</span> bithoven target segwit;
+          <br />
+          <br /><span class="code-comment"
+            >// 2. Stack Input Definitions (The "Witness")</span
+          >
+          <br />(sig_alice: <span class="code-type">signature</span>)
+          <br />
+          <br /><span class="code-comment">// 3. Logic Block</span> <br />{
+          <br />&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span>
+          <span class="code-function">checksig</span>(sig_alice,
+          <span class="code-string"
+            >"0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212"</span
+          >); <br />}
+        </div>
+      </section>
+
+      <!-- 4. Language Basics -->
+      <section id="basics" class="mb-16">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b">
+          4. Language Basics
+        </h2>
+
+        <h3 id="pragmas" class="text-xl font-semibold text-gray-800 mb-3">
+          Pragmas
+        </h3>
+        <p class="mb-4 text-gray-700">
+          Pragmas define the compiler version and the Bitcoin protocol target.
+          The
+          <code class="bg-gray-100 px-1 rounded text-sm text-red-600"
+            >target</code
+          >
+          controls opcode generation.
+        </p>
+        <ul
+          class="list-disc list-inside mb-4 text-gray-700 ml-4 space-y-1 text-sm"
+        >
+          <li>
+            <code class="font-bold">legacy</code>: Generates P2SH-compatible
+            script.
+          </li>
+          <li>
+            <code class="font-bold">segwit</code>: Generates P2WSH-compatible
+            script.
+          </li>
+          <li>
+            <code class="font-bold">taproot</code>: Generates P2TR-compatible
+            script (uses
+            <code class="bg-gray-100 px-1 rounded">OP_CHECKSIGADD</code>).
+          </li>
+        </ul>
+
+        <h3 id="types" class="text-xl font-semibold text-gray-800 mb-3">
+          Types
+        </h3>
+        <div class="overflow-x-auto">
+          <table
+            class="w-full text-sm text-left text-gray-500 border rounded-lg"
+          >
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 border-b">Type</th>
+                <th scope="col" class="px-6 py-3 border-b">Description</th>
+                <th scope="col" class="px-6 py-3 border-b">Example</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="bg-white border-b">
+                <td class="px-6 py-4 font-mono font-bold text-blue-600">
+                  bool
+                </td>
+                <td class="px-6 py-4">Boolean values</td>
+                <td class="px-6 py-4 font-mono">true</td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-6 py-4 font-mono font-bold text-blue-600">
+                  number
+                </td>
+                <td class="px-6 py-4">Integer values (32-bit signed)</td>
+                <td class="px-6 py-4 font-mono">1000</td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-6 py-4 font-mono font-bold text-blue-600">
+                  string
+                </td>
+                <td class="px-6 py-4">Hex or ASCII string data</td>
+                <td class="px-6 py-4 font-mono">"secret"</td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-6 py-4 font-mono font-bold text-blue-600">
+                  signature
+                </td>
+                <td class="px-6 py-4">ECDSA or Schnorr signatures</td>
+                <td class="px-6 py-4 font-mono">sig_alice</td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-6 py-4 font-mono font-bold text-blue-600">
+                  pubkey
+                </td>
+                <td class="px-6 py-4">Valid public key point</td>
+                <td class="px-6 py-4 font-mono">"0245..."</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3
+          id="stack-definitions"
+          class="text-xl font-semibold text-gray-800 mt-6 mb-3"
+        >
+          Stack Input Definitions
+        </h3>
+        <p class="mb-4 text-gray-700">
+          Bithoven allows you to define multiple valid "spending paths" at the
+          top of your file. The compiler verifies that
+          <strong>every</strong> path is secure.
+        </p>
+        <div
+          class="bg-gray-50 border border-gray-200 rounded-lg p-4 font-mono text-sm"
+        >
+          (condition: <span class="code-type">bool</span>, sig_alice:
+          <span class="code-type">signature</span>)
+          <span class="code-comment">// Path A</span> <br />(condition:
+          <span class="code-type">bool</span>, preimage:
+          <span class="code-type">string</span>, sig_bob:
+          <span class="code-type">signature</span>)
+          <span class="code-comment">// Path B</span>
+        </div>
+      </section>
+
+      <!-- 5. Control Flow -->
+      <section id="control-flow" class="mb-16">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b">
+          5. Control Flow
+        </h2>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="text-lg font-bold text-gray-800 mb-2">Conditionals</h3>
+            <p class="text-sm text-gray-600 mb-2">
+              Use standard if/else logic.
+            </p>
+            <div
+              class="bg-gray-50 border border-gray-200 rounded-lg p-3 font-mono text-xs"
+            >
+              <span class="code-keyword">if</span> condition {
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment"
+                >// Branch A</span
+              >
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword"
+                >return</span
+              >
+              <span class="code-type">true</span>; <br />}
+              <span class="code-keyword">else</span> {
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment"
+                >// Branch B</span
+              >
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword"
+                >return</span
+              >
+              <span class="code-type">false</span>; <br />}
+            </div>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-gray-800 mb-2">Assertions</h3>
+            <p class="text-sm text-gray-600 mb-2">Halts execution if false.</p>
+            <div
+              class="bg-gray-50 border border-gray-200 rounded-lg p-3 font-mono text-xs"
+            >
+              <span class="code-comment">// Fails transaction if false</span>
+              <br /><span class="code-keyword">verify</span>
+              <span class="code-function">sha256</span>(preimage) ==
+              <span class="code-string">"53de...4e45f"</span>;
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. Bitcoin Primitives -->
+      <section id="primitives" class="mb-16">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b">
+          6. Bitcoin Primitives
+        </h2>
+
+        <h3 id="timelocks" class="text-xl font-semibold text-gray-800 mb-3">
+          Time Locks
+        </h3>
+        <p class="mb-4 text-gray-700">
+          Keywords enforce 32-bit limits automatically.
+        </p>
+        <ul class="space-y-4">
+          <li class="flex items-start">
+            <span
+              class="bg-blue-100 text-blue-800 font-mono text-xs px-2 py-1 rounded mr-3 mt-1"
+              >older &lt;n&gt;</span
+            >
+            <span class="text-gray-700 text-sm"
+              >Relative Timelock (CSV). Input must be older than
+              <code>n</code> blocks.</span
+            >
+          </li>
+          <li class="flex items-start">
+            <span
+              class="bg-blue-100 text-blue-800 font-mono text-xs px-2 py-1 rounded mr-3 mt-1"
+              >after &lt;n&gt;</span
+            >
+            <span class="text-gray-700 text-sm"
+              >Absolute Timelock (CLTV). Block height must be greater than
+              <code>n</code>.</span
+            >
+          </li>
+        </ul>
+
+        <h3 id="crypto" class="text-xl font-semibold text-gray-800 mt-6 mb-3">
+          Cryptography
+        </h3>
+        <p class="mb-2 text-gray-700 text-sm">
+          <strong>Hashing:</strong>
+          <code class="font-mono bg-gray-100 px-1">sha256(data)</code>,
+          <code class="font-mono bg-gray-100 px-1">ripemd160(data)</code>
+        </p>
+
+        <p class="mb-2 text-gray-700 text-sm mt-4">
+          <strong>Signature Checks:</strong> Supports single and multisig via
+          <code class="font-mono text-blue-600 font-bold">checksig</code>.
+        </p>
+
+        <div
+          class="bg-gray-50 border border-gray-200 rounded-lg p-4 font-mono text-sm mb-4"
+        >
+          <span class="code-comment">// Single Signature</span>
+          <br /><span class="code-function">checksig</span>(sig_var,
+          <span class="code-string">"pubkey_hex"</span>)
+          <br />
+          <br /><span class="code-comment">// 2-of-2 Multisig</span> <br /><span
+            class="code-function"
+            >checksig</span
+          >
+          [<span class="code-number">2</span>,
+          <br />&nbsp;&nbsp;&nbsp;&nbsp;(sig_alice,
+          <span class="code-string">"pk_alice_hex"</span>),
+          <br />&nbsp;&nbsp;&nbsp;&nbsp;(sig_bob,
+          <span class="code-string">"pk_bob_hex"</span>) <br />]
+        </div>
+      </section>
+
+      <!-- 7. Security -->
+      <section id="security" class="mb-16">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b">
+          7. Security Features
+        </h2>
+        <p class="mb-6 text-gray-700">
+          Bithoven is "Correct-by-Construction." The static analyzer runs during
+          compilation.
+        </p>
+
+        <div class="grid md:grid-cols-3 gap-6">
+          <div
+            class="p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition"
+          >
+            <div
+              class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 mb-4"
+            >
+              <i class="fas fa-recycle"></i>
+            </div>
+            <h5 class="mb-2 text-lg font-bold tracking-tight text-gray-900">
+              Liveness Safety
+            </h5>
+            <p class="font-normal text-gray-700 text-sm">
+              Ensures every variable (especially signatures) is consumed exactly
+              once. Prevents signature reuse and resource exhaustion.
+            </p>
+          </div>
+          <div
+            class="p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition"
+          >
+            <div
+              class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 mb-4"
+            >
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <h5 class="mb-2 text-lg font-bold tracking-tight text-gray-900">
+              Semantic Security
+            </h5>
+            <p class="font-normal text-gray-700 text-sm">
+              Analyzes execution paths to ensure safe termination. Prevents
+              Anyone-Can-Spend bugs.
+            </p>
+          </div>
+          <div
+            class="p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition"
+          >
+            <div
+              class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-4"
+            >
+              <i class="fas fa-check-double"></i>
+            </div>
+            <h5 class="mb-2 text-lg font-bold tracking-tight text-gray-900">
+              Type Safety
+            </h5>
+            <p class="font-normal text-gray-700 text-sm">
+              Strictly validates types. Prevents consensus failures like
+              arithmetic on strings or invalid public key points.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8. Examples -->
+      <section id="examples" class="mb-20">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b">
+          8. Examples
+        </h2>
+
+        <div class="mb-10">
+          <h3
+            id="example-htlc"
+            class="text-xl font-semibold text-gray-800 mb-2"
+          >
+            Hashed Time-Locked Contract (HTLC)
+          </h3>
+          <p class="mb-4 text-gray-600 text-sm">
+            A standard contract used in Lightning Network. Alice can refund
+            after a delay; Bob can redeem immediately with a secret.
+          </p>
+
+          <div class="relative group">
+            <div
+              class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition"
+            >
+              <button
+                class="bg-gray-700 text-white text-xs px-2 py-1 rounded hover:bg-gray-600"
+                onclick="copyToClipboard('code-htlc')"
+              >
+                Copy
+              </button>
+            </div>
+            <div
+              id="code-htlc"
+              class="bg-gray-800 text-gray-100 p-4 rounded-lg font-mono text-sm overflow-x-auto"
+            >
+              <span class="code-keyword">pragma</span> bithoven version 0.0.1;
+              <br /><span class="code-keyword">pragma</span> bithoven target
+              segwit;
+              <br />
+              <br /><span class="code-comment"
+                >// Define inputs for both paths</span
+              >
+              <br />(condition: <span class="code-type">bool</span>, sig_alice:
+              <span class="code-type">signature</span>) <br />(condition:
+              <span class="code-type">bool</span>, preimage:
+              <span class="code-type">string</span>, sig_bob:
+              <span class="code-type">signature</span>)
+              <br />
+              <br />{ <br />&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword"
+                >if</span
+              >
+              condition {
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="code-comment"
+                >// Refund Path (Alice)</span
+              >
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="code-function"
+                >older</span
+              >
+              <span class="code-number">1000</span>;
+              <span class="code-comment">// Relative Lock</span>
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="code-keyword"
+                >return</span
+              >
+              <span class="code-function">checksig</span> (sig_alice,
+              <span class="code-string">"0245...alice_pk..."</span>);
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;}
+              <span class="code-keyword">else</span> {
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="code-comment"
+                >// Redeem Path (Bob)</span
+              >
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="code-comment"
+                >// Verify preimage matches hash</span
+              >
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="code-keyword"
+                >verify</span
+              >
+              <span class="code-function">sha256</span>
+              <span class="code-function">sha256</span> preimage ==
+              <span class="code-string">"53de...hash_digest..."</span>;
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="code-keyword"
+                >return</span
+              >
+              <span class="code-function">checksig</span> (sig_bob,
+              <span class="code-string">"0345...bob_pk..."</span>);
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;} <br />}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h3
+            id="example-inheritance"
+            class="text-xl font-semibold text-gray-800 mb-2"
+          >
+            Inheritance Plan with Decay
+          </h3>
+          <p class="mb-4 text-gray-600 text-sm">
+            Owner spends anytime. Heir spends after 1000 blocks with secret.
+            Lawyer+Auditor multisig after 10,000 blocks.
+          </p>
+          <div class="relative group">
+            <div
+              class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition"
+            >
+              <button
+                class="bg-gray-700 text-white text-xs px-2 py-1 rounded hover:bg-gray-600"
+                onclick="copyToClipboard('code-inherit')"
+              >
+                Copy
+              </button>
+            </div>
+            <div
+              id="code-inherit"
+              class="bg-gray-800 text-gray-100 p-4 rounded-lg font-mono text-sm overflow-x-auto"
+            >
+              <span class="code-keyword">pragma</span> bithoven version 0.0.1;
+              <br /><span class="code-keyword">pragma</span> bithoven target
+              segwit;
+              <br />
+              <br /><span class="code-comment"
+                >// Inputs corresponding to the 3 paths</span
+              >
+              <br />(sig_owner: <span class="code-type">signature</span>)
+              <br />(sig_owner: <span class="code-type">signature</span>,
+              secret: <span class="code-type">string</span>, sig_heir:
+              <span class="code-type">signature</span>) <br />(sig_owner:
+              <span class="code-type">signature</span>, secret:
+              <span class="code-type">string</span>, sig_heir:
+              <span class="code-type">signature</span>, sig_lawyer:
+              <span class="code-type">signature</span>, sig_audit:
+              <span class="code-type">signature</span>)
+              <br />
+              <br />{ <br />&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment"
+                >// Path 1: Owner</span
+              >
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">if</span>
+              <span class="code-function">checksig</span>(sig_owner,
+              <span class="code-string">"03da...owner_pk..."</span>) {
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="code-keyword"
+                >return</span
+              >
+              <span class="code-type">true</span>;
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;}
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword"
+                >else</span
+              >
+              { <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="code-function"
+                >older</span
+              >
+              <span class="code-number">1000</span>;
+              <span class="code-comment">// Wait 1000 blocks</span>
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="code-comment"
+                >// Path 2: Heir</span
+              >
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="code-keyword"
+                >if</span
+              >
+              <span class="code-function">sha256</span>(secret) ==
+              <span class="code-string">"daed...hash..."</span>
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&&
+              <span class="code-function">checksig</span>(sig_heir,
+              <span class="code-string">"0344...heir_pk..."</span>) {
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="code-keyword"
+                >return</span
+              >
+              <span class="code-type">true</span>;
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="code-keyword"
+                >else</span
+              >
+              {
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="code-function"
+                >older</span
+              >
+              <span class="code-number">10000</span>;
+              <span class="code-comment">// Wait 10,000 blocks</span>
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="code-comment"
+                >// Path 3: Lawyer + Auditor Multisig</span
+              >
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="code-keyword"
+                >return</span
+              >
+              <span class="code-function">checksig</span>[<span
+                class="code-number"
+                >2</span
+              >,
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(sig_lawyer,
+              <span class="code-string">"03da...lawyer_pk..."</span>),
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(sig_audit,
+              <span class="code-string">"03da...audit_pk..."</span>)
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;];
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+              <br />&nbsp;&nbsp;&nbsp;&nbsp;} <br />}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer
+        class="mt-20 border-t pt-8 pb-8 text-center text-gray-500 text-sm"
+      >
+        <p>&copy; 2025 Bithoven Project. Licensed under MIT.</p>
+        <div class="mt-2 space-x-4">
+          <a href="#" class="hover:text-gray-900">GitHub</a>
+          <a href="#" class="hover:text-gray-900">Issues</a>
+          <a href="#" class="hover:text-gray-900">Contact</a>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+      // Sidebar Toggle for Mobile
+      const sidebarToggle = document.getElementById("sidebar-toggle");
+      const sidebar = document.getElementById("logo-sidebar");
+
+      sidebarToggle.addEventListener("click", () => {
+        sidebar.classList.toggle("-translate-x-full");
+      });
+
+      // Clipboard Copy Function
+      function copyToClipboard(elementId) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+
+        // Create temporary textarea to select text
+        const textarea = document.createElement("textarea");
+        textarea.value = el.innerText;
+        document.body.appendChild(textarea);
+        textarea.select();
+
+        try {
+          document.execCommand("copy");
+          // Could show a toast notification here
+          const btn = event.target;
+          const originalText = btn.innerText;
+          btn.innerText = "Copied!";
+          setTimeout(() => {
+            btn.innerText = originalText;
+          }, 2000);
+        } catch (err) {
+          console.error("Failed to copy text", err);
+        }
+
+        document.body.removeChild(textarea);
+      }
+    </script>
+  </body>
+</html>
