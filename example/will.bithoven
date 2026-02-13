@@ -39,6 +39,7 @@ pragma bithoven target taproot;
         older 52560;
         
         // Check if heir is claiming with secret
+        // NOTE: This hash is for demonstration only - use a secure secret in production!
         if sha256(secret) == "8b7df143d91c716ecfa5fc1730022f6b421b05cedee8fd52b1fc65a96030ad52" {
             return checksig(sig_heir, "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5");
         }

@@ -26,6 +26,7 @@ pragma bithoven target segwit;
     // Check if this is a redeem or refund path
     if is_redeem {
         // Bob must reveal the secret preimage
+        // NOTE: This hash is for demonstration only - use a secure secret in production!
         verify sha256(sha256(preimage)) == "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
         
         // And provide his signature to claim
