@@ -66,7 +66,26 @@ pragma bithoven target segwit;
 }
 ```
 
-**See more examples here:** [Examples](./example)
+## 📖 Examples Gallery
+
+Bithoven comes with a rich collection of examples demonstrating real-world Bitcoin smart contracts:
+
+| Example | Description | Key Features |
+|---------|-------------|--------------|
+| **[HTLC](./example/htlc.bithoven)** | Hash Time-Locked Contract | Hash locks, timelocks, conditional payments |
+| **[Atomic Swap](./example/atomic_swap.bithoven)** | Cross-chain trading | Hash-locked transactions, trustless exchange |
+| **[Escrow](./example/escrow.bithoven)** | 2-of-3 multisig escrow | Multiple spending paths, time-locked refunds |
+| **[Vault](./example/vault.bithoven)** | Security-enhanced wallet | Time-delayed withdrawals, emergency cancel |
+| **[Payment Channel](./example/payment_channel.bithoven)** | Layer 2 micropayments | Cooperative/unilateral close, state commitments |
+| **[Digital Will](./example/will.bithoven)** | Inheritance with dead man's switch | Progressive timelocks, taproot privacy |
+| **[Crowdfund](./example/crowdfund.bithoven)** | Goal-based fundraising | Time-based conditions, refund mechanism |
+| **[Multisig](./example/multisig.bithoven)** | 2-of-2 multisig | Taproot multi-signature support |
+| **[Inheritance](./example/inheritance.bithoven)** | Tiered access control | Multiple heir levels, secret-based access |
+| **[Hashlock](./example/hashlock.bithoven)** | Simple hash lock | SHA256 hash verification |
+| **[Timelock](./example/timelock.bithoven)** | Absolute timelock | CLTV (CheckLockTimeVerify) |
+| **[Single Sig](./example/singlesig.bithoven)** | Basic signature check | Simple P2PKH-style contract |
+
+**See all examples:** [Examples Directory](./example)
 
 ## 🛠 Compilation
 

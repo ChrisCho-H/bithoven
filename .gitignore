@@ -6,6 +6,9 @@ Cargo.lock
 # Build artifacts
 target
 
+# Compiled Bithoven artifacts
+*.bithoven.json
+
 # DS files
 *.DS_Store
 
