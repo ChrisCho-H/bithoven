@@ -1,0 +1,39 @@
+pragma bithoven version 0.0.1;
+pragma bithoven target segwit;
+
+/*
+ * Atomic Swap Contract (HTLC for Cross-Chain Trading)
+ * 
+ * Enables trustless exchange of cryptocurrencies across different blockchains.
+ * Alice locks BTC, Bob locks another coin on different chain with same secret hash.
+ * 
+ * - Redeem: Bob reveals secret to claim BTC (within 48 hours)
+ * - Refund: Alice gets refund after timeout if Bob doesn't claim
+ * 
+ * This showcases:
+ * - Hash-locked transactions for atomic swaps
+ * - Time-bounded offers
+ * - Cross-chain interoperability pattern
+ */
+
+// Path 1: Bob claims with secret (redeem)
+(is_redeem: bool, preimage: string, sig_bob: signature)
+
+// Path 2: Alice refunds after timeout
+(is_redeem: bool, sig_alice: signature)
+
+{
+    // Check if this is a redeem or refund path
+    if is_redeem {
+        // Bob must reveal the secret preimage
+        verify sha256(sha256(preimage)) == "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+        
+        // And provide his signature to claim
+        return checksig(sig_bob, "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432");
+    }
+    else {
+        // After 48 hours (288 blocks), Alice can reclaim her BTC
+        older 288;
+        return checksig(sig_alice, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
+    }
+}

@@ -1,0 +1,48 @@
+pragma bithoven version 0.0.1;
+pragma bithoven target segwit;
+
+/*
+ * 2-of-3 Escrow Contract
+ * 
+ * A trustless escrow where buyer, seller, and arbitrator each hold a key.
+ * Demonstrates multiple spending paths with time-locked refund mechanism.
+ * 
+ * - Path 1: Buyer + Seller agree (happy path)
+ * - Path 2: Arbitrator + Buyer (refund after timeout)
+ * - Path 3: Arbitrator + Seller (dispute resolution)
+ * 
+ * This showcases:
+ * - Multiple spending paths with different signature combinations
+ * - Time-locked refund mechanism  
+ * - Practical real-world escrow use case
+ */
+
+// Path 1: Buyer + Seller agree (happy path)
+(sig_buyer: signature, sig_seller: signature)
+
+// Path 2: Arbitrator + Buyer (refund after 30 days)
+(sig_buyer_refund: signature, sig_arbitrator_refund: signature)
+
+// Path 3: Arbitrator + Seller (dispute resolution)
+(sig_seller_dispute: signature, sig_arbitrator_dispute: signature)
+
+{
+    // Try buyer + seller path first (happy path)
+    if checksig(sig_buyer, "02a1633cafcc01ebfb6d78e39f687a1f0995c62fc95f51ead10a02ee0be551b5dc") {
+        // Buyer signed - verify seller also signed
+        return checksig(sig_seller, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
+    }
+    else {
+        // Not buyer+seller path - check arbitrator paths
+        // Path 2: Arbitrator + Buyer (refund requires 30 day timeout)
+        if checksig(sig_buyer_refund, "02a1633cafcc01ebfb6d78e39f687a1f0995c62fc95f51ead10a02ee0be551b5dc") {
+            older 4320;  // 30 days = 4320 blocks
+            return checksig(sig_arbitrator_refund, "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432");
+        }
+        else {
+            // Path 3: Arbitrator + Seller (dispute resolution)
+            verify checksig(sig_seller_dispute, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
+            return checksig(sig_arbitrator_dispute, "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432");
+        }
+    }
+}

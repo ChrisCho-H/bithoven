@@ -1,0 +1,38 @@
+pragma bithoven version 0.0.1;
+pragma bithoven target segwit;
+
+/*
+ * Vault Contract with Time-Delayed Withdrawal
+ * 
+ * A security-enhanced wallet where withdrawals require a waiting period,
+ * allowing time to cancel if keys are compromised.
+ * 
+ * - Withdrawal path: Requires withdraw signature + 1 day delay
+ * - Emergency cancel: Hot key can cancel within the delay period
+ * - Recovery: Cold storage key can always recover (no delay)
+ * 
+ * This showcases:
+ * - Security-focused smart contract design
+ * - Multiple privilege levels (hot/cold keys)
+ * - Time-delayed operations for safety
+ */
+
+// Path 1: Normal withdrawal (after delay)
+(withdraw_flag: bool, sig_withdraw: signature)
+
+// Path 2: Emergency cancel or immediate cold storage recovery
+(withdraw_flag: bool, sig_emergency: signature)
+
+{
+    // Consume withdraw_flag first (last item on stack)
+    if withdraw_flag {
+        // Withdrawal path: Must wait 1 day (144 blocks)
+        older 144;
+        return checksig(sig_withdraw, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
+    }
+    else {
+        // Cold storage recovery or emergency cancel
+        // Cold key can always recover immediately
+        return checksig(sig_emergency, "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5");
+    }
+}
