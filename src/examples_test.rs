@@ -21,9 +21,21 @@ mod tests {
             result.err()
         );
         let output = result.unwrap();
-        assert!(!output.asm().is_empty(), "ASM output is empty for {}", filename);
-        assert!(!output.hex().is_empty(), "Hex output is empty for {}", filename);
-        assert!(!output.bytes().is_empty(), "Bytes output is empty for {}", filename);
+        assert!(
+            !output.asm().is_empty(),
+            "ASM output is empty for {}",
+            filename
+        );
+        assert!(
+            !output.hex().is_empty(),
+            "Hex output is empty for {}",
+            filename
+        );
+        assert!(
+            !output.bytes().is_empty(),
+            "Bytes output is empty for {}",
+            filename
+        );
     }
 
     #[test]
@@ -35,13 +47,18 @@ mod tests {
     fn test_atomic_swap_output() {
         let output = compile_example("atomic_swap.bithoven").unwrap();
         let asm = output.asm();
-        
+
         // Verify it contains expected opcodes for HTLC pattern
         assert!(asm.contains("OP_IF"), "Should have conditional logic");
-        assert!(asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"), 
-                "Should have relative timelock");
-        assert!(asm.contains("OP_CHECKSIG"), "Should have signature verification");
-        
+        assert!(
+            asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"),
+            "Should have relative timelock"
+        );
+        assert!(
+            asm.contains("OP_CHECKSIG"),
+            "Should have signature verification"
+        );
+
         println!("Atomic Swap ASM: {}", asm);
     }
 
@@ -54,14 +71,18 @@ mod tests {
     fn test_escrow_output() {
         let output = compile_example("escrow.bithoven").unwrap();
         let asm = output.asm();
-        
+
         // Verify 2-of-3 multisig escrow structure
-        assert!(asm.contains("OP_IF") || asm.contains("OP_NOTIF"), 
-                "Should have conditional paths");
+        assert!(
+            asm.contains("OP_IF") || asm.contains("OP_NOTIF"),
+            "Should have conditional paths"
+        );
         assert!(asm.contains("OP_CHECKSIG"), "Should verify signatures");
-        assert!(asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"), 
-                "Should have timelock for refund");
-        
+        assert!(
+            asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"),
+            "Should have timelock for refund"
+        );
+
         println!("Escrow ASM: {}", asm);
     }
 
@@ -74,13 +95,15 @@ mod tests {
     fn test_vault_output() {
         let output = compile_example("vault.bithoven").unwrap();
         let asm = output.asm();
-        
+
         // Verify vault with time-delayed withdrawal
         assert!(asm.contains("OP_IF"), "Should have withdrawal flag logic");
-        assert!(asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"), 
-                "Should have time delay");
+        assert!(
+            asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"),
+            "Should have time delay"
+        );
         assert!(asm.contains("OP_CHECKSIG"), "Should verify signatures");
-        
+
         println!("Vault ASM: {}", asm);
     }
 
@@ -93,14 +116,18 @@ mod tests {
     fn test_payment_channel_output() {
         let output = compile_example("payment_channel.bithoven").unwrap();
         let asm = output.asm();
-        
+
         // Verify payment channel structure
-        assert!(asm.contains("OP_IF") || asm.contains("OP_NOTIF"), 
-                "Should have cooperative/unilateral paths");
+        assert!(
+            asm.contains("OP_IF") || asm.contains("OP_NOTIF"),
+            "Should have cooperative/unilateral paths"
+        );
         assert!(asm.contains("OP_CHECKSIG"), "Should verify signatures");
-        assert!(asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"), 
-                "Should have dispute period");
-        
+        assert!(
+            asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"),
+            "Should have dispute period"
+        );
+
         println!("Payment Channel ASM: {}", asm);
     }
 
@@ -113,14 +140,18 @@ mod tests {
     fn test_crowdfund_output() {
         let output = compile_example("crowdfund.bithoven").unwrap();
         let asm = output.asm();
-        
+
         // Verify crowdfunding contract structure
         assert!(asm.contains("OP_IF"), "Should have success/refund paths");
-        assert!(asm.contains("OP_CHECKLOCKTIMEVERIFY") || asm.contains("OP_CLTV"), 
-                "Should have deadline");
-        assert!(asm.contains("OP_HASH256") || asm.contains("OP_SHA256"), 
-                "Should verify goal proof");
-        
+        assert!(
+            asm.contains("OP_CHECKLOCKTIMEVERIFY") || asm.contains("OP_CLTV"),
+            "Should have deadline"
+        );
+        assert!(
+            asm.contains("OP_HASH256") || asm.contains("OP_SHA256"),
+            "Should verify goal proof"
+        );
+
         println!("Crowdfund ASM: {}", asm);
     }
 
@@ -133,14 +164,18 @@ mod tests {
     fn test_will_output() {
         let output = compile_example("will.bithoven").unwrap();
         let asm = output.asm();
-        
+
         // Verify digital will with progressive timelocks
-        assert!(asm.contains("OP_IF") || asm.contains("OP_NOTIF"), 
-                "Should have multiple paths");
-        assert!(asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"), 
-                "Should have progressive timelocks");
+        assert!(
+            asm.contains("OP_IF") || asm.contains("OP_NOTIF"),
+            "Should have multiple paths"
+        );
+        assert!(
+            asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"),
+            "Should have progressive timelocks"
+        );
         assert!(asm.contains("OP_CHECKSIG"), "Should verify signatures");
-        
+
         println!("Will ASM: {}", asm);
     }
 
@@ -155,14 +190,18 @@ mod tests {
     fn test_subscription_output() {
         let output = compile_example("subscription.bithoven").unwrap();
         let asm = output.asm();
-        
+
         // Verify subscription service structure
-        assert!(asm.contains("OP_IF") || asm.contains("OP_NOTIF"), 
-                "Should have provider/customer paths");
-        assert!(asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"), 
-                "Should have billing period timelock");
+        assert!(
+            asm.contains("OP_IF") || asm.contains("OP_NOTIF"),
+            "Should have provider/customer paths"
+        );
+        assert!(
+            asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"),
+            "Should have billing period timelock"
+        );
         assert!(asm.contains("OP_CHECKSIG"), "Should verify signatures");
-        
+
         println!("Subscription ASM: {}", asm);
     }
 
@@ -175,15 +214,21 @@ mod tests {
     fn test_prediction_market_output() {
         let output = compile_example("prediction_market.bithoven").unwrap();
         let asm = output.asm();
-        
+
         // Verify prediction market with oracle
-        assert!(asm.contains("OP_IF") || asm.contains("OP_NOTIF"), 
-                "Should have outcome paths");
-        assert!(asm.contains("OP_HASH256") || asm.contains("OP_SHA256"), 
-                "Should verify oracle proof");
-        assert!(asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"), 
-                "Should have betting period");
-        
+        assert!(
+            asm.contains("OP_IF") || asm.contains("OP_NOTIF"),
+            "Should have outcome paths"
+        );
+        assert!(
+            asm.contains("OP_HASH256") || asm.contains("OP_SHA256"),
+            "Should verify oracle proof"
+        );
+        assert!(
+            asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"),
+            "Should have betting period"
+        );
+
         println!("Prediction Market ASM: {}", asm);
     }
 
@@ -196,14 +241,18 @@ mod tests {
     fn test_nft_auction_output() {
         let output = compile_example("nft_auction.bithoven").unwrap();
         let asm = output.asm();
-        
+
         // Verify NFT auction with royalties
-        assert!(asm.contains("OP_IF") || asm.contains("OP_NOTIF"), 
-                "Should have winner/creator/bidder paths");
-        assert!(asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"), 
-                "Should have auction period");
+        assert!(
+            asm.contains("OP_IF") || asm.contains("OP_NOTIF"),
+            "Should have winner/creator/bidder paths"
+        );
+        assert!(
+            asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"),
+            "Should have auction period"
+        );
         assert!(asm.contains("OP_CHECKSIG"), "Should verify signatures");
-        
+
         println!("NFT Auction ASM: {}", asm);
     }
 
@@ -216,14 +265,18 @@ mod tests {
     fn test_savings_challenge_output() {
         let output = compile_example("savings_challenge.bithoven").unwrap();
         let asm = output.asm();
-        
+
         // Verify progressive savings challenge
-        assert!(asm.contains("OP_IF") || asm.contains("OP_NOTIF"), 
-                "Should have milestone paths");
-        assert!(asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"), 
-                "Should have progressive timelocks");
+        assert!(
+            asm.contains("OP_IF") || asm.contains("OP_NOTIF"),
+            "Should have milestone paths"
+        );
+        assert!(
+            asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"),
+            "Should have progressive timelocks"
+        );
         assert!(asm.contains("OP_CHECKSIG"), "Should verify signatures");
-        
+
         println!("Savings Challenge ASM: {}", asm);
     }
 
@@ -236,16 +289,22 @@ mod tests {
     fn test_bug_bounty_output() {
         let output = compile_example("bug_bounty.bithoven").unwrap();
         let asm = output.asm();
-        
+
         // Verify bug bounty with severity tiers
-        assert!(asm.contains("OP_IF") || asm.contains("OP_NOTIF"), 
-                "Should have researcher/team paths");
-        assert!(asm.contains("OP_HASH256") || asm.contains("OP_SHA256"), 
-                "Should verify disclosure proof");
-        assert!(asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"), 
-                "Should have disclosure period");
+        assert!(
+            asm.contains("OP_IF") || asm.contains("OP_NOTIF"),
+            "Should have researcher/team paths"
+        );
+        assert!(
+            asm.contains("OP_HASH256") || asm.contains("OP_SHA256"),
+            "Should verify disclosure proof"
+        );
+        assert!(
+            asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"),
+            "Should have disclosure period"
+        );
         assert!(asm.contains("OP_SIZE"), "Should verify proof length");
-        
+
         println!("Bug Bounty ASM: {}", asm);
     }
 
@@ -339,7 +398,7 @@ mod tests {
         for example in &examples {
             let output = compile_example(example).unwrap();
             let bytes = output.bytes();
-            
+
             // Bitcoin scripts should be reasonable size (not empty, not too large)
             assert!(!bytes.is_empty(), "{} produced empty script", example);
             assert!(
@@ -348,7 +407,7 @@ mod tests {
                 example,
                 bytes.len()
             );
-            
+
             println!("{}: {} bytes", example, bytes.len());
         }
 
