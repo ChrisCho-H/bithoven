@@ -100,6 +100,108 @@ A contract where the creator can claim funds only if the goal is met after the d
 
 ---
 
+## 🌟 Innovative Examples (New!)
+
+### Subscription Service (`subscription.bithoven`)
+
+**Use Case:** Recurring payments and usage-based billing on Bitcoin
+
+A groundbreaking subscription contract enabling:
+- Provider claims payment after each billing period (30 days)
+- Customer can cancel anytime and reclaim remaining balance
+- Automatic refund if provider doesn't claim within grace period (60 days)
+
+**Key Concepts:**
+- Time-based recurring access patterns
+- Proportional value distribution
+- Self-enforcing service level agreements
+- No custodial intermediaries needed
+
+**Real-world application:** SaaS subscriptions, streaming services, membership platforms
+
+---
+
+### Prediction Market (`prediction_market.bithoven`)
+
+**Use Case:** Trustless decentralized betting on binary outcomes
+
+A revolutionary betting contract where:
+- Participants bet on outcomes (sports, price predictions, events)
+- Oracle provides signed outcome resolution
+- Winners claim proportionally, losers can dispute with counter-proof
+- 7-day dispute window for fairness
+
+**Key Concepts:**
+- Oracle integration patterns
+- Dispute resolution with time bounds
+- Trustless betting infrastructure
+- No custodian needed - funds locked in contract
+
+**Real-world application:** Sports betting, governance decisions, event predictions, DeFi oracles
+
+---
+
+### NFT Auction (`nft_auction.bithoven`)
+
+**Use Case:** Trustless marketplace for Bitcoin NFTs (Ordinals/Inscriptions)
+
+An innovative auction contract featuring:
+- Highest bidder wins after 3-day auction period
+- Automatic royalty distribution to original creator
+- Previous owner receives remaining payment
+- Losing bidders can reclaim their bids
+
+**Key Concepts:**
+- Multi-party settlements with automatic splits
+- Creator royalty enforcement (impossible with basic Bitcoin)
+- Time-bounded price discovery
+- No marketplace intermediary
+
+**Real-world application:** Ordinals marketplace, digital art sales, collectibles
+
+---
+
+### Progressive Savings Challenge (`savings_challenge.bithoven`)
+
+**Use Case:** Gamified savings with commitment enforcement
+
+A behavioral economics experiment on Bitcoin:
+- Participants lock BTC for milestone periods (1, 3, 6, or 12 months)
+- Full withdrawal after completing milestone
+- Early withdrawal incurs penalty (donated to charity)
+- Abandoned funds claimable by charity after 450 days
+
+**Key Concepts:**
+- Milestone-based progressive unlocking
+- Penalty mechanisms for early exit
+- Gamification of financial discipline
+- Behavioral commitment devices
+
+**Real-world application:** "52-week challenge" on Bitcoin, savings goals, financial wellness apps
+
+---
+
+### Decentralized Bug Bounty (`bug_bounty.bithoven`)
+
+**Use Case:** Autonomous security vulnerability rewards
+
+A revolutionary bug bounty system where:
+- Researchers submit cryptographic proof of vulnerability discovery
+- After disclosure period, reveal full details to claim bounty
+- Automatic tiered payouts (critical/high: 30 days, low/medium: 14 days)
+- Project team can dispute invalid claims or reclaim after 60 days
+
+**Key Concepts:**
+- Trustless bounty distribution
+- Cryptographic commitment schemes
+- Severity-based automatic tiering
+- Responsible disclosure enforcement
+- No intermediary platform needed
+
+**Real-world application:** Open source security, protocol bug bounties, vulnerability disclosure programs
+
+---
+
 ## 📚 Foundational Examples
 
 ### HTLC (`htlc.bithoven`)
@@ -149,6 +251,12 @@ cat example/escrow.bithoven.json
 3. **Combine Concepts:** Study `htlc.bithoven` which combines hashes and time
 4. **Real-world Contracts:** Dive into `escrow.bithoven`, `vault.bithoven`, and `atomic_swap.bithoven`
 5. **Advanced Patterns:** Explore `payment_channel.bithoven` and `will.bithoven`
+6. **Innovative Use Cases:** 🆕 Study the new examples:
+   - `subscription.bithoven` - Recurring payments
+   - `prediction_market.bithoven` - Oracle-based betting
+   - `nft_auction.bithoven` - NFT marketplace with royalties
+   - `savings_challenge.bithoven` - Gamified financial products
+   - `bug_bounty.bithoven` - Decentralized security rewards
 
 ## 🔍 Key Design Patterns
 

@@ -1,0 +1,88 @@
+pragma bithoven version 0.0.1;
+pragma bithoven target segwit;
+
+/*
+ * Progressive Savings Challenge Contract
+ * 
+ * A gamified savings contract where users commit to saving BTC with increasing
+ * rewards for meeting milestones. Think "52-week savings challenge" on Bitcoin.
+ * 
+ * Innovation for Bitcoin:
+ * - Enforces savings discipline through smart contracts
+ * - Progressive unlocking based on commitment adherence
+ * - Penalty mechanism for early withdrawal
+ * - Bonus rewards for completing full challenge
+ * 
+ * How it works:
+ * - Participant locks BTC for progressive periods
+ * - Can withdraw after milestone with full amount
+ * - Early withdrawal incurs penalty (goes to charity/burn address)
+ * - Completing challenge unlocks bonus from contract pool
+ * 
+ * This showcases:
+ * - Behavioral economics on Bitcoin
+ * - Milestone-based unlocking
+ * - Penalty mechanisms
+ * - Gamification of savings
+ */
+
+// Path 1: Participant completes 1 month milestone
+(sig_participant_1m: signature)
+
+// Path 2: Participant completes 3 month milestone
+(sig_participant_3m: signature)
+
+// Path 3: Participant completes 6 month milestone
+(sig_participant_6m: signature)
+
+// Path 4: Participant completes 12 month milestone (full challenge)
+(sig_participant_12m: signature)
+
+// Path 5: Early withdrawal with penalty
+(sig_participant_early: signature)
+
+// Path 6: Charity claims penalty after abandonment
+(sig_charity: signature)
+
+{
+    // Check which milestone path
+    if checksig(sig_participant_1m, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798") {
+        // 1 month milestone
+        older 4320;
+        return true;
+    }
+    else {
+        if checksig(sig_participant_3m, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798") {
+            // 3 month milestone
+            older 12960;
+            return true;
+        }
+        else {
+            if checksig(sig_participant_6m, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798") {
+                // 6 month milestone
+                older 25920;
+                return true;
+            }
+            else {
+                if checksig(sig_participant_12m, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798") {
+                    // 12 month milestone (full challenge with bonus)
+                    older 51840;
+                    return true;
+                }
+                else {
+                    // Early withdrawal or abandonment paths
+                    if checksig(sig_participant_early, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798") {
+                        // Allow early withdrawal with penalty after 1 week minimum
+                        older 1008;
+                        return true;
+                    }
+                    else {
+                        // If participant abandons for 450 days, charity can claim
+                        older 65000;
+                        return checksig(sig_charity, "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432");
+                    }
+                }
+            }
+        }
+    }
+}

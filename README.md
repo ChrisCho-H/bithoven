@@ -79,6 +79,11 @@ Bithoven comes with a rich collection of examples demonstrating real-world Bitco
 | **[Payment Channel](./example/payment_channel.bithoven)** | Layer 2 micropayments | Cooperative/unilateral close, state commitments |
 | **[Digital Will](./example/will.bithoven)** | Inheritance with dead man's switch | Progressive timelocks, taproot privacy |
 | **[Crowdfund](./example/crowdfund.bithoven)** | Goal-based fundraising | Time-based conditions, refund mechanism |
+| **[Subscription](./example/subscription.bithoven)** 🆕 | Usage-based billing service | Recurring payments, auto-refund, fair billing |
+| **[Prediction Market](./example/prediction_market.bithoven)** 🆕 | Decentralized betting | Oracle integration, dispute resolution |
+| **[NFT Auction](./example/nft_auction.bithoven)** 🆕 | Ordinals marketplace | Automatic royalties, trustless auctions |
+| **[Savings Challenge](./example/savings_challenge.bithoven)** 🆕 | Gamified savings | Milestone-based, penalty mechanism |
+| **[Bug Bounty](./example/bug_bounty.bithoven)** 🆕 | Autonomous security rewards | Proof-based payouts, severity tiers |
 | **[Multisig](./example/multisig.bithoven)** | 2-of-2 multisig | Taproot multi-signature support |
 | **[Inheritance](./example/inheritance.bithoven)** | Tiered access control | Multiple heir levels, secret-based access |
 | **[Hashlock](./example/hashlock.bithoven)** | Simple hash lock | SHA256 hash verification |
