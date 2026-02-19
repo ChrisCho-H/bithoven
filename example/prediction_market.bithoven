@@ -38,14 +38,17 @@ pragma bithoven target taproot;
     older 1008;
     
     // Check if outcome A winner is claiming with valid proof
-    // Oracle would have committed to sha256("outcome_a:<event_id>:<timestamp>")
-    if sha256(outcome_proof) == "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3" {
+    // NOTE: These hashes are demonstration placeholders. In production, the oracle would commit
+    //       to sha256("outcome_a:<event_id>:<timestamp>:<oracle_secret>") before the event,
+    //       then reveal the preimage only after the outcome is determined.
+    if sha256(outcome_proof) == "8f6d9b3c1a27f4e985c2487b62a1cd0f3e9a54d28b7c64ea1f4c9e62d5b7a3c1" {
         // Outcome A confirmed - participant A wins
         return checksig(sig_winner_a, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
     }
     else {
         // Check if outcome B winner is claiming with valid proof
-        if sha256(outcome_proof_b) == "b3a8e0e1f9ab1bfe3a36f231f676f78bb30a519d2b21e6c530c0eee8ebb4a5d0" {
+        // NOTE: Demo placeholder hash - replace with actual oracle commitment in production
+        if sha256(outcome_proof_b) == "7a8c9d2b4e6f1a3c5d7e9b1f3a5c7e9d2b4f6a8c1e3a5c7e9b2d4f6a8c1e3a5c" {
             // Outcome B confirmed - participant B wins
             return checksig(sig_winner_b, "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5");
         }

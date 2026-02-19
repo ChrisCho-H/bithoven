@@ -5,11 +5,10 @@ pragma bithoven target segwit;
  * Vault Contract with Time-Delayed Withdrawal
  * 
  * A security-enhanced wallet where withdrawals require a waiting period,
- * allowing time to cancel if keys are compromised.
+ * allowing time to detect compromise and use cold storage recovery.
  * 
  * - Withdrawal path: Requires withdraw signature + 1 day delay
- * - Emergency cancel: Hot key can cancel within the delay period
- * - Recovery: Cold storage key can always recover (no delay)
+ * - Immediate recovery: Cold storage key can always recover without delay
  * 
  * This showcases:
  * - Security-focused smart contract design
