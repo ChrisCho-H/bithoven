@@ -10,7 +10,7 @@ pragma bithoven target segwit;
 // Path 1: Cooperative close (both parties agree)
 (sig_alice: signature, sig_bob: signature)
 // Path 2: Unilateral close by Alice (after timeout)
-(sig_alice: signature)
+(sig_alice: signature, sig_bob: signature)
 // Path 3: Unilateral close by Bob (after timeout)
 (sig_bob: signature)
 {
