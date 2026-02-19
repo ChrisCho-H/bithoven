@@ -31,6 +31,9 @@ pragma bithoven target taproot;
 (outcome_proof: string, outcome_proof_b: string, sig_winner_b: signature)
 
 // Path 3: Refund if oracle fails to resolve
+// NOTE: outcome_proof and outcome_proof_b are still required in the witness stack because the script
+//       checks them before reaching this refund branch. Provide empty strings for these parameters
+//       when spending via the refund path.
 (outcome_proof: string, outcome_proof_b: string, sig_refund_a: signature, sig_refund_b: signature)
 
 {
