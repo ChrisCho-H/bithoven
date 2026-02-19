@@ -28,10 +28,10 @@ pragma bithoven target taproot;
 (outcome_proof: string, sig_winner_a: signature)
 
 // Path 2: Outcome B winner claims with oracle proof
-(outcome_proof_b: string, sig_winner_b: signature)
+(outcome_proof: string, outcome_proof_b: string, sig_winner_b: signature)
 
 // Path 3: Refund if oracle fails to resolve
-(sig_refund_a: signature, sig_refund_b: signature)
+(outcome_proof: string, outcome_proof_b: string, sig_refund_a: signature, sig_refund_b: signature)
 
 {
     // Must wait for betting period to end (7 days = 1008 blocks)

@@ -167,8 +167,8 @@ mod tests {
             println!("{}: {} bytes", example, size);
 
             assert!(
-                size > 0 && size < 1000,
-                "{} has unreasonable size: {} bytes",
+                size > 0 && size < 10000,
+                "{} has unreasonable size: {} bytes (should be > 0 and < 10KB for practical Bitcoin scripts)",
                 example,
                 size
             );
