@@ -18,10 +18,10 @@ pragma bithoven target segwit;
 (sig_alice: signature, sig_bob: signature)
 
 // Path 2: Unilateral close by Alice (requires waiting period)
-(state_hash_alice: string, sig_alice_unilateral: signature)
+(sig_alice_unilateral: signature)
 
 // Path 3: Unilateral close by Bob (requires waiting period)
-(state_hash_bob: string, sig_bob_unilateral: signature)
+(sig_bob_unilateral: signature)
 
 {
     // Check if Alice signed (could be cooperative or unilateral)
@@ -31,16 +31,15 @@ pragma bithoven target segwit;
     }
     else {
         // Not cooperative close - check unilateral paths
-        // Check if this is Alice's unilateral close
-        if len(state_hash_alice) == 32 {
-            // Unilateral close by Alice
-            older 144;  // 1 day dispute period
-            return checksig(sig_alice_unilateral, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
+        // Try Alice's unilateral close
+        if checksig(sig_alice_unilateral, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798") {
+            // Unilateral close by Alice - must wait 1 day
+            older 144;
+            return true;
         }
         else {
-            // Unilateral close by Bob
+            // Bob's unilateral close
             older 144;  // 1 day dispute period
-            verify len(state_hash_bob) == 32;
             return checksig(sig_bob_unilateral, "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432");
         }
     }

@@ -48,7 +48,7 @@ A security-focused wallet where withdrawals require a 1-day waiting period, givi
 - Hot/cold key hierarchy
 - Security-in-depth
 
-**Real-world application:** Exchange cold storage, high-value custody, institutional treasury
+**Real-world application:** Corporate treasury management, high-value custody
 
 ---
 
@@ -56,149 +56,84 @@ A security-focused wallet where withdrawals require a 1-day waiting period, givi
 
 **Use Case:** Off-chain micropayments with on-chain settlement
 
-A simplified payment channel where Alice and Bob can cooperatively close instantly, or either can unilaterally close after a dispute period.
+Enables two parties to transact off-chain with instant finality, settling on-chain only when needed. Supports both cooperative and unilateral close.
 
 **Key Concepts:**
 - Layer 2 scaling
-- State commitments
-- Cooperative vs unilateral close
-- Dispute resolution period
+- Cooperative close (instant)
+- Unilateral close (with timeout)
+- Dispute period
 
-**Real-world application:** Lightning Network, streaming payments, micropayment systems
+**Real-world application:** Lightning Network, micropayment systems, streaming payments
 
 ---
 
-### Digital Will (`will.bithoven`)
+### Crowdfund (`crowdfund.bithoven`)
 
-**Use Case:** Estate planning with progressive access
+**Use Case:** Time-bounded fundraising campaigns
 
-A sophisticated inheritance contract with a "dead man's switch" - if the owner doesn't move funds for 1 year, the heir can claim with a secret. After 1.5 years, a multi-sig executor can distribute.
+Contributors pledge BTC with time-locked refunds if the campaign doesn't reach its goal or deadline.
 
 **Key Concepts:**
-- Dead man's switch pattern
-- Progressive timelock escalation
-- Secret-based access control
-- Multi-signature recovery
+- Time-bounded campaigns
+- Multi-party coordination
+- Automatic refunds
+- Goal-based unlocking
 
-**Real-world application:** Estate planning, inheritance management, long-term savings
-
----
-
-### Crowdfunding (`crowdfund.bithoven`)
-
-**Use Case:** Decentralized crowdfunding campaigns
-
-A contract where the creator can claim funds only if the goal is met after the deadline. Contributors can reclaim if the goal isn't met.
-
-**Key Concepts:**
-- Goal-based conditions
-- Time-bound campaigns
-- Refund mechanisms
-- Trustless fundraising
-
-**Real-world application:** Kickstarter-style campaigns, DAO funding, grants
+**Real-world application:** DAO fundraising, community projects, startup funding
 
 ---
 
-## 🌟 Innovative Examples (New!)
-
-### Subscription Service (`subscription.bithoven`)
-
-**Use Case:** Recurring payments and usage-based billing on Bitcoin
-
-A groundbreaking subscription contract enabling:
-- Provider claims payment after each billing period (30 days)
-- Customer can cancel anytime and reclaim remaining balance
-- Automatic refund if provider doesn't claim within grace period (60 days)
-
-**Key Concepts:**
-- Time-based recurring access patterns
-- Proportional value distribution
-- Self-enforcing service level agreements
-- No custodial intermediaries needed
-
-**Real-world application:** SaaS subscriptions, streaming services, membership platforms
-
----
+## 🌟 Innovative Examples
 
 ### Prediction Market (`prediction_market.bithoven`)
 
-**Use Case:** Trustless decentralized betting on binary outcomes
+**Use Case:** Trustless betting on binary outcomes
 
-A revolutionary betting contract where:
-- Participants bet on outcomes (sports, price predictions, events)
-- Oracle provides signed outcome resolution
-- Winners claim proportionally, losers can dispute with counter-proof
-- 7-day dispute window for fairness
+Participants bet on outcomes, with winners claiming after oracle resolution via cryptographic signatures.
 
 **Key Concepts:**
-- Oracle integration patterns
-- Dispute resolution with time bounds
-- Trustless betting infrastructure
-- No custodian needed - funds locked in contract
+- Oracle signature verification
+- Time-bounded resolution
+- Multi-party claims
+- Refund mechanisms
 
-**Real-world application:** Sports betting, governance decisions, event predictions, DeFi oracles
+**Real-world application:** Sports betting, price predictions, event outcomes
 
 ---
 
 ### NFT Auction (`nft_auction.bithoven`)
 
-**Use Case:** Trustless marketplace for Bitcoin NFTs (Ordinals/Inscriptions)
+**Use Case:** Trustless auction settlement for Bitcoin NFTs (Ordinals/Inscriptions)
 
-An innovative auction contract featuring:
-- Highest bidder wins after 3-day auction period
-- Automatic royalty distribution to original creator
-- Previous owner receives remaining payment
-- Losing bidders can reclaim their bids
+After auction ends, winner and seller cooperatively complete the transaction, or winner can reclaim if seller doesn't cooperate.
+
+**Important Note:** Bitcoin Script cannot automatically split outputs. Royalty payments must be handled off-chain or through pre-signed transaction chains.
 
 **Key Concepts:**
-- Multi-party settlements with automatic splits
-- Creator royalty enforcement (impossible with basic Bitcoin)
-- Time-bounded price discovery
-- No marketplace intermediary
+- Time-bounded auction settlement
+- Cooperative transaction completion
+- Timeout-based refund protection
 
-**Real-world application:** Ordinals marketplace, digital art sales, collectibles
+**Real-world application:** Ordinals marketplace, digital art sales
 
 ---
 
-### Progressive Savings Challenge (`savings_challenge.bithoven`)
-
-**Use Case:** Gamified savings with commitment enforcement
-
-A behavioral economics experiment on Bitcoin:
-- Participants lock BTC for milestone periods (1, 3, 6, or 12 months)
-- Full withdrawal after completing milestone
-- Early withdrawal incurs penalty (donated to charity)
-- Abandoned funds claimable by charity after 450 days
-
-**Key Concepts:**
-- Milestone-based progressive unlocking
-- Penalty mechanisms for early exit
-- Gamification of financial discipline
-- Behavioral commitment devices
-
-**Real-world application:** "52-week challenge" on Bitcoin, savings goals, financial wellness apps
-
----
-
-### Decentralized Bug Bounty (`bug_bounty.bithoven`)
+### Bug Bounty (`bug_bounty.bithoven`)
 
 **Use Case:** Autonomous security vulnerability rewards
 
-A revolutionary bug bounty system where:
-- Researchers submit cryptographic proof of vulnerability discovery
-- After disclosure period, reveal full details to claim bounty
-- Automatic tiered payouts (critical/high: 30 days, low/medium: 14 days)
-- Project team can dispute invalid claims or reclaim after 60 days
+Researchers can claim bounties after a responsible disclosure period, with automatic payouts.
+
+**Important Note:** Different severity levels require separate UTXOs with different amounts locked.
 
 **Key Concepts:**
 - Trustless bounty distribution
-- Cryptographic commitment schemes
-- Severity-based automatic tiering
-- Responsible disclosure enforcement
-- No intermediary platform needed
+- Time-bound disclosure
+- Automatic payouts
+- Expiry reclaim
 
-**Real-world application:** Open source security, protocol bug bounties, vulnerability disclosure programs
+**Real-world application:** Open source security, protocol bug bounties
 
 ---
 
@@ -250,12 +185,10 @@ cat example/escrow.bithoven.json
 2. **Add Time:** Explore `timelock.bithoven` to understand timelocks
 3. **Combine Concepts:** Study `htlc.bithoven` which combines hashes and time
 4. **Real-world Contracts:** Dive into `escrow.bithoven`, `vault.bithoven`, and `atomic_swap.bithoven`
-5. **Advanced Patterns:** Explore `payment_channel.bithoven` and `will.bithoven`
+5. **Advanced Patterns:** Explore `payment_channel.bithoven` and `inheritance.bithoven`
 6. **Innovative Use Cases:** 🆕 Study the new examples:
-   - `subscription.bithoven` - Recurring payments
    - `prediction_market.bithoven` - Oracle-based betting
-   - `nft_auction.bithoven` - NFT marketplace with royalties
-   - `savings_challenge.bithoven` - Gamified financial products
+   - `nft_auction.bithoven` - NFT marketplace settlement
    - `bug_bounty.bithoven` - Decentralized security rewards
 
 ## 🔍 Key Design Patterns
@@ -265,45 +198,50 @@ cat example/escrow.bithoven.json
 Bithoven supports multiple input stack configurations, allowing different spending conditions:
 
 ```solidity
-(sig_alice: signature)                    // Path 1
-(sig_bob: signature, preimage: string)    // Path 2
+// Path 1: Owner spends immediately
+(sig_owner: signature)
+
+// Path 2: Heir spends after timelock
+(sig_heir: signature)
 ```
 
-### Time-Locked Fallbacks
+### Time Locks
 
-Use `older` (relative) or `after` (absolute) for time-based conditions:
+Two types of timelocks are supported:
+
+- **Relative (CSV):** `older N` - Wait N blocks from UTXO creation
+- **Absolute (CLTV):** `after N` - Wait until block height N
+
+### Conditional Logic
+
+Use if-else statements for complex spending conditions:
 
 ```solidity
-older 144;  // Wait 1 day (144 blocks)
-after 1000000;  // Wait until block height 1,000,000
+if condition {
+    // Branch A logic
+    return true;
+} else {
+    // Branch B logic
+    return false;
+}
 ```
 
-### Hash-Locked Secrets
+## 📝 Important Notes
 
-Require preimage revelation for atomic operations:
+### Bitcoin Script Limitations
 
-```solidity
-verify sha256(sha256(preimage)) == "hash_value";
-```
+- **No output splitting:** Contracts cannot automatically create multiple outputs with different amounts
+- **No amount awareness:** Scripts don't know the UTXO value
+- **Single UTXO:** Each contract locks a single output
 
-### Multi-Signature Coordination
+### Production Considerations
 
-Combine multiple signatures for shared control:
-
-```solidity
-checksig[2, (sig_a, pubkey_a), (sig_b, pubkey_b), (sig_c, pubkey_c)]
-```
+- Replace demo public keys with real keys
+- Use high-entropy secrets for hash locks
+- Test on testnet before mainnet deployment
+- Consider fee rates and transaction sizes
+- Understand relative timelock limits (BIP 68: max 65,535 blocks ≈ 455 days)
 
 ---
 
-## 🤝 Contributing Examples
-
-Have an interesting use case? We welcome new examples! Please ensure:
-
-1. **Clear comments** explaining the contract purpose
-2. **Real-world use case** documented in comments
-3. **Compiles successfully** with `bithoven compile`
-4. **Well-structured** following existing patterns
-5. **Security-conscious** design choices
-
-Submit your examples via PR to help grow the Bithoven ecosystem!
+For more information, see the [main README](../README.md) or visit the [Bithoven repository](https://github.com/ChrisCho-H/bithoven).

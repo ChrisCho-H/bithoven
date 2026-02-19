@@ -2,54 +2,40 @@ pragma bithoven version 0.0.1;
 pragma bithoven target taproot;
 
 /*
- * NFT Auction with Automatic Royalty Distribution
+ * NFT Auction Settlement Contract
  * 
- * An innovative auction contract for Bitcoin NFTs (Ordinals/Inscriptions) where:
- * - Highest bidder wins after auction period
- * - Original creator gets automatic royalty on resale
- * - Previous owner gets remaining payment
- * - Losing bidders can reclaim their bids
+ * A trustless auction settlement for Bitcoin NFTs (Ordinals/Inscriptions).
+ * After auction ends, this contract ensures proper settlement between parties.
  * 
- * This is groundbreaking for Bitcoin because:
- * - Enables trustless NFT marketplace on Bitcoin
- * - Automatic royalty enforcement (not possible with basic Bitcoin)
- * - No marketplace intermediary needed
- * - Fair price discovery through bidding
+ * Important: Bitcoin Script cannot automatically split outputs. This contract
+ * locks the winning bid amount. Royalty payments must be handled off-chain
+ * or through pre-signed transaction chains.
+ * 
+ * - Winning bidder + seller cooperate to settle (happy path)
+ * - After timeout, winner can reclaim if seller doesn't cooperate
+ * - Losing bidders use separate UTXOs to reclaim their bids
  * 
  * This showcases:
- * - Multi-party settlements with automatic splits
- * - Time-bounded auctions
- * - Creator royalties enforcement
- * - Decentralized marketplace primitives
+ * - Time-bounded auction settlement
+ * - Cooperative transaction completion
+ * - Timeout-based refund protection
  */
 
-// Path 1: Winning bidder + seller complete transaction
+// Path 1: Winner + Seller cooperatively complete transaction
 (sig_winner: signature, sig_seller: signature)
 
-// Path 2: Original creator claims royalty portion
-(sig_creator: signature)
-
-// Path 3: Losing bidder reclaims their bid
-(sig_losing_bidder: signature)
+// Path 2: Winner reclaims if seller doesn't cooperate after timeout
+(sig_winner_refund: signature)
 
 {
-    // Auction ends after 3 days (432 blocks)
-    older 432;
-    
-    // Path 1: Winner and seller complete transaction
+    // Check if winner and seller are cooperating
     if checksig(sig_winner, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798") {
-        // Both winner and seller must sign to complete transaction
+        // Both winner and seller must sign to complete auction
         return checksig(sig_seller, "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5");
     }
     else {
-        // Creator claims royalty or losing bidder reclaims
-        if checksig(sig_creator, "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432") {
-            // Creator claims their royalty portion
-            return true;
-        }
-        else {
-            // Losing bidder reclaims their bid
-            return checksig(sig_losing_bidder, "02a1633cafcc01ebfb6d78e39f687a1f0995c62fc95f51ead10a02ee0be551b5dc");
-        }
+        // Seller didn't cooperate - winner can reclaim after 7 days
+        older 1008;  // 7 days = 1008 blocks
+        return checksig(sig_winner_refund, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
     }
 }

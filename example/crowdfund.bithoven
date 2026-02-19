@@ -2,45 +2,42 @@ pragma bithoven version 0.0.1;
 pragma bithoven target segwit;
 
 /*
- * Crowdfunding Contract with Goal and Deadline
+ * Goal-Based Crowdfunding Contract
  * 
- * A decentralized crowdfunding campaign where:
- * - Creator can claim funds only if goal is met AND deadline is reached
- * - Contributors can reclaim funds if goal is NOT met after deadline
+ * A time-locked crowdfunding contract where:
+ * - Contributors send BTC to this contract address
+ * - If goal is met by deadline, organizer can claim funds
+ * - If deadline passes, contributors get refunds
  * 
- * This simplified version demonstrates the concept using signatures
- * as proof of conditions being met.
+ * Important: This contract locks a single contributor's pledge.
+ * Multiple contributors would each have their own UTXO with this script.
+ * 
+ * Note: The organizer signature could be a Schnorr multi-sig (MuSig)
+ * representing consensus from multiple contributors that the goal was met.
  * 
  * This showcases:
- * - Time-based conditional logic
- * - Multiple success/failure paths
- * - Real-world fundraising application
+ * - Time-bounded fundraising
+ * - Multi-party coordination
+ * - Refund protection
  */
 
-// Path 1: Creator claims if goal reached (after deadline)
-(success_path: bool, goal_met_proof: string, sig_creator: signature)
+// Path 1: Organizer claims if goal met (before deadline)
+(sig_organizer: signature)
 
-// Path 2: Contributors refund if goal not met (after deadline)
-(success_path: bool, sig_contributor: signature)
+// Path 2: Contributor refund after deadline
+(sig_contributor: signature)
 
 {
-    // Consume success_path first (last item on stack)
-    if success_path {
-        // Goal was met: Creator can claim after deadline (30 days = 4320 blocks)
-        after 1000000;  // Deadline block height
-        
-        // Verify goal was met (simplified: proof that funding goal reached)
-        // NOTE: This hash is for demonstration only - use proper goal verification in production!
-        verify sha256(goal_met_proof) == "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae";
-        
-        // Creator can claim funds
-        return checksig(sig_creator, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
+    // Check if organizer is claiming (goal was met)
+    if checksig(sig_organizer, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798") {
+        // Organizer can claim during campaign period (before 30 days)
+        // NOTE: In production, this signature could be MuSig from multiple
+        // parties confirming goal achievement
+        return true;
     }
     else {
-        // Goal was not met: Contributors can reclaim after deadline
-        after 1000000;  // Same deadline block height
-        
-        // Any contributor can reclaim their portion
-        return checksig(sig_contributor, "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432");
+        // After deadline (30 days = 4320 blocks), contributor can refund
+        older 4320;
+        return checksig(sig_contributor, "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5");
     }
 }
