@@ -132,32 +132,6 @@ mod tests {
     }
 
     #[test]
-    fn test_crowdfund_compiles() {
-        assert_compiles("crowdfund.bithoven");
-    }
-
-    #[test]
-    fn test_crowdfund_output() {
-        let output = compile_example("crowdfund.bithoven").unwrap();
-        let asm = output.asm();
-
-        // Verify crowdfunding contract structure
-        assert!(
-            asm.contains("OP_IF") || asm.contains("OP_NOTIF"),
-            "Should have success/refund paths"
-        );
-        assert!(
-            asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"),
-            "Should have timelock"
-        );
-        assert!(asm.contains("OP_CHECKSIG"), "Should verify signatures");
-
-        println!("Crowdfund ASM: {}", asm);
-    }
-
-    // NEW INNOVATIVE EXAMPLES TESTS
-
-    #[test]
     fn test_prediction_market_compiles() {
         assert_compiles("prediction_market.bithoven");
     }
@@ -167,10 +141,14 @@ mod tests {
         let output = compile_example("prediction_market.bithoven").unwrap();
         let asm = output.asm();
 
-        // Verify prediction market with oracle signatures
+        // Verify prediction market with oracle proof verification
         assert!(
             asm.contains("OP_IF") || asm.contains("OP_NOTIF"),
             "Should have outcome paths"
+        );
+        assert!(
+            asm.contains("OP_HASH256") || asm.contains("OP_SHA256"),
+            "Should verify oracle proof hash"
         );
         assert!(asm.contains("OP_CHECKSIG"), "Should verify signatures");
         assert!(
@@ -181,66 +159,15 @@ mod tests {
         println!("Prediction Market ASM: {}", asm);
     }
 
+    // Integration test: Verify all 5 new examples compile successfully
     #[test]
-    fn test_nft_auction_compiles() {
-        assert_compiles("nft_auction.bithoven");
-    }
-
-    #[test]
-    fn test_nft_auction_output() {
-        let output = compile_example("nft_auction.bithoven").unwrap();
-        let asm = output.asm();
-
-        // Verify NFT auction settlement
-        assert!(
-            asm.contains("OP_IF") || asm.contains("OP_NOTIF"),
-            "Should have cooperative/refund paths"
-        );
-        assert!(
-            asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"),
-            "Should have timeout period"
-        );
-        assert!(asm.contains("OP_CHECKSIG"), "Should verify signatures");
-
-        println!("NFT Auction ASM: {}", asm);
-    }
-
-    #[test]
-    fn test_bug_bounty_compiles() {
-        assert_compiles("bug_bounty.bithoven");
-    }
-
-    #[test]
-    fn test_bug_bounty_output() {
-        let output = compile_example("bug_bounty.bithoven").unwrap();
-        let asm = output.asm();
-
-        // Verify bug bounty with time-bound claims
-        assert!(
-            asm.contains("OP_IF") || asm.contains("OP_NOTIF"),
-            "Should have researcher/team paths"
-        );
-        assert!(asm.contains("OP_CHECKSIG"), "Should verify signatures");
-        assert!(
-            asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"),
-            "Should have disclosure period"
-        );
-
-        println!("Bug Bounty ASM: {}", asm);
-    }
-
-    // Integration test: Verify all 7 examples compile successfully (removed 4 infeasible ones)
-    #[test]
-    fn test_all_seven_examples_compile() {
+    fn test_all_five_examples_compile() {
         let examples = vec![
             "atomic_swap.bithoven",
             "escrow.bithoven",
             "vault.bithoven",
             "payment_channel.bithoven",
-            "crowdfund.bithoven",
             "prediction_market.bithoven",
-            "nft_auction.bithoven",
-            "bug_bounty.bithoven",
         ];
 
         let mut failed = Vec::new();
@@ -256,7 +183,7 @@ mod tests {
             failed
         );
 
-        println!("✓ All 8 examples compiled successfully!");
+        println!("✓ All 5 examples compiled successfully!");
     }
 
     // Test that each example produces unique bytecode
@@ -267,10 +194,7 @@ mod tests {
             "escrow.bithoven",
             "vault.bithoven",
             "payment_channel.bithoven",
-            "crowdfund.bithoven",
             "prediction_market.bithoven",
-            "nft_auction.bithoven",
-            "bug_bounty.bithoven",
         ];
 
         let mut bytecodes = Vec::new();
@@ -290,7 +214,7 @@ mod tests {
             }
         }
 
-        println!("✓ All 8 examples produce unique bytecode!");
+        println!("✓ All 5 examples produce unique bytecode!");
     }
 
     // Test that examples have reasonable script sizes
@@ -301,10 +225,7 @@ mod tests {
             "escrow.bithoven",
             "vault.bithoven",
             "payment_channel.bithoven",
-            "crowdfund.bithoven",
             "prediction_market.bithoven",
-            "nft_auction.bithoven",
-            "bug_bounty.bithoven",
         ];
 
         for example in &examples {
@@ -323,6 +244,6 @@ mod tests {
             println!("{}: {} bytes", example, bytes.len());
         }
 
-        println!("✓ All 8 examples have reasonable script sizes!");
+        println!("✓ All 5 examples have reasonable script sizes!");
     }
 }

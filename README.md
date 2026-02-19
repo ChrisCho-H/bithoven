@@ -77,10 +77,7 @@ Bithoven comes with a rich collection of examples demonstrating real-world Bitco
 | **[Escrow](./example/escrow.bithoven)** | 2-of-3 multisig escrow | Multiple spending paths, time-locked refunds |
 | **[Vault](./example/vault.bithoven)** | Security-enhanced wallet | Time-delayed withdrawals, emergency cancel |
 | **[Payment Channel](./example/payment_channel.bithoven)** | Layer 2 micropayments | Cooperative/unilateral close, dispute period |
-| **[Crowdfund](./example/crowdfund.bithoven)** | Goal-based fundraising | Time-based conditions, refund mechanism |
-| **[Prediction Market](./example/prediction_market.bithoven)** 🆕 | Decentralized betting | Oracle signatures, time-bounded resolution |
-| **[NFT Auction](./example/nft_auction.bithoven)** 🆕 | Ordinals marketplace settlement | Cooperative completion, timeout refunds |
-| **[Bug Bounty](./example/bug_bounty.bithoven)** 🆕 | Autonomous security rewards | Time-bound disclosure, trustless payouts |
+| **[Prediction Market](./example/prediction_market.bithoven)** 🆕 | Decentralized betting with oracle | Hash-based oracle proofs, multi-outcome resolution |
 | **[Multisig](./example/multisig.bithoven)** | 2-of-2 multisig | Taproot multi-signature support |
 | **[Inheritance](./example/inheritance.bithoven)** | Tiered access control | Multiple heir levels, secret-based access |
 | **[Hashlock](./example/hashlock.bithoven)** | Simple hash lock | SHA256 hash verification |

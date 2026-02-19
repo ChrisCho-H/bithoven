@@ -5,50 +5,56 @@ pragma bithoven target taproot;
  * Decentralized Prediction Market with Oracle
  * 
  * A trustless betting contract for binary outcomes resolved by an oracle.
+ * Participants bet on outcomes, oracle provides cryptographic proof of result,
+ * and winners claim their rewards.
  * 
- * In production: The oracle would sign the outcome off-chain, and winners
- * would provide the signed oracle message as proof. This demonstrates the
- * on-chain verification structure.
+ * Oracle Integration Pattern:
+ * - Oracle commits to event outcome by publishing hash of "outcome_A" or "outcome_B"
+ * - Winners provide the preimage to unlock funds
+ * - If oracle fails to resolve, refund mechanism activates
  * 
  * Use Cases:
- * - Sports betting, price predictions, event outcomes
+ * - Sports betting (team A vs team B)
+ * - Price predictions (BTC above/below threshold)
+ * - Event outcomes (elections, weather, etc.)
  * 
  * This showcases:
- * - Oracle integration patterns
- * - Time-bounded resolution
- * - Multi-party claim structure
+ * - Oracle commitment schemes with hash locks
+ * - Multi-outcome resolution paths
+ * - Time-bounded dispute and refund mechanisms
  */
 
-// Path 1: Outcome A winner claims
-(outcome_a_sig: signature)
+// Path 1: Outcome A winner claims with oracle proof
+(outcome_proof: string, sig_winner_a: signature)
 
-// Path 2: Outcome B winner claims
-(outcome_b_sig: signature)
+// Path 2: Outcome B winner claims with oracle proof
+(outcome_proof_b: string, sig_winner_b: signature)
 
 // Path 3: Refund if oracle fails to resolve
-(sig_refund: signature)
+(sig_refund_a: signature, sig_refund_b: signature)
 
 {
     // Must wait for betting period to end (7 days = 1008 blocks)
     older 1008;
     
-    // Check if outcome A winner is claiming
-    // In production: outcome_a_sig would be oracle's signature over "outcome_a"
-    if checksig(outcome_a_sig, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798") {
+    // Check if outcome A winner is claiming with valid proof
+    // Oracle would have committed to sha256("outcome_a:<event_id>:<timestamp>")
+    if sha256(outcome_proof) == "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3" {
         // Outcome A confirmed - participant A wins
-        return true;
+        return checksig(sig_winner_a, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
     }
     else {
-        // Check if outcome B winner is claiming
-        if checksig(outcome_b_sig, "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5") {
+        // Check if outcome B winner is claiming with valid proof
+        if sha256(outcome_proof_b) == "b3a8e0e1f9ab1bfe3a36f231f676f78bb30a519d2b21e6c530c0eee8ebb4a5d0" {
             // Outcome B confirmed - participant B wins
-            return true;
+            return checksig(sig_winner_b, "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5");
         }
         else {
-            // No valid outcome proven - refund after extended timeout
-            // Additional 30 days (4320 blocks) beyond betting period
+            // No valid outcome proven - both parties must agree to refund
+            // Requires cooperation after extended timeout (30 days beyond betting period)
             older 4320;
-            return checksig(sig_refund, "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432");
+            verify checksig(sig_refund_a, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
+            return checksig(sig_refund_b, "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5");
         }
     }
 }
