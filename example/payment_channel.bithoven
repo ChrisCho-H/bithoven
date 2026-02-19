@@ -12,7 +12,7 @@ pragma bithoven target segwit;
 // Path 2: Unilateral close by Alice (after timeout)
 (sig_alice: signature, sig_bob: signature)
 // Path 3: Unilateral close by Bob (after timeout)
-(sig_bob: signature)
+(sig_alice: signature, sig_bob: signature)
 {
     // Check if Alice signed
     if checksig(sig_alice, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798") {
