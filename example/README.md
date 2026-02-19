@@ -127,7 +127,7 @@ These limitations mean some common patterns (like 2-of-2 escrow with separate re
 - Multiple UTXOs with coordinated spending
 - Off-chain state channels with on-chain settlement
 
-##  Contributing
+## Contributing
 
 When creating new examples:
 1. Follow existing naming conventions
