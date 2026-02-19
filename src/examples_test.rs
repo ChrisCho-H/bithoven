@@ -29,11 +29,29 @@ mod tests {
     fn test_atomic_swap_output() {
         let output = compile_example("atomic_swap.bithoven").unwrap();
         let asm = output.asm();
-        
+
         assert!(asm.contains("OP_IF") || asm.contains("OP_NOTIF"));
         assert!(asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"));
         assert!(asm.contains("OP_CHECKSIG"));
-        assert!(asm.contains("OP_HASH256"), "Should verify hash preimage with OP_HASH256 (double SHA256)");
+        assert!(
+            asm.contains("OP_HASH256"),
+            "Should verify hash preimage with OP_HASH256 (double SHA256)"
+        );
+    }
+
+    #[test]
+    fn test_escrow_compiles() {
+        assert_compiles("escrow.bithoven");
+    }
+
+    #[test]
+    fn test_escrow_output() {
+        let output = compile_example("escrow.bithoven").unwrap();
+        let asm = output.asm();
+
+        assert!(asm.contains("OP_IF") || asm.contains("OP_NOTIF"));
+        assert!(asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"));
+        assert!(asm.contains("OP_CHECKSIG"));
     }
 
     #[test]
@@ -45,7 +63,22 @@ mod tests {
     fn test_vault_output() {
         let output = compile_example("vault.bithoven").unwrap();
         let asm = output.asm();
-        
+
+        assert!(asm.contains("OP_IF") || asm.contains("OP_NOTIF"));
+        assert!(asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"));
+        assert!(asm.contains("OP_CHECKSIG"));
+    }
+
+    #[test]
+    fn test_payment_channel_compiles() {
+        assert_compiles("payment_channel.bithoven");
+    }
+
+    #[test]
+    fn test_payment_channel_output() {
+        let output = compile_example("payment_channel.bithoven").unwrap();
+        let asm = output.asm();
+
         assert!(asm.contains("OP_IF") || asm.contains("OP_NOTIF"));
         assert!(asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"));
         assert!(asm.contains("OP_CHECKSIG"));
@@ -60,18 +93,23 @@ mod tests {
     fn test_prediction_market_output() {
         let output = compile_example("prediction_market.bithoven").unwrap();
         let asm = output.asm();
-        
+
         assert!(asm.contains("OP_IF") || asm.contains("OP_NOTIF"));
-        assert!(asm.contains("OP_SHA256"), "Should verify oracle proof hash using OP_SHA256");
+        assert!(
+            asm.contains("OP_SHA256"),
+            "Should verify oracle proof hash using OP_SHA256"
+        );
         assert!(asm.contains("OP_CHECKSIG"));
         assert!(asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"));
     }
 
     #[test]
-    fn test_all_three_examples_compile() {
+    fn test_all_five_examples_compile() {
         let examples = vec![
             "atomic_swap.bithoven",
+            "escrow.bithoven",
             "vault.bithoven",
+            "payment_channel.bithoven",
             "prediction_market.bithoven",
         ];
 
@@ -93,7 +131,9 @@ mod tests {
     fn test_examples_produce_unique_bytecode() {
         let examples = vec![
             "atomic_swap.bithoven",
+            "escrow.bithoven",
             "vault.bithoven",
+            "payment_channel.bithoven",
             "prediction_market.bithoven",
         ];
 
@@ -113,7 +153,9 @@ mod tests {
     fn test_examples_have_reasonable_sizes() {
         let examples = vec![
             "atomic_swap.bithoven",
+            "escrow.bithoven",
             "vault.bithoven",
+            "payment_channel.bithoven",
             "prediction_market.bithoven",
         ];
 
@@ -121,9 +163,9 @@ mod tests {
             let output = compile_example(example).unwrap();
             let bytes = output.bytes();
             let size = bytes.len();
-            
+
             println!("{}: {} bytes", example, size);
-            
+
             assert!(
                 size > 0 && size < 1000,
                 "{} has unreasonable size: {} bytes",

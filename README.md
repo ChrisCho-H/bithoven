@@ -73,8 +73,10 @@ Bithoven comes with a rich collection of examples demonstrating real-world Bitco
 | Example | Description | Key Features |
 |---------|-------------|--------------|
 | **[HTLC](./example/htlc.bithoven)** | Hash Time-Locked Contract | Hash locks, timelocks, conditional payments |
-| **[Atomic Swap](./example/atomic_swap.bithoven)** | Cross-chain trading | Hash-locked transactions, trustless exchange |
-| **[Vault](./example/vault.bithoven)** | Security-enhanced wallet | Time-delayed withdrawals, emergency recovery |
+| **[Atomic Swap](./example/atomic_swap.bithoven)** 🆕 | Cross-chain trading | Double SHA256 hash locks, trustless exchange |
+| **[Escrow](./example/escrow.bithoven)** 🆕 | 2-of-3 multisig marketplace | Arbitrator, buyer/seller, time-locked refunds |
+| **[Vault](./example/vault.bithoven)** 🆕 | Security-enhanced wallet | Time-delayed withdrawals, immediate cold storage recovery |
+| **[Payment Channel](./example/payment_channel.bithoven)** 🆕 | Layer 2 payment channel | Cooperative/unilateral close, dispute period |
 | **[Prediction Market](./example/prediction_market.bithoven)** 🆕 | Decentralized betting with hash-based oracle | Cryptographic commitment schemes, oracle proof verification |
 | **[Multisig](./example/multisig.bithoven)** | 2-of-2 multisig | Taproot multi-signature support |
 | **[Inheritance](./example/inheritance.bithoven)** | Tiered access control | Multiple heir levels, secret-based access |

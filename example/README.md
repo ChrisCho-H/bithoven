@@ -20,6 +20,22 @@ A hash time-locked contract (HTLC) that enables atomic swaps between Bitcoin and
 
 ---
 
+### Escrow (`escrow.bithoven`)
+
+**Use Case:** 2-of-3 multisig marketplace transactions with arbitration
+
+A flexible escrow contract where buyer and seller can cooperatively release funds immediately, or involve an arbitrator for dispute resolution. Includes time-locked refund mechanism after 30 days.
+
+**Key Concepts:**
+- Multi-party coordination
+- 2-of-3 signing patterns (buyer+seller, arbitrator+buyer, arbitrator+seller)
+- Time-delayed refunds
+- Dispute resolution
+
+**Real-world application:** P2P marketplaces, freelance platforms, real estate transactions
+
+---
+
 ### Vault (`vault.bithoven`)
 
 **Use Case:** Security-enhanced Bitcoin storage
@@ -28,7 +44,7 @@ A security-focused wallet where withdrawals require a 1-day waiting period, givi
 
 **Key Concepts:**
 - Time-delayed operations
-- Immediate recovery path
+- Immediate cold storage recovery path
 - Hot/cold key hierarchy  
 - Security-in-depth
 
@@ -36,7 +52,23 @@ A security-focused wallet where withdrawals require a 1-day waiting period, givi
 
 ---
 
-### Prediction Market (`prediction_market.bithoven`) 🆕
+### Payment Channel (`payment_channel.bithoven`)
+
+**Use Case:** Layer 2 payment channels (Lightning Network style)
+
+A bidirectional payment channel where Alice and Bob can cooperatively close instantly, or either party can unilaterally close after a 1-day dispute period, allowing the other party to contest with newer state.
+
+**Key Concepts:**
+- Cooperative close (instant)
+- Unilateral close (time-delayed)
+- Dispute periods
+- Layer 2 scaling
+
+**Real-world application:** Lightning Network channels, micropayment streams, off-chain scaling
+
+---
+
+### Prediction Market (`prediction_market.bithoven`)
 
 **Use Case:** Decentralized betting with oracle integration
 
@@ -67,8 +99,10 @@ The repository includes additional examples demonstrating various Bitcoin Script
 
 1. **Start with basics:** `singlesig.bithoven` → `hashlock.bithoven` → `timelock.bithoven`
 2. **Combine concepts:** `htlc.bithoven` (hash + time locks)
-3. **Advanced patterns:** `vault.bithoven` (conditional paths), `atomic_swap.bithoven` (cross-chain)
-4. **Innovative applications:** `prediction_market.bithoven` (oracle integration)
+3. **Multi-party patterns:** `escrow.bithoven` (2-of-3), `payment_channel.bithoven` (bilateral)
+4. **Advanced security:** `vault.bithoven` (time delays + recovery)
+5. **Advanced patterns:** `atomic_swap.bithoven` (cross-chain)
+6. **Innovative applications:** `prediction_market.bithoven` (oracle integration)
 
 ## ⚠️ Bitcoin Script Limitations
 
@@ -76,8 +110,8 @@ Bithoven compiles to Bitcoin Script, which has important constraints:
 
 ### Variable Consumption Rules
 - **Each variable can only be consumed once** across all spending paths
-- Variables must be consumed in the order they appear in the witness stack
-- This prevents certain multi-party patterns that require checking the same signature in multiple branches
+- When designing contracts with multiple paths, use distinct variable names for each path (e.g., `sig_arbitrator_refund` and `sig_arbitrator_dispute` instead of reusing `sig_arbitrator`)
+- Variables are matched by stack position - the witness must provide values that align with the chosen spending path
 
 ### Amount Blindness
 - Scripts cannot know the UTXO value

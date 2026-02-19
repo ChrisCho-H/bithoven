@@ -1,0 +1,35 @@
+pragma bithoven version 0.0.1;
+pragma bithoven target segwit;
+
+// Payment Channel Contract
+// Use case: Layer 2 payment channels (Lightning Network style)
+// - Path 1: Cooperative close (Alice + Bob agree on final state)
+// - Path 2: Unilateral close by Alice (after dispute period)
+// - Path 3: Unilateral close by Bob (after dispute period)
+
+// Path 1: Cooperative close (both parties agree)
+(sig_alice: signature, sig_bob: signature)
+// Path 2: Unilateral close by Alice (after timeout)
+(sig_alice: signature)
+// Path 3: Unilateral close by Bob (after timeout)
+(sig_bob: signature)
+{
+    // Check if Alice signed
+    if checksig(sig_alice, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798") {
+        // Alice is involved (Path 1 or Path 2)
+        if checksig(sig_bob, "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432") {
+            // Path 1: Cooperative close (immediate, both parties agree)
+            return true;
+        }
+        else {
+            // Path 2: Unilateral close by Alice (requires 1-day dispute period)
+            older 144;  // 1 day = 144 blocks (~24 hours)
+            return true;
+        }
+    }
+    else {
+        // Path 3: Unilateral close by Bob (requires 1-day dispute period)
+        older 144;  // 1 day = 144 blocks
+        return checksig(sig_bob, "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432");
+    }
+}
