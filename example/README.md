@@ -138,6 +138,6 @@ When creating new examples:
 
 ## Resources
 
-- [Bithoven Grammar](../docs/grammar.md)
+- Bithoven Grammar (see main project documentation)
 - [Bitcoin Script Reference](https://en.bitcoin.it/wiki/Script)
 - [Miniscript Policy Language](http://bitcoin.sipa.be/miniscript/)
