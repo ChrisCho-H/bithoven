@@ -324,10 +324,10 @@
         <h1 class="text-4xl font-extrabold text-gray-900 mb-4">
           Bithoven Developer Guide
         </h1>
-        <p class="text-xl text-gray-600">
-          A guide to building safe, expressive smart contracts on Bitcoin.
+        <p class="text-xl text-gray-600 mb-4">
+          Learn to build safe, expressive smart contracts on Bitcoin with readable, type-safe code.
         </p>
-        <div class="mt-6 flex flex-wrap gap-3">
+        <div class="mt-6 flex flex-wrap gap-3 mb-6">
           <span
             class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded border border-blue-400"
             >Version 0.0.1</span
@@ -338,8 +338,38 @@
           >
           <span
             class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded border border-gray-400"
-            >Legacy / Segwit / Taproot</span
+            >Legacy / SegWit / Taproot</span
           >
+        </div>
+
+        <!-- Quick Start Actions -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <a 
+            href="https://bithoven-lang.github.io/bithoven/ide/" 
+            target="_blank"
+            class="block p-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-center"
+          >
+            <div class="text-2xl mb-2">💻</div>
+            <div class="font-bold">Try Web IDE</div>
+            <div class="text-sm opacity-90">Write & compile instantly</div>
+          </a>
+          <a 
+            href="#examples" 
+            class="block p-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-center"
+          >
+            <div class="text-2xl mb-2">📚</div>
+            <div class="font-bold">Browse Examples</div>
+            <div class="text-sm opacity-90">11 real-world contracts</div>
+          </a>
+          <a 
+            href="https://github.com/ChrisCho-H/bithoven" 
+            target="_blank"
+            class="block p-4 bg-gray-700 hover:bg-gray-800 text-white rounded-lg transition-colors text-center"
+          >
+            <div class="text-2xl mb-2">🚀</div>
+            <div class="font-bold">View on GitHub</div>
+            <div class="text-sm opacity-90">Source code & issues</div>
+          </a>
         </div>
       </div>
 
@@ -380,6 +410,36 @@
               opcodes with minimal overhead.
             </li>
           </ul>
+        </div>
+
+        <!-- Quick Comparison -->
+        <div class="bg-gray-50 rounded-lg p-6 mb-6">
+          <h3 class="font-bold text-gray-900 mb-4 text-lg">📊 Bithoven vs. Raw Bitcoin Script</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <div class="font-semibold text-red-700 mb-2">❌ Bitcoin Script (Raw)</div>
+              <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs overflow-x-auto">OP_IF
+  &lt;1000&gt; OP_CSV OP_DROP
+  &lt;alice_pk&gt; OP_CHECKSIG
+OP_ELSE
+  OP_HASH256
+  &lt;hash&gt; OP_EQUALVERIFY
+  &lt;bob_pk&gt; OP_CHECKSIG
+OP_ENDIF</pre>
+              <p class="text-xs text-gray-600 mt-2">Stack-based, hard to read, error-prone</p>
+            </div>
+            <div>
+              <div class="font-semibold text-green-700 mb-2">✅ Bithoven (High-Level)</div>
+              <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs overflow-x-auto"><span class="code-keyword">if</span> condition {
+  <span class="code-function">older</span> <span class="code-number">1000</span>;
+  <span class="code-keyword">return</span> <span class="code-function">checksig</span>(sig_alice, alice_pk);
+} <span class="code-keyword">else</span> {
+  <span class="code-keyword">verify</span> <span class="code-function">sha256</span>(<span class="code-function">sha256</span>(preimage)) == hash;
+  <span class="code-keyword">return</span> <span class="code-function">checksig</span>(sig_bob, bob_pk);
+}</pre>
+              <p class="text-xs text-gray-600 mt-2">Readable, type-safe, beginner-friendly</p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -1241,12 +1301,17 @@
       <footer
         class="mt-20 border-t pt-8 pb-8 text-center text-gray-500 text-sm"
       >
-        <p>&copy; 2025 Bithoven Project. Licensed under MIT.</p>
-        <div class="mt-2 space-x-4">
-          <a href="#" class="hover:text-gray-900">GitHub</a>
-          <a href="#" class="hover:text-gray-900">Issues</a>
-          <a href="#" class="hover:text-gray-900">Contact</a>
+        <p class="mb-4">&copy; 2025 Bithoven Project. Licensed under MIT.</p>
+        <div class="mb-4 space-x-4">
+          <a href="https://github.com/ChrisCho-H/bithoven" target="_blank" class="hover:text-gray-900 hover:underline">GitHub</a>
+          <a href="https://github.com/ChrisCho-H/bithoven/issues" target="_blank" class="hover:text-gray-900 hover:underline">Issues</a>
+          <a href="https://bithoven-lang.github.io/bithoven/ide/" target="_blank" class="hover:text-gray-900 hover:underline">Web IDE</a>
+          <a href="https://arxiv.org/abs/2601.01436" target="_blank" class="hover:text-gray-900 hover:underline">Research Paper</a>
         </div>
+        <p class="text-xs text-gray-400">
+          Built for the Bitcoin community. 
+          <a href="#introduction" class="hover:text-gray-600">Learn more →</a>
+        </p>
       </footer>
     </div>
 
