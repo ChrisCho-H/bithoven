@@ -70,21 +70,22 @@ mod tests {
     }
 
     #[test]
-    fn test_commit_reveal_compiles() {
-        assert_compiles("commit_reveal.bithoven");
+    fn test_multisig_voting_compiles() {
+        assert_compiles("multisig_voting.bithoven");
     }
 
     #[test]
-    fn test_commit_reveal_output() {
-        let output = compile_example("commit_reveal.bithoven").unwrap();
+    fn test_multisig_voting_output() {
+        let output = compile_example("multisig_voting.bithoven").unwrap();
         let asm = output.asm();
 
         assert!(asm.contains("OP_IF") || asm.contains("OP_NOTIF"));
         assert!(asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"));
         assert!(asm.contains("OP_CHECKSIG"));
+        // Should use OP_CHECKMULTISIG for 2-of-3 threshold
         assert!(
-            asm.contains("OP_SHA256"),
-            "Should verify commitment preimage with OP_SHA256"
+            asm.contains("OP_CHECKMULTISIG"),
+            "Should use OP_CHECKMULTISIG for 2-of-3 threshold signature verification"
         );
     }
 
@@ -113,7 +114,7 @@ mod tests {
             "atomic_swap.bithoven",
             "escrow.bithoven",
             "vault.bithoven",
-            "commit_reveal.bithoven",
+            "multisig_voting.bithoven",
             "prediction_market.bithoven",
         ];
 
@@ -137,7 +138,7 @@ mod tests {
             "atomic_swap.bithoven",
             "escrow.bithoven",
             "vault.bithoven",
-            "commit_reveal.bithoven",
+            "multisig_voting.bithoven",
             "prediction_market.bithoven",
         ];
 
@@ -159,7 +160,7 @@ mod tests {
             "atomic_swap.bithoven",
             "escrow.bithoven",
             "vault.bithoven",
-            "commit_reveal.bithoven",
+            "multisig_voting.bithoven",
             "prediction_market.bithoven",
         ];
 

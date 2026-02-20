@@ -52,19 +52,20 @@ A security-focused wallet where withdrawals require a 1-day waiting period, givi
 
 ---
 
-### Commit-Reveal (`commit_reveal.bithoven`)
+### Multisig Voting (`multisig_voting.bithoven`)
 
-**Use Case:** Fair lottery, sealed-bid auctions, or any application requiring commitment hiding
+**Use Case:** DAO treasury management, joint custody, board approvals, multi-stakeholder funds
 
-A 2-phase protocol where a party commits funds with a hash of their secret choice, then must reveal the preimage to claim, or a timeout allows the challenger to get a refund.
+A democratic decision-making contract requiring approval from at least 2 out of 3 parties (2-of-3 threshold). Standard approvals require a 1-day waiting period for security, while emergency overrides with all 3 signatures can execute immediately.
 
 **Key Concepts:**
-- Commitment scheme (commit-then-reveal)
-- Hash-based hiding
-- Timeout refunds
-- Fair games and auctions
+- Multi-signature threshold logic (2-of-3)
+- OP_CHECKMULTISIG for threshold signatures
+- Different approval levels (standard vs emergency)
+- Time-delayed governance for security
+- Democratic fund control
 
-**Real-world application:** Fair lotteries, sealed-bid auctions, rock-paper-scissors games, competitive bidding
+**Real-world application:** DAO treasuries, corporate boards, joint custody wallets, multi-stakeholder governance
 
 ---
 
@@ -99,7 +100,7 @@ The repository includes additional examples demonstrating various Bitcoin Script
 
 1. **Start with basics:** `singlesig.bithoven` → `hashlock.bithoven` → `timelock.bithoven`
 2. **Combine concepts:** `htlc.bithoven` (hash + time locks)
-3. **Multi-party patterns:** `escrow.bithoven` (2-of-3), `commit_reveal.bithoven` (bilateral)
+3. **Multi-party patterns:** `escrow.bithoven` (2-of-3 arbitration), `multisig_voting.bithoven` (threshold voting)
 4. **Advanced security:** `vault.bithoven` (time delays + recovery)
 5. **Advanced patterns:** `atomic_swap.bithoven` (cross-chain)
 6. **Innovative applications:** `prediction_market.bithoven` (oracle integration)

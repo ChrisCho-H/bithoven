@@ -76,7 +76,7 @@ Bithoven comes with a rich collection of examples demonstrating real-world Bitco
 | **[Atomic Swap](./example/atomic_swap.bithoven)** 🆕 | Cross-chain trading | Double SHA256 hash locks, trustless exchange |
 | **[Escrow](./example/escrow.bithoven)** 🆕 | 2-of-3 multisig marketplace | Arbitrator, buyer/seller, time-locked refunds |
 | **[Vault](./example/vault.bithoven)** 🆕 | Security-enhanced wallet | Time-delayed withdrawals, immediate cold storage recovery |
-| **[Commit-Reveal](./example/commit_reveal.bithoven)** 🆕 | Fair lottery / sealed-bid auction | Hash-based commitment scheme, timeout refunds |
+| **[Multisig Voting](./example/multisig_voting.bithoven)** 🆕 | DAO treasury / board approvals | 2-of-3 threshold voting, emergency 3-of-3 override |
 | **[Prediction Market](./example/prediction_market.bithoven)** 🆕 | Decentralized betting with hash-based oracle | Cryptographic commitment schemes, oracle proof verification |
 | **[Multisig](./example/multisig.bithoven)** | 2-of-2 multisig | Taproot multi-signature support |
 | **[Inheritance](./example/inheritance.bithoven)** | Tiered access control | Multiple heir levels, secret-based access |

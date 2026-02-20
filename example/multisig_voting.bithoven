@@ -1,0 +1,45 @@
+pragma bithoven version 0.0.1;
+pragma bithoven target segwit;
+
+/*
+ * Multi-Signature Voting Contract (2-of-3 Threshold)
+ * 
+ * Enables democratic decision-making requiring approval from at least 2 out of 3 parties.
+ * Use cases: DAO treasury, joint custody, board approvals, multi-stakeholder funds
+ * 
+ * - Execute: Any 2 of the 3 parties can approve spending
+ * - Emergency: All 3 parties together can override immediately
+ * 
+ * This showcases:
+ * - Multi-signature threshold logic (2-of-3, 3-of-3)
+ * - Different approval levels for different scenarios
+ * - Democratic governance pattern
+ */
+
+// Path 1: Standard approval (2-of-3 multi-sig with timelock)
+(approval_type: bool, sig_a: signature, sig_b: signature, sig_c: signature)
+
+// Path 2: Emergency override (all 3 parties, no timelock)
+(approval_type: bool, sig_a_emerg: signature, sig_b_emerg: signature, sig_c_emerg: signature)
+
+{
+    // Check approval type
+    if approval_type {
+        // Standard 2-of-3 approval with 1-day waiting period for security
+        older 144;  // 1 day = 144 blocks
+        
+        // Verify at least 2 of 3 signatures (using 2-of-3 multisig)
+        // All 3 signatures must be provided, but only 2 need to be valid
+        return checksig[2,
+            (sig_a, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"),
+            (sig_b, "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432"),
+            (sig_c, "02a1633cafcc01ebfb6d78e39f687a1f0995c62fc95f51ead10a02ee0be551b5dc")
+        ];
+    }
+    else {
+        // Emergency path: all 3 parties agree, can execute immediately (no timelock)
+        verify checksig(sig_a_emerg, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
+        verify checksig(sig_b_emerg, "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432");
+        return checksig(sig_c_emerg, "02a1633cafcc01ebfb6d78e39f687a1f0995c62fc95f51ead10a02ee0be551b5dc");
+    }
+}
