@@ -85,7 +85,7 @@ mod tests {
         // Should use OP_CHECKMULTISIG for 2-of-3 threshold
         assert!(
             asm.contains("OP_CHECKMULTISIG"),
-            "Should use OP_CHECKMULTISIG for 2-of-3 threshold signature verification"
+            "Should use OP_CHECKMULTISIG for 2-of-3 threshold signature verification."
         );
     }
 

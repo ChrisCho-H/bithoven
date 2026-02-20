@@ -29,7 +29,7 @@ pragma bithoven target segwit;
         older 144;  // 1 day = 144 blocks
         
         // Verify at least 2 of 3 signatures (using 2-of-3 multisig)
-        // All 3 signatures must be provided, but only 2 need to be valid
+        // Provide 2 valid signatures corresponding to any 2 of the 3 parties
         return checksig[2,
             (sig_a, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"),
             (sig_b, "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432"),
