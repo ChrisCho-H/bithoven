@@ -81,11 +81,10 @@ mod tests {
 
         assert!(asm.contains("OP_IF") || asm.contains("OP_NOTIF"));
         assert!(asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"));
-        assert!(asm.contains("OP_CHECKSIG"));
-        // Should use OP_CHECKMULTISIG for 2-of-3 threshold
+        // Should use OP_CHECKMULTISIG for both 2-of-3 and 3-of-3 threshold signatures
         assert!(
             asm.contains("OP_CHECKMULTISIG"),
-            "Should use OP_CHECKMULTISIG for 2-of-3 threshold signature verification."
+            "Should use OP_CHECKMULTISIG for threshold signature verification."
         );
     }
 
