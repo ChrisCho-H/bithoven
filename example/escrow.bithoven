@@ -1,0 +1,35 @@
+pragma bithoven version 0.0.1;
+pragma bithoven target segwit;
+
+// 2-of-3 Multisig Escrow Contract
+// Use case: Marketplace transactions with arbitrator
+// - Path 1: Buyer + Seller agree (happy path - immediate settlement)
+// - Path 2: Arbitrator + Buyer agree to refund (after 30-day timeout)
+// - Path 3: Arbitrator + Seller agree to release payment (dispute resolution)
+
+// Path 1: Buyer + Seller cooperative release (happy path)
+(sig_buyer: signature, sig_seller_release: signature)
+// Path 2: Arbitrator + Buyer refund after timeout
+(sig_buyer: signature, sig_arbitrator_refund: signature)
+// Path 3: Arbitrator + Seller dispute resolution  
+(sig_buyer: signature, sig_seller_dispute: signature, sig_arbitrator_dispute: signature)
+{
+    // Check if buyer signed
+    if checksig(sig_buyer, "02a1633cafcc01ebfb6d78e39f687a1f0995c62fc95f51ead10a02ee0be551b5dc") {
+        // Path 1 or Path 2: Buyer is involved
+        if checksig(sig_seller_release, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798") {
+            // Path 1: Buyer + Seller agree (immediate release)
+            return true;
+        }
+        else {
+            // Path 2: Buyer + Arbitrator (refund after timeout)
+            older 4320;  // 30 days = 4320 blocks
+            return checksig(sig_arbitrator_refund, "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432");
+        }
+    }
+    else {
+        // Path 3: Seller + Arbitrator (dispute resolution, any time)
+        verify checksig(sig_seller_dispute, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
+        return checksig(sig_arbitrator_dispute, "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432");
+    }
+}

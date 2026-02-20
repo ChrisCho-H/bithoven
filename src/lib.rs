@@ -2,6 +2,7 @@ mod analyze;
 mod analyze_test;
 mod ast;
 mod compile;
+mod examples_test;
 mod parser_test;
 mod source;
 

@@ -1,0 +1,66 @@
+pragma bithoven version 0.0.1;
+pragma bithoven target taproot;
+
+/*
+ * Decentralized Prediction Market with Oracle
+ * 
+ * A trustless betting contract for binary outcomes resolved by an oracle.
+ * Participants bet on outcomes, oracle provides cryptographic proof of result,
+ * and winners claim their rewards.
+ * 
+ * Oracle Integration Pattern:
+ * - Oracle commits to event outcome by publishing hash of "outcome_A" or "outcome_B"
+ * - Winners provide the preimage to unlock funds
+ * - If oracle fails to resolve, refund mechanism activates
+ * 
+ * Use Cases:
+ * - Sports betting (team A vs team B)
+ * - Price predictions (BTC above/below threshold)
+ * - Event outcomes (elections, weather, etc.)
+ * 
+ * This showcases:
+ * - Oracle commitment schemes with hash locks
+ * - Multi-outcome resolution paths
+ * - Time-bounded dispute and refund mechanisms
+ */
+
+// Path 1: Outcome A winner claims with oracle proof
+(outcome_proof: string, sig_winner_a: signature)
+
+// Path 2: Outcome B winner claims with oracle proof
+(outcome_proof: string, outcome_proof_b: string, sig_winner_b: signature)
+
+// Path 3: Refund if oracle fails to resolve
+// NOTE: outcome_proof and outcome_proof_b are still required in the witness stack because the script
+//       checks them before reaching this refund branch. Provide empty strings for these parameters
+//       when spending via the refund path.
+(outcome_proof: string, outcome_proof_b: string, sig_refund_a: signature, sig_refund_b: signature)
+
+{
+    // Must wait for betting period to end (7 days = 1008 blocks)
+    older 1008;
+    
+    // Check if outcome A winner is claiming with valid proof
+    // NOTE: These hashes are demonstration placeholders. In production, the oracle would commit
+    //       to sha256("outcome_a:<event_id>:<timestamp>:<oracle_secret>") before the event,
+    //       then reveal the preimage only after the outcome is determined.
+    if sha256(outcome_proof) == "8f6d9b3c1a27f4e985c2487b62a1cd0f3e9a54d28b7c64ea1f4c9e62d5b7a3c1" {
+        // Outcome A confirmed - participant A wins
+        return checksig(sig_winner_a, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
+    }
+    else {
+        // Check if outcome B winner is claiming with valid proof
+        // NOTE: Demo placeholder hash - replace with actual oracle commitment in production
+        if sha256(outcome_proof_b) == "7a8c9d2b4e6f1a3c5d7e9b1f3a5c7e9d2b4f6a8c1e3a5c7e9b2d4f6a8c1e3a5c" {
+            // Outcome B confirmed - participant B wins
+            return checksig(sig_winner_b, "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5");
+        }
+        else {
+            // No valid outcome proven - both parties must agree to refund
+            // Requires cooperation after extended timeout (30 days beyond betting period)
+            older 4320;
+            verify checksig(sig_refund_a, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
+            return checksig(sig_refund_b, "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5");
+        }
+    }
+}
