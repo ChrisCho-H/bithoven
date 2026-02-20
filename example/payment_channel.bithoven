@@ -4,17 +4,20 @@ pragma bithoven target segwit;
 // Payment Channel Contract
 // Use case: Layer 2 payment channels (Lightning Network style)
 // - Path 1: Cooperative close (Alice + Bob agree on final state - immediate)
-// - Path 2: Unilateral close by holder (after dispute period - time-delayed)
+// - Path 2: Unilateral close by Alice (after dispute period - time-delayed)
+// - Path 3: Unilateral close by Bob (after extended dispute period - emergency recovery)
 //
-// NOTE: This follows Bithoven's spending path pattern where each path has a unique
-// stack layout, allowing the script to distinguish between cooperative and unilateral closes.
+// NOTE: This follows Bithoven's spending path pattern where variables are consumed
+// in order based on the conditional checks.
 
 // Path 1: Cooperative close (both parties agree)
 (sig_alice: signature, sig_bob: signature)
-// Path 2: Unilateral close by holder (after timeout) - uses different 2nd variable name
-(sig_alice: signature, sig_alice_state: signature)
+// Path 2: Unilateral close by Alice (after timeout)
+(sig_alice: signature, sig_bob_timeout: signature)
+// Path 3: Unilateral close by Bob (emergency recovery)
+(sig_alice: signature, sig_bob: signature, sig_bob_recovery: signature)
 {
-    // Check if Alice signed (holder must always sign)
+    // Check if Alice signed
     if checksig(sig_alice, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798") {
         // Alice signed - check if Bob also signed for cooperative close
         if checksig(sig_bob, "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432") {
@@ -22,14 +25,17 @@ pragma bithoven target segwit;
             return true;
         }
         else {
-            // Path 2: Alice signed but Bob didn't - unilateral close by Alice
-            // Must wait for dispute period, then verify Alice's state signature
+            // Path 2: Unilateral close by Alice (Bob didn't sign)
+            // Must wait for dispute period, then verify Alice can close with timeout signature
             older 144;  // 1 day = 144 blocks (~24 hours)
-            return checksig(sig_alice_state, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
+            return checksig(sig_bob_timeout, "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432");
         }
     }
     else {
-        // Alice didn't sign - invalid for this channel
-        return false;
+        // Path 3: Alice didn't sign - Bob's emergency recovery
+        // Must wait for extended dispute period and verify Bob's signatures
+        older 1008;  // 1 week = 1008 blocks (~7 days)
+        verify checksig(sig_bob, "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432");
+        return checksig(sig_bob_recovery, "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432");
     }
 }
