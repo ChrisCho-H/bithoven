@@ -5,8 +5,20 @@ import CodeMirror from "@uiw/react-codemirror";
 import { customKeywordHighlighting } from "./pretty";
 import "./App.css";
 
+// Constants
+const EDITOR_HEIGHT = "400px";
+
 // Example configurations with metadata
-const examples = [
+type Example = {
+  id: string;
+  name: string;
+  difficulty: "beginner" | "intermediate" | "advanced" | "expert";
+  description: string;
+  icon: string;
+  code: string;
+};
+
+const examples: Example[] = [
   {
     id: "htlc",
     name: "HTLC (Hash Time-Locked Contract)",
@@ -399,7 +411,7 @@ pragma bithoven target taproot;
   },
 ];
 
-const defaultExample = examples.find((ex) => ex.id === "htlc") || examples[0];
+const defaultExample = examples.find((ex) => ex.id === "htlc")!; // htlc is guaranteed to exist at index 0
 
 function App() {
   const [selectedExample, setSelectedExample] = useState(defaultExample);
@@ -423,7 +435,7 @@ function App() {
     }
   }, []);
 
-  const handleExampleSelect = (example: typeof defaultExample) => {
+  const handleExampleSelect = (example: Example) => {
     setSelectedExample(example);
     setCode(example.code);
     setShowExampleSelector(false);
@@ -588,7 +600,7 @@ function App() {
           <CodeMirror
             id="codemirror-editor"
             value={code}
-            height="400px"
+            height={EDITOR_HEIGHT}
             theme="dark"
             extensions={[customKeywordHighlighting]}
             onChange={(value) => setCode(value)}
