@@ -70,18 +70,22 @@ mod tests {
     }
 
     #[test]
-    fn test_payment_channel_compiles() {
-        assert_compiles("payment_channel.bithoven");
+    fn test_commit_reveal_compiles() {
+        assert_compiles("commit_reveal.bithoven");
     }
 
     #[test]
-    fn test_payment_channel_output() {
-        let output = compile_example("payment_channel.bithoven").unwrap();
+    fn test_commit_reveal_output() {
+        let output = compile_example("commit_reveal.bithoven").unwrap();
         let asm = output.asm();
 
         assert!(asm.contains("OP_IF") || asm.contains("OP_NOTIF"));
         assert!(asm.contains("OP_CHECKSEQUENCEVERIFY") || asm.contains("OP_CSV"));
         assert!(asm.contains("OP_CHECKSIG"));
+        assert!(
+            asm.contains("OP_SHA256"),
+            "Should verify commitment preimage with OP_SHA256"
+        );
     }
 
     #[test]
@@ -109,7 +113,7 @@ mod tests {
             "atomic_swap.bithoven",
             "escrow.bithoven",
             "vault.bithoven",
-            "payment_channel.bithoven",
+            "commit_reveal.bithoven",
             "prediction_market.bithoven",
         ];
 
@@ -133,7 +137,7 @@ mod tests {
             "atomic_swap.bithoven",
             "escrow.bithoven",
             "vault.bithoven",
-            "payment_channel.bithoven",
+            "commit_reveal.bithoven",
             "prediction_market.bithoven",
         ];
 
@@ -155,7 +159,7 @@ mod tests {
             "atomic_swap.bithoven",
             "escrow.bithoven",
             "vault.bithoven",
-            "payment_channel.bithoven",
+            "commit_reveal.bithoven",
             "prediction_market.bithoven",
         ];
 

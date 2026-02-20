@@ -16,7 +16,7 @@ A hash time-locked contract (HTLC) that enables atomic swaps between Bitcoin and
 - Conditional spending paths
 - Cross-chain interoperability
 
-**Real-world application:** Lightning Network payment channels, cross-chain DEX
+**Real-world application:** Cross-chain atomic swaps, Lightning Network HTLC, trustless DEX
 
 ---
 
@@ -52,19 +52,19 @@ A security-focused wallet where withdrawals require a 1-day waiting period, givi
 
 ---
 
-### Payment Channel (`payment_channel.bithoven`)
+### Commit-Reveal (`commit_reveal.bithoven`)
 
-**Use Case:** Layer 2 payment channels (Lightning Network style)
+**Use Case:** Fair lottery, sealed-bid auctions, or any application requiring commitment hiding
 
-A bidirectional payment channel where Alice and Bob can cooperatively close instantly, or either party can unilaterally close after a 1-day dispute period, allowing the other party to contest with newer state.
+A 2-phase protocol where a party commits funds with a hash of their secret choice, then must reveal the preimage to claim, or a timeout allows the challenger to get a refund.
 
 **Key Concepts:**
-- Cooperative close (instant)
-- Unilateral close (time-delayed)
-- Dispute periods
-- Layer 2 scaling
+- Commitment scheme (commit-then-reveal)
+- Hash-based hiding
+- Timeout refunds
+- Fair games and auctions
 
-**Real-world application:** Lightning Network channels, micropayment streams, off-chain scaling
+**Real-world application:** Fair lotteries, sealed-bid auctions, rock-paper-scissors games, competitive bidding
 
 ---
 
@@ -99,7 +99,7 @@ The repository includes additional examples demonstrating various Bitcoin Script
 
 1. **Start with basics:** `singlesig.bithoven` → `hashlock.bithoven` → `timelock.bithoven`
 2. **Combine concepts:** `htlc.bithoven` (hash + time locks)
-3. **Multi-party patterns:** `escrow.bithoven` (2-of-3), `payment_channel.bithoven` (bilateral)
+3. **Multi-party patterns:** `escrow.bithoven` (2-of-3), `commit_reveal.bithoven` (bilateral)
 4. **Advanced security:** `vault.bithoven` (time delays + recovery)
 5. **Advanced patterns:** `atomic_swap.bithoven` (cross-chain)
 6. **Innovative applications:** `prediction_market.bithoven` (oracle integration)
@@ -122,7 +122,7 @@ Bithoven compiles to Bitcoin Script, which has important constraints:
 - Each Bithoven contract locks exactly one UTXO
 - Multi-output scenarios require multiple contracts or pre-signed transaction trees
 
-These limitations mean some common patterns (like 2-of-2 escrow with separate refund paths, or payment channels with symmetric unilateral close) cannot be fully expressed in a single Bithoven contract. Production implementations often use:
+These limitations mean some common patterns (like 2-of-2 escrow with separate refund paths, or complex payment channels with symmetric unilateral close) cannot be fully expressed in a single Bithoven contract. Production implementations often use:
 - Pre-signed transaction trees
 - Multiple UTXOs with coordinated spending
 - Off-chain state channels with on-chain settlement

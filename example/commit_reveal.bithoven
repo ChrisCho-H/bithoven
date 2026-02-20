@@ -1,0 +1,34 @@
+pragma bithoven version 0.0.1;
+pragma bithoven target segwit;
+
+// Commit-Reveal Scheme Contract
+// Use case: Fair lottery, sealed-bid auctions, or any application requiring commitment hiding
+// - Path 1: Revealer provides correct preimage matching their prior commitment
+// - Path 2: Timeout refund if revealer fails to reveal within the time window
+//
+// This demonstrates a 2-phase protocol:
+// 1. Commit phase: Party commits funds with hash of their secret choice
+// 2. Reveal phase: Party must reveal the preimage to claim, or timeout allows refund
+
+// Path 1: Successful reveal (revealer provides preimage and signature)
+(reveal_flag: bool, preimage: string, sig_revealer: signature)
+// Path 2: Timeout refund (challenger claims if revealer doesn't reveal in time)
+(reveal_flag: bool, preimage: string, sig_challenger: signature)
+{
+    // Check if attempting to reveal
+    if reveal_flag {
+        // Verify the preimage matches the committed hash
+        // NOTE: This hash is for demonstration - replace with actual commitment hash
+        verify sha256(preimage) == "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+        
+        // Revealer successfully revealed - can claim immediately
+        return checksig(sig_revealer, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
+    }
+    else {
+        // Timeout path: challenger gets refund if revealer doesn't reveal in time
+        older 1008;  // 1 week = 1008 blocks (~7 days)
+        
+        // Challenger can claim the funds after timeout
+        return checksig(sig_challenger, "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432");
+    }
+}
