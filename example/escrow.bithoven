@@ -10,7 +10,8 @@ pragma bithoven target segwit;
 // Path 1: Buyer + Seller cooperative release (happy path)
 (sig_buyer: signature, sig_seller: signature)
 // Path 2: Arbitrator + Buyer refund after timeout
-(sig_buyer: signature, sig_arbitrator_refund: signature)
+// Note: sig_seller is still consumed by an earlier checksig (typically empty in this refund path).
+(sig_buyer: signature, sig_seller: signature, sig_arbitrator_refund: signature)
 // Path 3: Arbitrator + Seller dispute resolution  
 (sig_buyer: signature, sig_seller: signature, sig_arbitrator_dispute: signature)
 {
