@@ -3,7 +3,33 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bithoven Developer Guide</title>
+    <title>Bithoven - High-Level Language for Bitcoin Smart Contracts | Developer Guide</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Learn Bithoven - a type-safe, imperative language for writing Bitcoin smart contracts with if/else logic, timelocks, and signatures. Compile to native Bitcoin Script for SegWit and Taproot." />
+    <meta name="keywords" content="Bitcoin, smart contracts, Bithoven, blockchain programming, Bitcoin Script, HTLC, multisig, timelock, atomic swap, escrow, vault, SegWit, Taproot, cryptocurrency development" />
+    <meta name="author" content="Bithoven Project" />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Bithoven - High-Level Language for Bitcoin Smart Contracts" />
+    <meta property="og:description" content="Write readable Bitcoin smart contracts with if/else, timelocks, and signatures. Type-safe imperative language that compiles to native Bitcoin Script." />
+    <meta property="og:url" content="https://bithoven-lang.github.io/bithoven/docs/" />
+    <meta property="og:site_name" content="Bithoven Documentation" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Bithoven - Bitcoin Smart Contract Language" />
+    <meta name="twitter:description" content="Write readable Bitcoin smart contracts with if/else logic. Type-safe language that compiles to Bitcoin Script." />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://bithoven-lang.github.io/bithoven/docs/" />
+    
+    <!-- Preconnect for Performance -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" />
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       rel="stylesheet"
@@ -53,6 +79,45 @@
         scroll-behavior: smooth;
       }
     </style>
+    
+    <!-- Structured Data (Schema.org) for SEO and AI -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Bithoven",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Cross-platform",
+      "description": "A high-level, type-safe programming language for Bitcoin smart contracts that compiles to native Bitcoin Script. Features imperative syntax with if/else, timelocks, signatures, and multi-path spending.",
+      "url": "https://bithoven-lang.github.io/bithoven/",
+      "softwareVersion": "0.0.1",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Bithoven",
+        "url": "https://github.com/ChrisCho-H/bithoven"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "author": {
+        "@type": "Person",
+        "name": "Hyunhum Cho"
+      },
+      "codeRepository": "https://github.com/ChrisCho-H/bithoven",
+      "releaseNotes": "https://github.com/ChrisCho-H/bithoven/releases",
+      "screenshot": "https://bithoven-lang.github.io/bithoven/ide/",
+      "featureList": [
+        "Imperative syntax with if/else statements",
+        "Type safety for bool, signature, string, and number types",
+        "Multiple spending paths in smart contracts",
+        "Support for legacy, SegWit, and Taproot",
+        "Built-in Bitcoin primitives (timelocks, checksig, sha256)",
+        "Formal safety verification"
+      ]
+    }
+    </script>
   </head>
   <body class="bg-gray-50 text-gray-800 font-sans antialiased">
     <!-- Navbar -->
@@ -229,22 +294,24 @@
               href="#examples"
               class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group"
             >
-              <span class="ms-3">8. Examples</span>
+              <span class="ms-3">8. Examples Gallery</span>
             </a>
-            <ul class="pl-6 mt-1 space-y-1 text-gray-500">
-              <li>
-                <a href="#example-htlc" class="hover:text-blue-600 block py-1"
-                  >HTLC</a
-                >
-              </li>
-              <li>
-                <a
-                  href="#example-inheritance"
-                  class="hover:text-blue-600 block py-1"
-                  >Inheritance Plan</a
-                >
-              </li>
-            </ul>
+          </li>
+          <li>
+            <a
+              href="#faq"
+              class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group"
+            >
+              <span class="ms-3">9. FAQ</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="#glossary"
+              class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group"
+            >
+              <span class="ms-3">10. Glossary</span>
+            </a>
           </li>
         </ul>
       </div>
@@ -257,10 +324,10 @@
         <h1 class="text-4xl font-extrabold text-gray-900 mb-4">
           Bithoven Developer Guide
         </h1>
-        <p class="text-xl text-gray-600">
-          A guide to building safe, expressive smart contracts on Bitcoin.
+        <p class="text-xl text-gray-600 mb-4">
+          Learn to build safe, expressive smart contracts on Bitcoin with readable, type-safe code.
         </p>
-        <div class="mt-6 flex flex-wrap gap-3">
+        <div class="mt-6 flex flex-wrap gap-3 mb-6">
           <span
             class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded border border-blue-400"
             >Version 0.0.1</span
@@ -271,8 +338,38 @@
           >
           <span
             class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded border border-gray-400"
-            >Legacy / Segwit / Taproot</span
+            >Legacy / SegWit / Taproot</span
           >
+        </div>
+
+        <!-- Quick Start Actions -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <a 
+            href="https://bithoven-lang.github.io/bithoven/ide/" 
+            target="_blank"
+            class="block p-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-center"
+          >
+            <div class="text-2xl mb-2">💻</div>
+            <div class="font-bold">Try Web IDE</div>
+            <div class="text-sm opacity-90">Write & compile instantly</div>
+          </a>
+          <a 
+            href="#examples" 
+            class="block p-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-center"
+          >
+            <div class="text-2xl mb-2">📚</div>
+            <div class="font-bold">Browse Examples</div>
+            <div class="text-sm opacity-90">11 real-world contracts</div>
+          </a>
+          <a 
+            href="https://github.com/ChrisCho-H/bithoven" 
+            target="_blank"
+            class="block p-4 bg-gray-700 hover:bg-gray-800 text-white rounded-lg transition-colors text-center"
+          >
+            <div class="text-2xl mb-2">🚀</div>
+            <div class="font-bold">View on GitHub</div>
+            <div class="text-sm opacity-90">Source code & issues</div>
+          </a>
         </div>
       </div>
 
@@ -313,6 +410,36 @@
               opcodes with minimal overhead.
             </li>
           </ul>
+        </div>
+
+        <!-- Quick Comparison -->
+        <div class="bg-gray-50 rounded-lg p-6 mb-6">
+          <h3 class="font-bold text-gray-900 mb-4 text-lg">📊 Bithoven vs. Raw Bitcoin Script</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <div class="font-semibold text-red-700 mb-2">❌ Bitcoin Script (Raw)</div>
+              <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs overflow-x-auto">OP_IF
+  &lt;1000&gt; OP_CSV OP_DROP
+  &lt;alice_pk&gt; OP_CHECKSIG
+OP_ELSE
+  OP_HASH256
+  &lt;hash&gt; OP_EQUALVERIFY
+  &lt;bob_pk&gt; OP_CHECKSIG
+OP_ENDIF</pre>
+              <p class="text-xs text-gray-600 mt-2">Stack-based, hard to read, error-prone</p>
+            </div>
+            <div>
+              <div class="font-semibold text-green-700 mb-2">✅ Bithoven (High-Level)</div>
+              <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs overflow-x-auto"><span class="code-keyword">if</span> condition {
+  <span class="code-function">older</span> <span class="code-number">1000</span>;
+  <span class="code-keyword">return</span> <span class="code-function">checksig</span>(sig_alice, alice_pk);
+} <span class="code-keyword">else</span> {
+  <span class="code-keyword">verify</span> <span class="code-function">sha256</span>(<span class="code-function">sha256</span>(preimage)) == hash;
+  <span class="code-keyword">return</span> <span class="code-function">checksig</span>(sig_bob, bob_pk);
+}</pre>
+              <p class="text-xs text-gray-600 mt-2">Readable, type-safe, beginner-friendly</p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -705,230 +832,486 @@
         </div>
       </section>
 
-      <!-- 8. Examples -->
+<!-- 8. Examples Gallery -->
       <section id="examples" class="mb-20">
         <h2 class="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b">
-          8. Examples
+          8. Examples Gallery
         </h2>
+        
+        <p class="mb-6 text-gray-700 leading-relaxed">
+          Explore real-world Bitcoin smart contract patterns implemented in Bithoven. 
+          Each example demonstrates key concepts and can be <a href="https://bithoven-lang.github.io/bithoven/ide/" class="text-blue-600 hover:underline font-semibold">tried live in the Web IDE</a>.
+        </p>
 
-        <div class="mb-10">
-          <h3
-            id="example-htlc"
-            class="text-xl font-semibold text-gray-800 mb-2"
-          >
-            Hashed Time-Locked Contract (HTLC)
-          </h3>
-          <p class="mb-4 text-gray-600 text-sm">
-            A standard contract used in Lightning Network. Alice can refund
-            after a delay; Bob can redeem immediately with a secret.
+        <!-- Learning Path Guide -->
+        <div class="bg-gradient-to-r from-green-50 to-blue-50 border-l-4 border-green-500 p-5 mb-8 rounded-r-lg">
+          <p class="font-bold text-gray-900 mb-3 flex items-center">
+            <span class="text-2xl mr-2">🎓</span> Suggested Learning Path
           </p>
-
-          <div class="relative group">
-            <div
-              class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition"
-            >
-              <button
-                class="bg-gray-700 text-white text-xs px-2 py-1 rounded hover:bg-gray-600"
-                onclick="copyToClipboard('code-htlc')"
-              >
-                Copy
-              </button>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-sm">
+            <div class="flex items-center">
+              <span class="inline-flex items-center justify-center w-6 h-6 mr-2 text-xs font-bold text-white bg-green-500 rounded-full">1</span>
+              <span class="text-gray-700">Beginner → Basic signatures & locks</span>
             </div>
-            <div
-              id="code-htlc"
-              class="bg-gray-800 text-gray-100 p-4 rounded-lg font-mono text-sm overflow-x-auto"
-            >
-              <span class="code-keyword">pragma</span> bithoven version 0.0.1;
-              <br /><span class="code-keyword">pragma</span> bithoven target
-              segwit;
-              <br />
-              <br /><span class="code-comment"
-                >// Define inputs for both paths</span
-              >
-              <br />(condition: <span class="code-type">bool</span>, sig_alice:
-              <span class="code-type">signature</span>) <br />(condition:
-              <span class="code-type">bool</span>, preimage:
-              <span class="code-type">string</span>, sig_bob:
-              <span class="code-type">signature</span>)
-              <br />
-              <br />{ <br />&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword"
-                >if</span
-              >
-              condition {
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                class="code-comment"
-                >// Refund Path (Alice)</span
-              >
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                class="code-function"
-                >older</span
-              >
-              <span class="code-number">1000</span>;
-              <span class="code-comment">// Relative Lock</span>
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                class="code-keyword"
-                >return</span
-              >
-              <span class="code-function">checksig</span> (sig_alice,
-              <span class="code-string">"0245...alice_pk..."</span>);
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;}
-              <span class="code-keyword">else</span> {
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                class="code-comment"
-                >// Redeem Path (Bob)</span
-              >
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                class="code-comment"
-                >// Verify preimage matches hash</span
-              >
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                class="code-keyword"
-                >verify</span
-              >
-              <span class="code-function">sha256</span>
-              <span class="code-function">sha256</span> preimage ==
-              <span class="code-string">"53de...hash_digest..."</span>;
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                class="code-keyword"
-                >return</span
-              >
-              <span class="code-function">checksig</span> (sig_bob,
-              <span class="code-string">"0345...bob_pk..."</span>);
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;} <br />}
+            <div class="flex items-center">
+              <span class="inline-flex items-center justify-center w-6 h-6 mr-2 text-xs font-bold text-white bg-yellow-500 rounded-full">2</span>
+              <span class="text-gray-700">Intermediate → Combine concepts</span>
+            </div>
+            <div class="flex items-center">
+              <span class="inline-flex items-center justify-center w-6 h-6 mr-2 text-xs font-bold text-white bg-orange-500 rounded-full">3</span>
+              <span class="text-gray-700">Advanced → Multi-party patterns</span>
+            </div>
+            <div class="flex items-center">
+              <span class="inline-flex items-center justify-center w-6 h-6 mr-2 text-xs font-bold text-white bg-purple-600 rounded-full">4</span>
+              <span class="text-gray-700">Expert → Complex systems</span>
             </div>
           </div>
         </div>
 
-        <div>
-          <h3
-            id="example-inheritance"
-            class="text-xl font-semibold text-gray-800 mb-2"
-          >
-            Inheritance Plan with Decay
+        <!-- Beginner Examples -->
+        <div class="mb-12">
+          <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <span class="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full mr-3">BEGINNER</span>
+            Getting Started
           </h3>
-          <p class="mb-4 text-gray-600 text-sm">
-            Owner spends anytime. Heir spends after 1000 blocks with secret.
-            Lawyer+Auditor multisig after 10,000 blocks.
-          </p>
-          <div class="relative group">
-            <div
-              class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition"
-            >
-              <button
-                class="bg-gray-700 text-white text-xs px-2 py-1 rounded hover:bg-gray-600"
-                onclick="copyToClipboard('code-inherit')"
-              >
-                Copy
-              </button>
+          
+          <!-- Single Signature -->
+          <div class="mb-8 border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <h4 class="text-lg font-semibold text-gray-900 flex items-center">
+                  <span class="text-2xl mr-2">✍️</span>
+                  Single Signature (P2PKH)
+                  <a href="https://bithoven-lang.github.io/bithoven/ide/?example=singlesig" class="ml-3 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 transition">Try in IDE →</a>
+                </h4>
+                <p class="text-sm text-gray-600 mt-1">The most basic Bitcoin transaction - requires only a signature to spend.</p>
+              </div>
             </div>
-            <div
-              id="code-inherit"
-              class="bg-gray-800 text-gray-100 p-4 rounded-lg font-mono text-sm overflow-x-auto"
-            >
-              <span class="code-keyword">pragma</span> bithoven version 0.0.1;
-              <br /><span class="code-keyword">pragma</span> bithoven target
-              segwit;
-              <br />
-              <br /><span class="code-comment"
-                >// Inputs corresponding to the 3 paths</span
-              >
-              <br />(sig_owner: <span class="code-type">signature</span>)
-              <br />(sig_owner: <span class="code-type">signature</span>,
-              secret: <span class="code-type">string</span>, sig_heir:
-              <span class="code-type">signature</span>) <br />(sig_owner:
-              <span class="code-type">signature</span>, secret:
-              <span class="code-type">string</span>, sig_heir:
-              <span class="code-type">signature</span>, sig_lawyer:
-              <span class="code-type">signature</span>, sig_audit:
-              <span class="code-type">signature</span>)
-              <br />
-              <br />{ <br />&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment"
-                >// Path 1: Owner</span
-              >
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">if</span>
-              <span class="code-function">checksig</span>(sig_owner,
-              <span class="code-string">"03da...owner_pk..."</span>) {
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                class="code-keyword"
-                >return</span
-              >
-              <span class="code-type">true</span>;
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;}
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword"
-                >else</span
-              >
-              { <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                class="code-function"
-                >older</span
-              >
-              <span class="code-number">1000</span>;
-              <span class="code-comment">// Wait 1000 blocks</span>
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                class="code-comment"
-                >// Path 2: Heir</span
-              >
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                class="code-keyword"
-                >if</span
-              >
-              <span class="code-function">sha256</span>(secret) ==
-              <span class="code-string">"daed...hash..."</span>
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&&
-              <span class="code-function">checksig</span>(sig_heir,
-              <span class="code-string">"0344...heir_pk..."</span>) {
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                class="code-keyword"
-                >return</span
-              >
-              <span class="code-type">true</span>;
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                class="code-keyword"
-                >else</span
-              >
-              {
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                class="code-function"
-                >older</span
-              >
-              <span class="code-number">10000</span>;
-              <span class="code-comment">// Wait 10,000 blocks</span>
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                class="code-comment"
-                >// Path 3: Lawyer + Auditor Multisig</span
-              >
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                class="code-keyword"
-                >return</span
-              >
-              <span class="code-function">checksig</span>[<span
-                class="code-number"
-                >2</span
-              >,
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(sig_lawyer,
-              <span class="code-string">"03da...lawyer_pk..."</span>),
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(sig_audit,
-              <span class="code-string">"03da...audit_pk..."</span>)
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;];
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
-              <br />&nbsp;&nbsp;&nbsp;&nbsp;} <br />}
+            <div class="bg-gray-50 border-l-4 border-green-500 p-3 text-sm">
+              <p class="font-semibold text-gray-800 mb-1">💡 Learns: Basic syntax, checksig operation</p>
+              <p class="text-gray-600">Use case: Simple wallet, standard payments</p>
+            </div>
+          </div>
+
+          <!-- Hash Lock -->
+          <div class="mb-8 border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <h4 class="text-lg font-semibold text-gray-900 flex items-center">
+                  <span class="text-2xl mr-2">🔒</span>
+                  Hash Lock
+                  <a href="https://bithoven-lang.github.io/bithoven/ide/?example=hashlock" class="ml-3 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 transition">Try in IDE →</a>
+                </h4>
+                <p class="text-sm text-gray-600 mt-1">Spend coins by revealing a secret that matches a SHA256 hash.</p>
+              </div>
+            </div>
+            <div class="bg-gray-50 border-l-4 border-green-500 p-3 text-sm">
+              <p class="font-semibold text-gray-800 mb-1">💡 Learns: Hash verification, secret reveals</p>
+              <p class="text-gray-600">Use case: Atomic swaps, payment channels</p>
+            </div>
+          </div>
+
+          <!-- Time Lock -->
+          <div class="mb-8 border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <h4 class="text-lg font-semibold text-gray-900 flex items-center">
+                  <span class="text-2xl mr-2">⏰</span>
+                  Time Lock (CLTV)
+                  <a href="https://bithoven-lang.github.io/bithoven/ide/?example=timelock" class="ml-3 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 transition">Try in IDE →</a>
+                </h4>
+                <p class="text-sm text-gray-600 mt-1">Coins locked until a specific block height using absolute timelocks.</p>
+              </div>
+            </div>
+            <div class="bg-gray-50 border-l-4 border-green-500 p-3 text-sm">
+              <p class="font-semibold text-gray-800 mb-1">💡 Learns: Absolute timelocks (after), CLTV</p>
+              <p class="text-gray-600">Use case: Vesting schedules, delayed payments</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Intermediate Examples -->
+        <div class="mb-12">
+          <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <span class="bg-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full mr-3">INTERMEDIATE</span>
+            Combining Concepts
+          </h3>
+
+          <!-- HTLC -->
+          <div class="mb-8 border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <h4 class="text-lg font-semibold text-gray-900 flex items-center">
+                  <span class="text-2xl mr-2">⚡</span>
+                  HTLC (Hash Time-Locked Contract)
+                  <a href="https://bithoven-lang.github.io/bithoven/ide/?example=htlc" class="ml-3 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 transition">Try in IDE →</a>
+                </h4>
+                <p class="text-sm text-gray-600 mt-1">Lightning Network standard combining hash locks and timelocks with if/else branches.</p>
+              </div>
+            </div>
+            <div class="bg-gray-50 border-l-4 border-yellow-500 p-3 text-sm">
+              <p class="font-semibold text-gray-800 mb-1">💡 Learns: Conditional paths, combining hash+time locks, relative timelocks (older)</p>
+              <p class="text-gray-600">Use case: Lightning Network, payment channels</p>
+            </div>
+          </div>
+
+          <!-- Atomic Swap -->
+          <div class="mb-8 border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <h4 class="text-lg font-semibold text-gray-900 flex items-center">
+                  <span class="text-2xl mr-2">🔄</span>
+                  Atomic Swap
+                  <a href="https://bithoven-lang.github.io/bithoven/ide/?example=atomic_swap" class="ml-3 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 transition">Try in IDE →</a>
+                </h4>
+                <p class="text-sm text-gray-600 mt-1">Trustless cross-chain trading with hash locks and timeout refunds.</p>
+              </div>
+            </div>
+            <div class="bg-gray-50 border-l-4 border-yellow-500 p-3 text-sm">
+              <p class="font-semibold text-gray-800 mb-1">💡 Learns: Cross-chain patterns, double SHA256, refund mechanisms</p>
+              <p class="text-gray-600">Use case: Decentralized exchanges, cross-chain swaps</p>
+            </div>
+          </div>
+
+          <!-- Multisig -->
+          <div class="mb-8 border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <h4 class="text-lg font-semibold text-gray-900 flex items-center">
+                  <span class="text-2xl mr-2">👥</span>
+                  Multisig (2-of-2)
+                  <a href="https://bithoven-lang.github.io/bithoven/ide/?example=multisig" class="ml-3 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 transition">Try in IDE →</a>
+                </h4>
+                <p class="text-sm text-gray-600 mt-1">Taproot multi-signature authorization requiring both parties to sign.</p>
+              </div>
+            </div>
+            <div class="bg-gray-50 border-l-4 border-yellow-500 p-3 text-sm">
+              <p class="font-semibold text-gray-800 mb-1">💡 Learns: Multisig syntax, Taproot vs SegWit differences</p>
+              <p class="text-gray-600">Use case: Joint accounts, shared custody</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Advanced Examples -->
+        <div class="mb-12">
+          <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <span class="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full mr-3">ADVANCED</span>
+            Multi-Party Patterns
+          </h3>
+
+          <!-- Escrow -->
+          <div class="mb-8 border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <h4 class="text-lg font-semibold text-gray-900 flex items-center">
+                  <span class="text-2xl mr-2">🤝</span>
+                  Escrow (2-of-3 Multisig)
+                  <a href="https://bithoven-lang.github.io/bithoven/ide/?example=escrow" class="ml-3 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 transition">Try in IDE →</a>
+                </h4>
+                <p class="text-sm text-gray-600 mt-1">Marketplace contract with buyer, seller, and arbitrator. Multiple spending paths for different scenarios.</p>
+              </div>
+            </div>
+            <div class="bg-gray-50 border-l-4 border-orange-500 p-3 text-sm">
+              <p class="font-semibold text-gray-800 mb-1">💡 Learns: 3-party coordination, nested conditions, refund timeouts</p>
+              <p class="text-gray-600">Use case: P2P marketplaces, freelance platforms, real estate</p>
+            </div>
+          </div>
+
+          <!-- Vault -->
+          <div class="mb-8 border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <h4 class="text-lg font-semibold text-gray-900 flex items-center">
+                  <span class="text-2xl mr-2">🏦</span>
+                  Vault (Time-Delayed Withdrawal)
+                  <a href="https://bithoven-lang.github.io/bithoven/ide/?example=vault" class="ml-3 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 transition">Try in IDE →</a>
+                </h4>
+                <p class="text-sm text-gray-600 mt-1">Security wallet with delayed withdrawals and immediate cold storage recovery.</p>
+              </div>
+            </div>
+            <div class="bg-gray-50 border-l-4 border-orange-500 p-3 text-sm">
+              <p class="font-semibold text-gray-800 mb-1">💡 Learns: Hot/cold key hierarchy, security delays, emergency recovery</p>
+              <p class="text-gray-600">Use case: Corporate treasuries, high-value custody, exchange cold storage</p>
+            </div>
+          </div>
+
+          <!-- Multisig Voting -->
+          <div class="mb-8 border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <h4 class="text-lg font-semibold text-gray-900 flex items-center">
+                  <span class="text-2xl mr-2">🗳️</span>
+                  Multisig Voting (2-of-3 Threshold)
+                  <a href="https://bithoven-lang.github.io/bithoven/ide/?example=multisig_voting" class="ml-3 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 transition">Try in IDE →</a>
+                </h4>
+                <p class="text-sm text-gray-600 mt-1">Democratic governance requiring 2-of-3 approval with security timelock, or 3-of-3 emergency override.</p>
+              </div>
+            </div>
+            <div class="bg-gray-50 border-l-4 border-orange-500 p-3 text-sm">
+              <p class="font-semibold text-gray-800 mb-1">💡 Learns: Threshold signatures, governance delays, emergency overrides</p>
+              <p class="text-gray-600">Use case: DAO treasuries, board approvals, multi-stakeholder governance</p>
+            </div>
+          </div>
+
+          <!-- Inheritance -->
+          <div class="mb-8 border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <h4 class="text-lg font-semibold text-gray-900 flex items-center">
+                  <span class="text-2xl mr-2">👨‍👩‍👧</span>
+                  Inheritance (Tiered Access)
+                  <a href="https://bithoven-lang.github.io/bithoven/ide/?example=inheritance" class="ml-3 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 transition">Try in IDE →</a>
+                </h4>
+                <p class="text-sm text-gray-600 mt-1">Three-tier access: owner (anytime), heir (after 1000 blocks + secret), lawyers (after 10,000 blocks).</p>
+              </div>
+            </div>
+            <div class="bg-gray-50 border-l-4 border-orange-500 p-3 text-sm">
+              <p class="font-semibold text-gray-800 mb-1">💡 Learns: Cascading timelocks, secret-based access, fallback multisig</p>
+              <p class="text-gray-600">Use case: Estate planning, inheritance vaults, tiered recovery</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Expert Examples -->
+        <div class="mb-12">
+          <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <span class="bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full mr-3">EXPERT</span>
+            Complex Systems
+          </h3>
+
+          <!-- Prediction Market -->
+          <div class="mb-8 border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <h4 class="text-lg font-semibold text-gray-900 flex items-center">
+                  <span class="text-2xl mr-2">🎲</span>
+                  Prediction Market (Oracle Integration)
+                  <a href="https://bithoven-lang.github.io/bithoven/ide/?example=prediction_market" class="ml-3 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 transition">Try in IDE →</a>
+                </h4>
+                <p class="text-sm text-gray-600 mt-1">Decentralized betting with cryptographic oracle commitment, multi-outcome resolution, and refund mechanism.</p>
+              </div>
+            </div>
+            <div class="bg-gray-50 border-l-4 border-purple-600 p-3 text-sm">
+              <p class="font-semibold text-gray-800 mb-1">💡 Learns: Oracle commitment schemes, multi-outcome branching, complex refund logic</p>
+              <p class="text-gray-600">Use case: Sports betting, price predictions, decentralized insurance</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Reference -->
+        <div class="bg-gray-100 border border-gray-300 rounded-lg p-6 mt-8">
+          <h4 class="font-bold text-gray-900 mb-4 text-lg">📚 Quick Reference</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <p class="font-semibold text-gray-800 mb-2">By Difficulty:</p>
+              <ul class="list-disc list-inside text-gray-700 space-y-1">
+                <li><span class="font-mono bg-green-100 px-2 py-0.5 rounded text-xs">Beginner</span> singlesig, hashlock, timelock</li>
+                <li><span class="font-mono bg-yellow-100 px-2 py-0.5 rounded text-xs">Intermediate</span> htlc, atomic_swap, multisig</li>
+                <li><span class="font-mono bg-orange-100 px-2 py-0.5 rounded text-xs">Advanced</span> escrow, vault, voting, inheritance</li>
+                <li><span class="font-mono bg-purple-100 px-2 py-0.5 rounded text-xs">Expert</span> prediction_market</li>
+              </ul>
+            </div>
+            <div>
+              <p class="font-semibold text-gray-800 mb-2">By Use Case:</p>
+              <ul class="list-disc list-inside text-gray-700 space-y-1">
+                <li><strong>Payments:</strong> Lightning (htlc), atomic_swap</li>
+                <li><strong>Security:</strong> vault, inheritance</li>
+                <li><strong>Governance:</strong> multisig_voting, escrow</li>
+                <li><strong>DeFi:</strong> prediction_market, atomic_swap</li>
+              </ul>
             </div>
           </div>
         </div>
       </section>
 
+      <!-- 9. FAQ -->
+      <section id="faq" class="mb-20">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b">
+          9. Frequently Asked Questions
+        </h2>
+
+        <div class="space-y-6">
+          <!-- FAQ 1 -->
+          <div class="border border-gray-200 rounded-lg p-5">
+            <h4 class="font-bold text-gray-900 mb-2 flex items-center">
+              <span class="text-blue-600 mr-2">Q:</span> What is Bithoven?
+            </h4>
+            <p class="text-gray-700 pl-6">
+              <strong>A:</strong> Bithoven is a high-level, type-safe programming language for writing Bitcoin smart contracts. 
+              It provides imperative syntax (if/else, return) instead of low-level stack operations, and compiles to native Bitcoin Script.
+            </p>
+          </div>
+
+          <!-- FAQ 2 -->
+          <div class="border border-gray-200 rounded-lg p-5">
+            <h4 class="font-bold text-gray-900 mb-2 flex items-center">
+              <span class="text-blue-600 mr-2">Q:</span> Do I need to know Bitcoin Script to use Bithoven?
+            </h4>
+            <p class="text-gray-700 pl-6">
+              <strong>A:</strong> No! That's the point. Bithoven abstracts away the complexity of Bitcoin Script's stack-based operations. 
+              You write readable code with familiar programming constructs, and the compiler handles the low-level details.
+            </p>
+          </div>
+
+          <!-- FAQ 3 -->
+          <div class="border border-gray-200 rounded-lg p-5">
+            <h4 class="font-bold text-gray-900 mb-2 flex items-center">
+              <span class="text-blue-600 mr-2">Q:</span> How does Bithoven compare to Miniscript?
+            </h4>
+            <p class="text-gray-700 pl-6">
+              <strong>A:</strong> Miniscript is a policy language focused on composability and correctness. Bithoven is an imperative programming language 
+              that offers more expressive control flow (nested if/else, early returns) while maintaining formal safety guarantees. 
+              Both compile to Bitcoin Script, but Bithoven targets developers who want imperative syntax.
+            </p>
+          </div>
+
+          <!-- FAQ 4 -->
+          <div class="border border-gray-200 rounded-lg p-5">
+            <h4 class="font-bold text-gray-900 mb-2 flex items-center">
+              <span class="text-blue-600 mr-2">Q:</span> What's the difference between <code>older</code> and <code>after</code>?
+            </h4>
+            <p class="text-gray-700 pl-6">
+              <strong>A:</strong> <code class="bg-gray-100 px-1 rounded">older N</code> is a <strong>relative timelock</strong> (OP_CHECKSEQUENCEVERIFY) - 
+              locks coins for N blocks <em>after</em> the UTXO is created. 
+              <code class="bg-gray-100 px-1 rounded">after N</code> is an <strong>absolute timelock</strong> (OP_CHECKLOCKTIMEVERIFY) - 
+              locks coins until block height N. Use <code>older</code> for "wait X blocks from now", and <code>after</code> for "unlock at specific time".
+            </p>
+          </div>
+
+          <!-- FAQ 5 -->
+          <div class="border border-gray-200 rounded-lg p-5">
+            <h4 class="font-bold text-gray-900 mb-2 flex items-center">
+              <span class="text-blue-600 mr-2">Q:</span> Can Bithoven create multiple outputs or check UTXO values?
+            </h4>
+            <p class="text-gray-700 pl-6">
+              <strong>A:</strong> No. Bitcoin Script (and therefore Bithoven) has <strong>amount blindness</strong> - scripts cannot read UTXO values 
+              or control output amounts. These require pre-signed transactions or off-chain coordination. 
+              Bithoven focuses on <em>spending conditions</em>, not transaction construction.
+            </p>
+          </div>
+
+          <!-- FAQ 6 -->
+          <div class="border border-gray-200 rounded-lg p-5">
+            <h4 class="font-bold text-gray-900 mb-2 flex items-center">
+              <span class="text-blue-600 mr-2">Q:</span> Is Bithoven production-ready?
+            </h4>
+            <p class="text-gray-700 pl-6">
+              <strong>A:</strong> Bithoven v0.0.1 is in <strong>beta</strong>. The compiler has formal verification and passes extensive tests, 
+              but has not been independently audited. Use for research, prototyping, and learning. For production deployments, 
+              please conduct thorough testing and security review.
+            </p>
+          </div>
+
+          <!-- FAQ 7 -->
+          <div class="border border-gray-200 rounded-lg p-5">
+            <h4 class="font-bold text-gray-900 mb-2 flex items-center">
+              <span class="text-blue-600 mr-2">Q:</span> How do I test my Bithoven contracts?
+            </h4>
+            <p class="text-gray-700 pl-6">
+              <strong>A:</strong> Use the <a href="https://bithoven-lang.github.io/bithoven/ide/" class="text-blue-600 hover:underline">Web IDE</a> 
+              for quick experimentation. For thorough testing, compile your contract and use Bitcoin testing frameworks like 
+              <code class="bg-gray-100 px-1 rounded">bitcoin-core</code> regtest or <code class="bg-gray-100 px-1 rounded">btcd</code>.
+            </p>
+          </div>
+
+          <!-- FAQ 8 -->
+          <div class="border border-gray-200 rounded-lg p-5">
+            <h4 class="font-bold text-gray-900 mb-2 flex items-center">
+              <span class="text-blue-600 mr-2">Q:</span> Where can I get help?
+            </h4>
+            <p class="text-gray-700 pl-6">
+              <strong>A:</strong> Check the <a href="https://github.com/ChrisCho-H/bithoven" class="text-blue-600 hover:underline">GitHub repository</a> 
+              for documentation, or open an <a href="https://github.com/ChrisCho-H/bithoven/issues" class="text-blue-600 hover:underline">issue</a> 
+              if you encounter problems. For research questions, refer to the 
+              <a href="https://arxiv.org/abs/2601.01436" class="text-blue-600 hover:underline">Bithoven paper</a>.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Glossary -->
+      <section id="glossary" class="mb-20">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b">
+          10. Glossary
+        </h2>
+
+        <dl class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="border-l-4 border-blue-500 pl-4">
+            <dt class="font-bold text-gray-900 mb-1">Bitcoin Script</dt>
+            <dd class="text-gray-700 text-sm">A stack-based programming language used to define spending conditions for Bitcoin transactions.</dd>
+          </div>
+
+          <div class="border-l-4 border-blue-500 pl-4">
+            <dt class="font-bold text-gray-900 mb-1">UTXO</dt>
+            <dd class="text-gray-700 text-sm">Unspent Transaction Output - a chunk of bitcoin that can be spent by satisfying its script conditions.</dd>
+          </div>
+
+          <div class="border-l-4 border-blue-500 pl-4">
+            <dt class="font-bold text-gray-900 mb-1">Witness</dt>
+            <dd class="text-gray-700 text-sm">The data provided to satisfy a script's spending conditions (signatures, preimages, etc.).</dd>
+          </div>
+
+          <div class="border-l-4 border-blue-500 pl-4">
+            <dt class="font-bold text-gray-900 mb-1">SegWit</dt>
+            <dd class="text-gray-700 text-sm">Segregated Witness - a Bitcoin upgrade separating witness data from transaction data for efficiency.</dd>
+          </div>
+
+          <div class="border-l-4 border-blue-500 pl-4">
+            <dt class="font-bold text-gray-900 mb-1">Taproot</dt>
+            <dd class="text-gray-700 text-sm">Bitcoin's 2021 upgrade enabling more efficient and private smart contracts via Schnorr signatures and MAST.</dd>
+          </div>
+
+          <div class="border-l-4 border-blue-500 pl-4">
+            <dt class="font-bold text-gray-900 mb-1">HTLC</dt>
+            <dd class="text-gray-700 text-sm">Hash Time-Locked Contract - combines hash locks and timelocks for conditional payments (used in Lightning).</dd>
+          </div>
+
+          <div class="border-l-4 border-blue-500 pl-4">
+            <dt class="font-bold text-gray-900 mb-1">Multisig</dt>
+            <dd class="text-gray-700 text-sm">Multi-signature - requires multiple signatures to spend (e.g., 2-of-3 means any 2 of 3 parties can spend).</dd>
+          </div>
+
+          <div class="border-l-4 border-blue-500 pl-4">
+            <dt class="font-bold text-gray-900 mb-1">CLTV / CSV</dt>
+            <dd class="text-gray-700 text-sm">CheckLockTimeVerify (absolute) / CheckSequenceVerify (relative) - opcodes for timelocks.</dd>
+          </div>
+
+          <div class="border-l-4 border-blue-500 pl-4">
+            <dt class="font-bold text-gray-900 mb-1">Atomic Swap</dt>
+            <dd class="text-gray-700 text-sm">Trustless cross-chain exchange using matching hash locks on different blockchains.</dd>
+          </div>
+
+          <div class="border-l-4 border-blue-500 pl-4">
+            <dt class="font-bold text-gray-900 mb-1">Opcode</dt>
+            <dd class="text-gray-700 text-sm">Operation code - a single instruction in Bitcoin Script (e.g., OP_CHECKSIG, OP_IF).</dd>
+          </div>
+
+          <div class="border-l-4 border-blue-500 pl-4">
+            <dt class="font-bold text-gray-900 mb-1">Preimage</dt>
+            <dd class="text-gray-700 text-sm">The secret data that, when hashed, produces a specific hash digest used in hash locks.</dd>
+          </div>
+
+          <div class="border-l-4 border-blue-500 pl-4">
+            <dt class="font-bold text-gray-900 mb-1">Spending Path</dt>
+            <dd class="text-gray-700 text-sm">A distinct execution branch in a contract with its own witness requirements.</dd>
+          </div>
+        </dl>
+      </section>
       <!-- Footer -->
       <footer
         class="mt-20 border-t pt-8 pb-8 text-center text-gray-500 text-sm"
       >
-        <p>&copy; 2025 Bithoven Project. Licensed under MIT.</p>
-        <div class="mt-2 space-x-4">
-          <a href="#" class="hover:text-gray-900">GitHub</a>
-          <a href="#" class="hover:text-gray-900">Issues</a>
-          <a href="#" class="hover:text-gray-900">Contact</a>
+        <p class="mb-4">&copy; 2025 Bithoven Project. Licensed under MIT.</p>
+        <div class="mb-4 space-x-4">
+          <a href="https://github.com/ChrisCho-H/bithoven" target="_blank" class="hover:text-gray-900 hover:underline">GitHub</a>
+          <a href="https://github.com/ChrisCho-H/bithoven/issues" target="_blank" class="hover:text-gray-900 hover:underline">Issues</a>
+          <a href="https://bithoven-lang.github.io/bithoven/ide/" target="_blank" class="hover:text-gray-900 hover:underline">Web IDE</a>
+          <a href="https://arxiv.org/abs/2601.01436" target="_blank" class="hover:text-gray-900 hover:underline">Research Paper</a>
         </div>
+        <p class="text-xs text-gray-400">
+          Built for the Bitcoin community. 
+          <a href="#introduction" class="hover:text-gray-600">Learn more →</a>
+        </p>
       </footer>
     </div>
 
