@@ -185,3 +185,127 @@ label {
 .githubLink:hover {
   opacity: 0.8;
 }
+
+/* Example Selector Styles */
+.exampleSelectorSection {
+  margin-bottom: 1.5rem;
+  background-color: #111827;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.exampleSelectorHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.exampleDescription {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  margin: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.difficultyBadge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.difficultyBadgeSmall {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: white;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  text-transform: capitalize;
+}
+
+.exampleDropdownButton {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #e5e7eb;
+  background-color: #374151;
+  border: 1px solid #4b5563;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.exampleDropdownButton:hover {
+  background-color: #4b5563;
+  border-color: #6b7280;
+}
+
+.exampleGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.exampleCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: #1f2937;
+  border: 2px solid #374151;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.exampleCard:hover {
+  border-color: #3b82f6;
+  background-color: #1e293b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.exampleCard.selected {
+  border-color: #2563eb;
+  background-color: #1e3a8a;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.exampleIcon {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.exampleInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.exampleName {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #f9fafb;
+  margin-bottom: 0.25rem;
+}
+
+.exampleDesc {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  line-height: 1.3;
+  margin-bottom: 0.5rem;
+}
