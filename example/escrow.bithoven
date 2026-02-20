@@ -8,17 +8,16 @@ pragma bithoven target segwit;
 // - Path 3: Arbitrator + Seller agree to release payment (dispute resolution)
 
 // Path 1: Buyer + Seller cooperative release (happy path)
-(sig_buyer: signature, sig_seller: signature)
+(sig_buyer: signature, sig_seller_release: signature)
 // Path 2: Arbitrator + Buyer refund after timeout
-// Note: sig_seller is still consumed by an earlier checksig (typically empty in this refund path).
-(sig_buyer: signature, sig_seller: signature, sig_arbitrator_refund: signature)
+(sig_buyer: signature, sig_arbitrator_refund: signature)
 // Path 3: Arbitrator + Seller dispute resolution  
-(sig_buyer: signature, sig_seller: signature, sig_arbitrator_dispute: signature)
+(sig_buyer: signature, sig_seller_dispute: signature, sig_arbitrator_dispute: signature)
 {
     // Check if buyer signed
     if checksig(sig_buyer, "02a1633cafcc01ebfb6d78e39f687a1f0995c62fc95f51ead10a02ee0be551b5dc") {
         // Path 1 or Path 2: Buyer is involved
-        if checksig(sig_seller, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798") {
+        if checksig(sig_seller_release, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798") {
             // Path 1: Buyer + Seller agree (immediate release)
             return true;
         }
@@ -30,7 +29,7 @@ pragma bithoven target segwit;
     }
     else {
         // Path 3: Seller + Arbitrator (dispute resolution, any time)
-        verify checksig(sig_seller, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
+        verify checksig(sig_seller_dispute, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
         return checksig(sig_arbitrator_dispute, "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432");
     }
 }
