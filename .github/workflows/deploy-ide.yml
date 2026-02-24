@@ -8,6 +8,7 @@ on:
       - 'ide/**'
       - 'src/**'
       - 'Cargo.toml'
+      - 'Cargo.lock'
       - 'build.rs'
   workflow_dispatch:
 
@@ -37,6 +38,7 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
+            target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
