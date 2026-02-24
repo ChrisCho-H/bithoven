@@ -202,6 +202,12 @@ label {
   margin-bottom: 0.5rem;
 }
 
+.exampleSelectorHeader > div {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #9ca3af;
+}
+
 .exampleDescription {
   font-size: 0.875rem;
   color: #9ca3af;

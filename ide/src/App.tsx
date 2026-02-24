@@ -411,7 +411,7 @@ pragma bithoven target taproot;
   },
 ];
 
-const defaultExample = examples.find((ex) => ex.id === "htlc")!; // htlc is guaranteed to exist at index 0
+const defaultExample = examples.find((ex) => ex.id === "htlc")!; // htlc is guaranteed to exist in the examples array
 
 function App() {
   const [selectedExample, setSelectedExample] = useState(defaultExample);
@@ -431,8 +431,39 @@ function App() {
       if (example) {
         setSelectedExample(example);
         setCode(example.code);
+      } else {
+        console.warn(
+          `Unknown example ID in URL query parameter: "${exampleId}". Falling back to default example.`
+        );
+        setOutput(
+          'The requested example could not be found. Showing the default HTLC example instead.'
+        );
       }
     }
+  }, []);
+
+  // Handle browser back/forward navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const exampleId = params.get("example");
+      if (exampleId) {
+        const example = examples.find((ex) => ex.id === exampleId);
+        if (example) {
+          setSelectedExample(example);
+          setCode(example.code);
+          setOutput('Click "Compile & Run" to execute the code.');
+        }
+      } else {
+        // No example parameter, reset to default
+        setSelectedExample(defaultExample);
+        setCode(defaultExample.code);
+        setOutput('Click "Compile & Run" to execute the code.');
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
   const handleExampleSelect = (example: Example) => {
@@ -446,7 +477,7 @@ function App() {
     window.history.pushState({}, "", url);
   };
 
-  const getDifficultyColor = (difficulty: string) => {
+  const getDifficultyColor = (difficulty: Example["difficulty"]) => {
     switch (difficulty) {
       case "beginner":
         return "#10b981";
@@ -471,7 +502,6 @@ function App() {
         `✅ Compilation Successful!\n\n${JSON.stringify(compiled, null, 2)}`
       );
     } catch (error) {
-      console.log(error);
       console.error("Execution error:", error);
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -545,12 +575,14 @@ function App() {
         {/* Example Selector */}
         <div className="exampleSelectorSection">
           <div className="exampleSelectorHeader">
-            <label htmlFor="example-dropdown">
+            <div>
               {selectedExample.icon} {selectedExample.name}
-            </label>
+            </div>
             <button
               className="exampleDropdownButton"
               onClick={() => setShowExampleSelector(!showExampleSelector)}
+              aria-expanded={showExampleSelector}
+              aria-label="Toggle example selector"
             >
               {showExampleSelector ? "▲ Hide Examples" : "▼ Browse Examples"}
             </button>
@@ -575,6 +607,8 @@ function App() {
                     selectedExample.id === example.id ? "selected" : ""
                   }`}
                   onClick={() => handleExampleSelect(example)}
+                  aria-label={`Select example: ${example.name}`}
+                  aria-pressed={selectedExample.id === example.id}
                 >
                   <div className="exampleIcon">{example.icon}</div>
                   <div className="exampleInfo">
