@@ -1,0 +1,80 @@
+name: Deploy IDE to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ide/**'
+      - 'src/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'build.rs'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-ide-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-ide:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: nightly
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        uses: jetli/wasm-pack-action@v0.4.0
+
+      - name: Cache Cargo Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Build wasm package
+        run: wasm-pack build --target web
+
+      - name: Link local wasm package to IDE
+        working-directory: ide
+        run: npm install ../pkg
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ide/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ide
+        run: npm ci
+
+      - name: Build IDE
+        working-directory: ide
+        run: npm run build
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Deploy IDE to GitHub Pages
+        working-directory: ide
+        run: npm run deploy -- --repo https://github.com/${{ github.repository }}.git
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
