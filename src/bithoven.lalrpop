@@ -158,7 +158,7 @@ LogicalExpression: Expression = {
 }
 
 // By separating CmpExpr, you can ensure that boolean operators (&&, ||) only operate on boolean values, 
-// and arithmetic operators (+, -, *, /) only operate on numeric values.
+// and arithmetic operators (+, -, max, min) only operate on numeric values.
 CompareExpression: Expression = {
     <l:@L> <lhs:Expression2> <c:BinaryCompareOp> <rhs:Expression2> <r:@R> => {
         Expression::CompareExpression {
@@ -280,7 +280,7 @@ InfixBinaryMathOp: BinaryMathOp = {
 // 2. postfix(Reverse Polish Notation)
 PostfixBinaryMathOp: BinaryMathOp = {
     "max" => BinaryMathOp::Max, // OP_MAX
-    "min" => BinaryMathOp::Min, // OP_SUB
+    "min" => BinaryMathOp::Min, // OP_MIN
 }
 
 BinaryLogicalOp: BinaryLogicalOp = {

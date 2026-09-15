@@ -6,5 +6,5 @@ pragma bithoven target taproot;
 {
     // multisig use same "checksig" syntax, but different operand comes.
     // [number of signature required, (sig, pubkey)*]
-    return checksig [2, (sig_alice, "0345a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212"), (sig_bob, "0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212")];
+    return checksig [2, (sig_alice, "45a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212"), (sig_bob, "79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798")];
 }

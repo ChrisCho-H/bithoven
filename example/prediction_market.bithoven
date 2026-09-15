@@ -46,21 +46,21 @@ pragma bithoven target taproot;
     //       then reveal the preimage only after the outcome is determined.
     if sha256(outcome_proof) == "8f6d9b3c1a27f4e985c2487b62a1cd0f3e9a54d28b7c64ea1f4c9e62d5b7a3c1" {
         // Outcome A confirmed - participant A wins
-        return checksig(sig_winner_a, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
+        return checksig(sig_winner_a, "79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
     }
     else {
         // Check if outcome B winner is claiming with valid proof
         // NOTE: Demo placeholder hash - replace with actual oracle commitment in production
         if sha256(outcome_proof_b) == "7a8c9d2b4e6f1a3c5d7e9b1f3a5c7e9d2b4f6a8c1e3a5c7e9b2d4f6a8c1e3a5c" {
             // Outcome B confirmed - participant B wins
-            return checksig(sig_winner_b, "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5");
+            return checksig(sig_winner_b, "c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5");
         }
         else {
             // No valid outcome proven - both parties must agree to refund
             // Requires cooperation after extended timeout (30 days beyond betting period)
             older 4320;
-            verify checksig(sig_refund_a, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
-            return checksig(sig_refund_b, "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5");
+            verify checksig(sig_refund_a, "79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
+            return checksig(sig_refund_b, "c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5");
         }
     }
 }

@@ -10,7 +10,10 @@ pragma bithoven target segwit;
 // Path 1: Buyer + Seller cooperative release (happy path)
 (sig_buyer: signature, sig_seller_release: signature)
 // Path 2: Arbitrator + Buyer refund after timeout
-(sig_buyer: signature, sig_arbitrator_refund: signature)
+// The seller item is consumed by the inner branch discriminant on this path too
+// (its `OP_CHECKSIG` reads a witness item and returns false), so it belongs to
+// the prefix this declaration shares with Path 1.
+(sig_buyer: signature, sig_seller_release: signature, sig_arbitrator_refund: signature)
 // Path 3: Arbitrator + Seller dispute resolution  
 (sig_buyer: signature, sig_seller_dispute: signature, sig_arbitrator_dispute: signature)
 {
