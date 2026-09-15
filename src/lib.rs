@@ -3,6 +3,7 @@ mod analyze_test;
 mod ast;
 mod compile;
 mod examples_test;
+mod necessity;
 mod parser_test;
 mod source;
 
@@ -137,4 +138,16 @@ pub fn compile_program(source: String) -> Result<BithovenOutput, CompileError> {
         bitcoin::Script::from_bytes(&script).to_hex_string(),
         bitcoin::Script::from_bytes(&script).to_bytes(),
     ))
+}
+
+/// The hard ceiling `B` on free atoms per path, above which a path is rejected
+/// statically rather than analysed.
+pub const MAX_FREE_ATOMS: usize = necessity::MAX_FREE_ATOMS;
+
+/// Free atoms (`beta`) per terminating path, in path order; `len()` is `|Pi(P)|`.
+///
+/// Only the parser runs, so contracts the analyser rejects are measurable too.
+pub fn program_complexity(source: String) -> Result<Vec<usize>, CompileError> {
+    let utxo: Bithoven = parse(source)?;
+    Ok(necessity::path_free_atoms(&utxo.output_script))
 }

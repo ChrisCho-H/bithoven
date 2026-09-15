@@ -214,7 +214,8 @@ pub enum ErrorKind {
     MultipleReturn(String),
     NoReturn(String),
     UnreachableCode(String),
-    DeadPath,
+    DeadPath(String),
+    DeclarationPathMismatch(String),
 
     // Security Errors
     IntegerOverflow(String),

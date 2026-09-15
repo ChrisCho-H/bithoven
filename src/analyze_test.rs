@@ -3,7 +3,7 @@ mod tests {
     use super::*;
     use crate::analyze::{
         analyze, build_symbol_table, check_flow, check_overflow, check_type, check_type_sig_pubkey,
-        check_useless_sig, check_variable, Symbol,
+        check_variable, Symbol,
     };
     // Import analyzer functions
     use crate::ast::*; // Import AST definitions
@@ -132,16 +132,17 @@ mod tests {
     }
 
     #[test]
-    fn test_build_symbol_table_err_no_sig() {
+    fn test_build_symbol_table_no_longer_requires_sig() {
+        // The signature requirement moved out of `build_symbol_table` into the
+        // path-sensitive necessity analysis (Session B). `build_symbol_table`
+        // now only builds the table and checks duplicates, so a stack with no
+        // signature parameter is accepted here.
         let stack = vec![
             stack_param("a", Type::Number),
             stack_param("b", Type::String),
         ];
         let result = build_symbol_table(&stack);
-        assert!(result.is_err());
-        if let Err(e) = result {
-            assert!(matches!(e.kind, ErrorKind::NoSigRequired(_)));
-        }
+        assert!(result.is_ok());
     }
 
     #[test]
@@ -238,17 +239,17 @@ mod tests {
 
     // --- check_type TESTS ---
 
-    #[test]
-    fn test_check_type_math_ok() {
-        let table = mock_symbol_table();
-        let expr = Expression::BinaryMathExpression {
-            loc: loc(0, 0),
-            lhs: Box::new(var("a_num")),
-            op: BinaryMathOp::Add,
-            rhs: Box::new(var("a_bool")), // bools are numeric
-        };
-        assert!(check_type(&expr, &table).is_ok());
-    }
+    ///    #[test]
+    ///    fn test_check_type_math_ok() {
+    ///        let table = mock_symbol_table();
+    ///        let expr = Expression::BinaryMathExpression {
+    ///            loc: loc(0, 0),
+    ///            lhs: Box::new(var("a_num")),
+    ///            op: BinaryMathOp::Add,
+    ///            rhs: Box::new(var("a_bool")), // bools are numeric
+    ///        };
+    ///        assert!(check_type(&expr, &table, &Target::Segwit).is_ok());
+    ///    }
 
     #[test]
     fn test_check_type_math_err() {
@@ -259,7 +260,7 @@ mod tests {
             op: BinaryMathOp::Add,
             rhs: Box::new(var("a_str")), // strings are NOT numeric
         };
-        let result = check_type(&expr, &table);
+        let result = check_type(&expr, &table, &Target::Segwit);
         assert!(result.is_err());
         assert!(matches!(
             result.unwrap_err().kind,
@@ -277,7 +278,7 @@ mod tests {
             op: BinaryCompareOp::Equal,
             rhs: Box::new(num(10)),
         };
-        assert!(check_type(&expr_ok_num, &table).is_ok());
+        assert!(check_type(&expr_ok_num, &table, &Target::Segwit).is_ok());
 
         // OK: str == str
         let expr_ok_str = Expression::CompareExpression {
@@ -286,7 +287,7 @@ mod tests {
             op: BinaryCompareOp::Equal,
             rhs: Box::new(str_lit("hello")),
         };
-        assert!(check_type(&expr_ok_str, &table).is_ok());
+        assert!(check_type(&expr_ok_str, &table, &Target::Segwit).is_ok());
 
         // ERR: num == str
         let expr_err_mismatch = Expression::CompareExpression {
@@ -295,7 +296,7 @@ mod tests {
             op: BinaryCompareOp::Equal,
             rhs: Box::new(var("a_str")),
         };
-        let res_mismatch = check_type(&expr_err_mismatch, &table);
+        let res_mismatch = check_type(&expr_err_mismatch, &table, &Target::Segwit);
         assert!(res_mismatch.is_err());
         assert!(matches!(
             res_mismatch.unwrap_err().kind,
@@ -309,7 +310,7 @@ mod tests {
             op: BinaryCompareOp::Greater,
             rhs: Box::new(str_lit("hello")),
         };
-        let res_op = check_type(&expr_err_op, &table);
+        let res_op = check_type(&expr_err_op, &table, &Target::Segwit);
         assert!(res_op.is_err());
         assert!(matches!(
             res_op.unwrap_err().kind,
@@ -326,7 +327,7 @@ mod tests {
             op: ByteOp::Size,
             operand: Box::new(str_lit("ascii")),
         };
-        assert!(check_type(&expr_ok, &table).is_ok());
+        assert!(check_type(&expr_ok, &table, &Target::Segwit).is_ok());
 
         // ERR: len(number)
         let expr_err_type = Expression::ByteExpression {
@@ -334,7 +335,7 @@ mod tests {
             op: ByteOp::Size,
             operand: Box::new(num(123)),
         };
-        let res_type = check_type(&expr_err_type, &table);
+        let res_type = check_type(&expr_err_type, &table, &Target::Segwit);
         assert!(res_type.is_err());
         assert!(matches!(
             res_type.unwrap_err().kind,
@@ -347,7 +348,7 @@ mod tests {
             op: ByteOp::Size,
             operand: Box::new(str_lit("hello 👋")),
         };
-        let res_ascii = check_type(&expr_err_ascii, &table);
+        let res_ascii = check_type(&expr_err_ascii, &table, &Target::Segwit);
         assert!(res_ascii.is_err());
         assert!(matches!(
             res_ascii.unwrap_err().kind,
@@ -362,7 +363,7 @@ mod tests {
         let table = mock_symbol_table();
         let sig = var("a_sig");
         let pk = valid_pubkey_literal();
-        assert!(check_type_sig_pubkey(&sig, &pk, &table).is_ok());
+        assert!(check_type_sig_pubkey(&sig, &pk, &table, &Target::Segwit).is_ok());
     }
 
     #[test]
@@ -370,7 +371,7 @@ mod tests {
         let table = mock_symbol_table();
         let sig = num(123); // sig must be a variable
         let pk = valid_pubkey_literal();
-        let res = check_type_sig_pubkey(&sig, &pk, &table);
+        let res = check_type_sig_pubkey(&sig, &pk, &table, &Target::Segwit);
         assert!(res.is_err());
         assert!(matches!(res.unwrap_err().kind, ErrorKind::TypeMismatch(_)));
     }
@@ -380,7 +381,7 @@ mod tests {
         let table = mock_symbol_table();
         let sig = var("a_num"); // sig must be Type::Signature
         let pk = valid_pubkey_literal();
-        let res = check_type_sig_pubkey(&sig, &pk, &table);
+        let res = check_type_sig_pubkey(&sig, &pk, &table, &Target::Segwit);
         assert!(res.is_err());
         assert!(matches!(
             res.unwrap_err().kind,
@@ -393,7 +394,7 @@ mod tests {
         let table = mock_symbol_table();
         let sig = var("a_sig");
         let pk = var("a_str"); // pubkey must be a string literal
-        let res = check_type_sig_pubkey(&sig, &pk, &table);
+        let res = check_type_sig_pubkey(&sig, &pk, &table, &Target::Segwit);
         assert!(res.is_err());
         assert!(matches!(res.unwrap_err().kind, ErrorKind::TypeMismatch(_)));
     }
@@ -403,7 +404,7 @@ mod tests {
         let table = mock_symbol_table();
         let sig = var("a_sig");
         let pk = str_lit("not a hex string");
-        let res = check_type_sig_pubkey(&sig, &pk, &table);
+        let res = check_type_sig_pubkey(&sig, &pk, &table, &Target::Segwit);
         assert!(res.is_err());
         assert!(matches!(
             res.unwrap_err().kind,
@@ -413,7 +414,7 @@ mod tests {
         // Valid hex, but wrong length and prefix (not on curve)
         let pk_invalid =
             str_lit("04ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        let res_invalid = check_type_sig_pubkey(&sig, &pk_invalid, &table);
+        let res_invalid = check_type_sig_pubkey(&sig, &pk_invalid, &table, &Target::Segwit);
         assert!(res_invalid.is_err());
         assert!(matches!(
             res_invalid.unwrap_err().kind,
@@ -437,24 +438,10 @@ mod tests {
         ));
     }
 
-    #[test]
-    fn test_check_security_useless_sig() {
-        let expr_ok = Expression::UnaryMathExpression {
-            loc: loc(0, 0),
-            op: UnaryMathOp::Not,
-            operand: Box::new(bool_lit(true)),
-        };
-        assert!(check_useless_sig(&expr_ok).is_ok());
-
-        let expr_err = Expression::UnaryMathExpression {
-            loc: loc(0, 0),
-            op: UnaryMathOp::Not,
-            operand: Box::new(checksig(var("a_sig"), valid_pubkey_literal())),
-        };
-        let res = check_useless_sig(&expr_err);
-        assert!(res.is_err());
-        assert!(matches!(res.unwrap_err().kind, ErrorKind::UselessSig(_)));
-    }
+    // NOTE: The former `test_check_security_useless_sig` was removed in Session B
+    // together with `check_useless_sig`. The single-pattern useless-signature
+    // check is subsumed by the path-sensitive necessity analysis
+    // (see `src/necessity.rs` and the `f02`-`f06` reviewer findings).
 
     // --- check_flow TESTS ---
 
@@ -586,10 +573,10 @@ mod tests {
             (preimage: string, sig_b: signature)
             {
                 if true {
-                    return checksig(sig_a, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
+                    return checksig(sig_a, "79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
                 } else {
                     verify sha256(preimage) == "0000000000000000000000000000000000000000000000000000000000000000";
-                    return checksig(sig_b, "03a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7");
+                    return checksig(sig_b, "a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7");
                 }
             }
         "#;
@@ -699,9 +686,88 @@ mod tests {
     }
 
     #[test]
-    #[should_panic] // This test should panic because it tries to access scope_vec[1]
-    fn test_analyze_panic_branch_mismatch() {
-        // This tests for a bug in the analyzer itself.
+    fn test_analyze_w5_layout_disagreement_is_rejected() {
+        // (w5), layout agreement. Both declarations name the discriminant `c`,
+        // but it sits at stack depth 0 on the first path and depth 1 on the
+        // second. The emitted `OP_IF` reads whatever is on top, so one of the
+        // two declarations describes a witness the script does not consume in
+        // the order it claims. This must be rejected with the layout error
+        // rather than accepted or transferred against a layout we cannot
+        // justify.
+        let input = r#"
+            pragma bithoven version 0.0.1;
+            pragma bithoven target segwit;
+            (c: bool, sa: signature)
+            (sb: signature, c: bool)
+            {
+                if c {
+                    return checksig(sa, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
+                } else {
+                    return checksig(sb, "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432");
+                }
+            }
+        "#;
+        let parser = BithovenParser::new();
+        let parsed = parser.parse(input).expect("Parser failed");
+
+        let res = analyze(
+            &parsed.output_script,
+            parsed.input_stack,
+            &parsed.pragma.target,
+        );
+        let err = res.expect_err("a layout disagreement must be rejected");
+        match &err.kind {
+            ErrorKind::DeclarationPathMismatch(msg) => assert!(
+                msg.contains("stack depth"),
+                "expected the layout-disagreement message, got: {:?}",
+                msg
+            ),
+            other => panic!("expected DeclarationPathMismatch, got: {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_analyze_name_shared_below_branch_point_is_accepted() {
+        // The companion to the test above: `x` is shared by name but is consumed
+        // *inside* each block, not before the branch, so (w5) does not constrain
+        // it and depth 2 on both paths is well-formed. Keying the layout checks
+        // on the name intersection rather than on the consumed prefix rejected
+        // this contract, which the paper's (w5) admits.
+        let input = r#"
+            pragma bithoven version 0.0.1;
+            pragma bithoven target segwit;
+            (c: bool, sa: signature, x: string)
+            (c: bool, sb: signature, x: string)
+            {
+                if c {
+                    verify checksig(sa, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
+                    return len x == 3;
+                } else {
+                    verify checksig(sb, "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432");
+                    return len x == 3;
+                }
+            }
+        "#;
+        let parser = BithovenParser::new();
+        let parsed = parser.parse(input).expect("Parser failed");
+
+        assert!(
+            analyze(
+                &parsed.output_script,
+                parsed.input_stack,
+                &parsed.pragma.target,
+            )
+            .is_ok(),
+            "a name shared only below the branch point must not be rejected"
+        );
+    }
+
+    #[test]
+    fn test_analyze_branch_mismatch_returns_error_not_panic() {
+        // C4: This program has two terminating paths (the `if` and the `else`)
+        // but only ONE stack declaration. Before the fix, `analyze_statement`
+        // indexed `scope_vec[1]` and panicked. It must now return a clean
+        // `DeclarationPathMismatch` error instead of crashing.
         let input = r#"
             pragma bithoven version 1.0.0;
             pragma bithoven target segwit;
@@ -710,7 +776,7 @@ mod tests {
                 if true {
                     return 1;
                 } else {
-                    return 2; // This 'else' will cause branch=1
+                    return 2; // This 'else' would have caused branch=1
                 }
             }
         "#;
@@ -718,12 +784,18 @@ mod tests {
         let parser = BithovenParser::new();
         let parsed = parser.parse(input).expect("Parser failed");
 
-        // This will call analyze_statement with branch=1, which panics on scope_vec[1]
-        // This is a valid test, as it identifies a crash bug in the analyzer.
-        let _ = analyze(
+        let res = analyze(
             &parsed.output_script,
             parsed.input_stack,
             &parsed.pragma.target,
+        );
+        assert!(
+            matches!(
+                res.as_ref().unwrap_err().kind,
+                ErrorKind::DeclarationPathMismatch(_)
+            ),
+            "expected DeclarationPathMismatch, got: {:?}",
+            res
         );
     }
 

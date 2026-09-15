@@ -345,6 +345,46 @@ pub fn push_from_alt_stack(script: &mut Vec<u8>) {
     script.extend_from_slice(builder.as_bytes());
 }
 
+/// True when this subtree contains an arithmetic operator whose result can fall
+/// outside the `CScriptNum` range of the paper's Definition 2.
+///
+/// `OP_ADD`, `OP_SUB`, `OP_1ADD` and `OP_1SUB` do not range-check their *output*,
+/// so the value they leave on the stack may be five bytes wide. `OP_EQUAL`
+/// compares such a value bytewise and succeeds, whereas the abstract machine
+/// takes the addition to bottom and fails --- a script that accepts where the
+/// source rejects, which is the direction the Refinement theorem forbids.
+/// `OP_NUMEQUAL` coerces its operands and fails on an out-of-range value, which
+/// is the behaviour the semantics models, so equality is compiled to the numeric
+/// opcode wherever an operand may exceed the range.
+///
+/// `UnaryMathOp::Not` is the boolean `!`, which shares this AST node with the
+/// arithmetic unary operators; its own result is always `0` or `1`, so only its
+/// operand can carry the hazard.
+///
+/// The test is syntactic over the whole operand subtree, so it also fires under
+/// a hash or `len` applied to an arithmetic result --- `sha256 (x + y) == <H>`
+/// coerces even though the comparison is over a 32-byte digest. Coercing there
+/// is conservative: `OP_NUMEQUAL` faults on the five-byte value the overflow
+/// leaves, which is the bottom the abstract machine has already reached, whereas
+/// `OP_EQUAL` would compare it bytewise and let `!(sha256 (x + y) == <H>)`
+/// succeed on consensus where the source rejects. Only a subtree with no
+/// arithmetic anywhere beneath it stays on `OP_EQUAL`.
+fn may_exceed_script_num(e: &Expression) -> bool {
+    match e {
+        Expression::BinaryMathExpression { .. } => true,
+        Expression::UnaryMathExpression { operand, op, .. } => {
+            !matches!(op, UnaryMathOp::Not) || may_exceed_script_num(operand)
+        }
+        Expression::CompareExpression { lhs, rhs, .. }
+        | Expression::LogicalExpression { lhs, rhs, .. } => {
+            may_exceed_script_num(lhs) || may_exceed_script_num(rhs)
+        }
+        Expression::ByteExpression { operand, .. }
+        | Expression::UnaryCryptoExpression { operand, .. } => may_exceed_script_num(operand),
+        _ => false,
+    }
+}
+
 pub fn compile(ast: Vec<Statement>, target: &Target) -> Vec<u8> {
     let mut bitcoin_script: Vec<u8> = Vec::new();
 
@@ -462,12 +502,26 @@ pub fn compile_expression(bitcoin_script: &mut Vec<u8>, expr: Expression, target
             op,
             rhs,
         } => {
+            // Decided before the recursive calls move the operands. Equality over
+            // a value that may exceed the CScriptNum range must coerce, or the
+            // emitted script accepts where the abstract machine fails; see
+            // `may_exceed_script_num`.
+            let coerce = may_exceed_script_num(&lhs) || may_exceed_script_num(&rhs);
             // recursive to compile condition expression
             compile_expression(bitcoin_script, *lhs, target);
             push_to_alt_stack(bitcoin_script);
             compile_expression(bitcoin_script, *rhs, target);
             push_from_alt_stack(bitcoin_script);
             // push compare opcode
+            let op = if coerce {
+                match op {
+                    BinaryCompareOp::Equal => BinaryCompareOp::NumEqual,
+                    BinaryCompareOp::NotEqual => BinaryCompareOp::NumNotEqual,
+                    other => other,
+                }
+            } else {
+                op
+            };
             push_compare(bitcoin_script, op);
         }
         Expression::UnaryMathExpression {
@@ -608,27 +662,27 @@ pub fn opcode_optimizer(bitcoin_script: Vec<u8>) -> Vec<u8> {
         match bitcoin::Opcode::from(op) {
             // Skip OP_PUSHDATAN
             OP_PUSHDATA1 => {
-                let num_to_read = bitcoin::script::read_scriptint(&[bitcoin_script[i + 1]])
-                    .expect("Script number is wrongly encoded.");
-                optimized_script
-                    .extend_from_slice(&bitcoin_script[i..=i + (num_to_read + 1) as usize]);
-                i += (num_to_read + 1 + 1) as usize;
+                let num_to_read = bitcoin_script[i + 1] as usize;
+                optimized_script.extend_from_slice(&bitcoin_script[i..=i + 1 + num_to_read]);
+                i += 1 + 1 + num_to_read;
                 continue;
             }
             OP_PUSHDATA2 => {
-                let num_to_read = bitcoin::script::read_scriptint(&bitcoin_script[i + 1..=i + 2])
-                    .expect("Script number is wrongly encoded.");
-                optimized_script
-                    .extend_from_slice(&bitcoin_script[i..=i + (num_to_read + 2) as usize]);
-                i += (num_to_read + 1 + 2) as usize;
+                let num_to_read =
+                    u16::from_le_bytes([bitcoin_script[i + 1], bitcoin_script[i + 2]]) as usize;
+                optimized_script.extend_from_slice(&bitcoin_script[i..=i + 2 + num_to_read]);
+                i += 1 + 2 + num_to_read;
                 continue;
             }
             OP_PUSHDATA4 => {
-                let num_to_read = bitcoin::script::read_scriptint(&bitcoin_script[i + 1..=i + 4])
-                    .expect("Script number is wrongly encoded.");
-                optimized_script
-                    .extend_from_slice(&bitcoin_script[i..=i + (num_to_read + 4) as usize]);
-                i += (num_to_read + 1 + 4) as usize;
+                let num_to_read = u32::from_le_bytes([
+                    bitcoin_script[i + 1],
+                    bitcoin_script[i + 2],
+                    bitcoin_script[i + 3],
+                    bitcoin_script[i + 4],
+                ]) as usize;
+                optimized_script.extend_from_slice(&bitcoin_script[i..=i + 4 + num_to_read]);
+                i += 1 + 4 + num_to_read;
                 continue;
             }
             // else try optimizing
