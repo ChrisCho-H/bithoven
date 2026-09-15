@@ -15,7 +15,12 @@ exclude = [
     "pkg/**/*",
     "example/**/*",
     ".github",
-    ".DS_Store"
+    ".DS_Store",
+    ".cargo",
+    "bshunter/**",
+    "benches/**",
+    "scripts/**",
+    "tests/**"
 ]
 
 [lib]
@@ -53,3 +58,7 @@ bitcoinconsensus = "0.106.0"
 [[bench]]
 name = "compilation_cost"
 harness = false
+
+exclude = [
+    
+]
