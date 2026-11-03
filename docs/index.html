@@ -6,7 +6,7 @@
     <title>Bithoven - High-Level Language for Bitcoin Smart Contracts | Developer Guide</title>
     
     <!-- SEO Meta Tags -->
-    <meta name="description" content="Learn Bithoven - a type-safe, imperative language for writing Bitcoin smart contracts with if/else logic, timelocks, and signatures. Compile to native Bitcoin Script for SegWit and Taproot." />
+    <meta name="description" content="Learn Bithoven - a formally specified, type-safe, imperative language for Bitcoin smart contracts. Its compiler rejects anyone-can-spend paths, type errors and unspendable scripts before deployment, then emits native Bitcoin Script for Legacy, SegWit and Taproot." />
     <meta name="keywords" content="Bitcoin, smart contracts, Bithoven, blockchain programming, Bitcoin Script, HTLC, multisig, timelock, atomic swap, escrow, vault, SegWit, Taproot, cryptocurrency development" />
     <meta name="author" content="Bithoven Project" />
     <meta name="robots" content="index, follow" />
@@ -14,14 +14,14 @@
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Bithoven - High-Level Language for Bitcoin Smart Contracts" />
-    <meta property="og:description" content="Write readable Bitcoin smart contracts with if/else, timelocks, and signatures. Type-safe imperative language that compiles to native Bitcoin Script." />
+    <meta property="og:description" content="Write readable Bitcoin smart contracts with if/else, timelocks, and signatures. A formally specified language whose compiler proves every spending path requires a signature before emitting native Bitcoin Script." />
     <meta property="og:url" content="https://bithoven-lang.github.io/bithoven/docs/" />
     <meta property="og:site_name" content="Bithoven Documentation" />
     
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Bithoven - Bitcoin Smart Contract Language" />
-    <meta name="twitter:description" content="Write readable Bitcoin smart contracts with if/else logic. Type-safe language that compiles to Bitcoin Script." />
+    <meta name="twitter:description" content="Write readable Bitcoin smart contracts with if/else logic. A formally specified, statically analyzed language that compiles to Bitcoin Script." />
     
     <!-- Canonical URL -->
     <link rel="canonical" href="https://bithoven-lang.github.io/bithoven/docs/" />
@@ -88,9 +88,9 @@
       "name": "Bithoven",
       "applicationCategory": "DeveloperApplication",
       "operatingSystem": "Cross-platform",
-      "description": "A high-level, type-safe programming language for Bitcoin smart contracts that compiles to native Bitcoin Script. Features imperative syntax with if/else, timelocks, signatures, and multi-path spending.",
+      "description": "A high-level, formally specified, type-safe programming language for Bitcoin smart contracts that compiles to native Bitcoin Script. Features imperative syntax with if/else, timelocks, signatures, and multi-path spending, checked by a static analyzer before deployment.",
       "url": "https://bithoven-lang.github.io/bithoven/",
-      "softwareVersion": "0.0.1",
+      "softwareVersion": "0.1.0",
       "programmingLanguage": {
         "@type": "ComputerLanguage",
         "name": "Bithoven",
@@ -114,7 +114,10 @@
         "Multiple spending paths in smart contracts",
         "Support for legacy, SegWit, and Taproot",
         "Built-in Bitcoin primitives (timelocks, checksig, sha256)",
-        "Formal safety verification"
+        "Path-sensitive signature-necessity analysis",
+        "Linear witness consumption and consensus-literal checks",
+        "Formal type soundness and refinement guarantees",
+        "Differential validation against Bitcoin Core"
       ]
     }
     </script>
@@ -157,7 +160,7 @@
                 class="self-center text-xl font-bold sm:text-2xl whitespace-nowrap text-gray-900"
                 >₿ithoven
                 <span class="text-xs font-normal text-gray-500 ml-1"
-                  >v0.0.1</span
+                  >v0.1.0</span
                 ></span
               >
             </a>
@@ -197,6 +200,13 @@
             >
               <span class="ms-3">1. Introduction</span>
             </a>
+            <ul class="pl-6 mt-1 space-y-1 text-gray-500">
+              <li>
+                <a href="#whats-new" class="hover:text-blue-600 block py-1"
+                  >What's New in v0.1.0</a
+                >
+              </li>
+            </ul>
           </li>
           <li>
             <a
@@ -288,6 +298,30 @@
             >
               <span class="ms-3">7. Security Features</span>
             </a>
+            <ul class="pl-6 mt-1 space-y-1 text-gray-500">
+              <li>
+                <a href="#pipeline" class="hover:text-blue-600 block py-1"
+                  >Analysis Pipeline</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#signature-necessity"
+                  class="hover:text-blue-600 block py-1"
+                  >Signature Necessity</a
+                >
+              </li>
+              <li>
+                <a href="#diagnostics" class="hover:text-blue-600 block py-1"
+                  >Compiler Diagnostics</a
+                >
+              </li>
+              <li>
+                <a href="#guarantees" class="hover:text-blue-600 block py-1"
+                  >Formal Guarantees</a
+                >
+              </li>
+            </ul>
           </li>
           <li>
             <a
@@ -330,7 +364,7 @@
         <div class="mt-6 flex flex-wrap gap-3 mb-6">
           <span
             class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded border border-blue-400"
-            >Version 0.0.1</span
+            >Version 0.1.0</span
           >
           <span
             class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded border border-green-400"
@@ -340,7 +374,23 @@
             class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded border border-gray-400"
             >Legacy / SegWit / Taproot</span
           >
+          <span
+            class="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded border border-purple-400"
+            >Formally Specified</span
+          >
         </div>
+
+        <!-- Release Callout -->
+        <a
+          href="#whats-new"
+          class="block mb-6 p-4 bg-amber-50 border border-amber-300 rounded-lg text-sm text-amber-900 hover:bg-amber-100 transition-colors"
+        >
+          <span class="font-bold">🆕 v0.1.0:</span> a major revision of the
+          analyzer. The compiler now proves that every spending path needs a
+          valid signature, rejects contracts no witness can satisfy, and
+          enforces stricter well-formedness rules.
+          <span class="font-semibold underline">See what changed →</span>
+        </a>
 
         <!-- Quick Start Actions -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -402,12 +452,20 @@
               instead of mental stack juggling.
             </li>
             <li>
-              <strong>Formal Safety:</strong> The compiler prevents
-              "anyone-can-spend" bugs and signature reuse.
+              <strong>Formal Safety:</strong> A type checker, a liveness
+              analyzer, a consensus-literal checker and a path-sensitive
+              semantic analyzer reject anyone-can-spend paths, signature
+              misuse, type errors and unspendable contracts before deployment.
             </li>
             <li>
-              <strong>Zero-Cost Abstraction:</strong> Compiles to efficient
-              opcodes with minimal overhead.
+              <strong>Proven, then Tested:</strong> Type soundness and a
+              refinement theorem connect the source to the emitted script,
+              and the compiler is differentially tested against Bitcoin Core.
+            </li>
+            <li>
+              <strong>Low Overhead:</strong> On standard Miniscript policies,
+              emitted scripts are within a median of one byte of
+              <code>rust-miniscript</code>.
             </li>
           </ul>
         </div>
@@ -432,14 +490,120 @@ OP_ENDIF</pre>
               <div class="font-semibold text-green-700 mb-2">✅ Bithoven (High-Level)</div>
               <pre class="bg-gray-800 text-gray-100 p-3 rounded text-xs overflow-x-auto"><span class="code-keyword">if</span> condition {
   <span class="code-function">older</span> <span class="code-number">1000</span>;
-  <span class="code-keyword">return</span> <span class="code-function">checksig</span>(sig_alice, alice_pk);
+  <span class="code-keyword">return</span> <span class="code-function">checksig</span>(sig_alice, <span class="code-string">"&lt;alice_pk&gt;"</span>);
 } <span class="code-keyword">else</span> {
-  <span class="code-keyword">verify</span> <span class="code-function">sha256</span>(<span class="code-function">sha256</span>(preimage)) == hash;
-  <span class="code-keyword">return</span> <span class="code-function">checksig</span>(sig_bob, bob_pk);
+  <span class="code-keyword">verify</span> <span class="code-function">sha256</span>(<span class="code-function">sha256</span>(preimage)) == <span class="code-string">"&lt;hash&gt;"</span>;
+  <span class="code-keyword">return</span> <span class="code-function">checksig</span>(sig_bob, <span class="code-string">"&lt;bob_pk&gt;"</span>);
 }</pre>
-              <p class="text-xs text-gray-600 mt-2">Readable, type-safe, beginner-friendly</p>
+              <p class="text-xs text-gray-600 mt-2">Readable, type-safe, checked before deployment</p>
             </div>
           </div>
+        </div>
+
+        <!-- What's New -->
+        <h3 id="whats-new" class="text-xl font-semibold text-gray-800 mt-8 mb-3">
+          🆕 What's New in v0.1.0
+        </h3>
+        <p class="mb-4 text-gray-700">
+          v0.1.0 is a major revision of the analyzer and back end,
+          accompanying the
+          <a
+            href="https://arxiv.org/abs/2601.01436"
+            class="text-blue-600 hover:underline"
+            >Bithoven paper</a
+          >.
+        </p>
+        <ul class="space-y-3 text-sm text-gray-700 mb-6 list-disc list-inside">
+          <li>
+            <strong>Path-sensitive signature necessity.</strong> In 0.0.x, a
+            declaration only had to contain a
+            <code class="bg-gray-100 px-1 rounded">signature</code> item, and
+            only the literal shape
+            <code class="bg-gray-100 px-1 rounded">!checksig(..)</code> was
+            flagged. v0.1.0 decides, for every path, whether it can succeed
+            while every <code class="bg-gray-100 px-1 rounded">checksig</code>
+            fails. Rewrites that 0.0.x compiled into anyone-can-spend scripts,
+            such as
+            <code class="bg-gray-100 px-1 rounded">checksig(..) == false</code>,
+            <code class="bg-gray-100 px-1 rounded">checksig(..) || flag</code>
+            or an inverted
+            <code class="bg-gray-100 px-1 rounded">if checksig(..)</code>, are
+            now rejected.
+            <code class="bg-gray-100 px-1 rounded">!!checksig(..)</code>, which
+            0.0.x wrongly rejected, now compiles.
+            <a href="#signature-necessity" class="text-blue-600 hover:underline"
+              >Details →</a
+            >
+          </li>
+          <li>
+            <strong>Dead-contract detection.</strong> A contract whose every
+            path is provably unsatisfiable is rejected with
+            <code class="bg-gray-100 px-1 rounded">DeadPath</code> instead of
+            compiling to an unspendable output.
+          </li>
+          <li>
+            <strong>Enforced well-formedness.</strong> Every
+            <code class="bg-gray-100 px-1 rounded">if</code> needs an
+            <code class="bg-gray-100 px-1 rounded">else</code>, there is exactly
+            one stack declaration per spending path, and paths that split at a
+            branch must agree on the witness items consumed before it.
+          </li>
+          <li>
+            <strong>Per-path liveness.</strong> Witness consumption is tracked
+            per spending path, so two branches may reuse a name such as
+            <code class="bg-gray-100 px-1 rounded">sig</code>; 0.0.x rejected
+            this with
+            <code class="bg-gray-100 px-1 rounded">VariableConsumed</code>.
+          </li>
+          <li>
+            <strong>Stricter types and literals.</strong>
+            <code class="bg-gray-100 px-1 rounded">verify</code>,
+            <code class="bg-gray-100 px-1 rounded">return</code> and
+            <code class="bg-gray-100 px-1 rounded">if</code> operands must be
+            <code class="bg-gray-100 px-1 rounded">bool</code>; byte strings are
+            capped at the 520-byte push limit; key literals must use the
+            target's encoding.
+          </li>
+          <li>
+            <strong>Back-end fixes.</strong> Equality over arithmetic compiles
+            to <code class="bg-gray-100 px-1 rounded">OP_NUMEQUAL</code>, so an
+            overflowing sum can no longer compare equal byte-wise, and long
+            byte-string literals that could crash the 0.0.x compiler now
+            compile.
+          </li>
+          <li>
+            <strong>Reproducible evaluation.</strong> Differential validation
+            against Bitcoin Core, mutation analysis, the BSHunter taxonomy
+            benchmark and a false-positive corpus ship with the repository
+            (see
+            <a
+              href="https://github.com/ChrisCho-H/bithoven/blob/main/tests/README.md"
+              target="_blank"
+              class="text-blue-600 hover:underline"
+              >tests/README.md</a
+            >).
+          </li>
+        </ul>
+        <div
+          class="bg-amber-50 border-l-4 border-amber-500 p-4 text-sm text-amber-900"
+        >
+          <p class="font-bold mb-1">Upgrading from 0.0.x?</p>
+          <p>
+            Contracts that relied on the looser rules may stop compiling. Give
+            every <code class="bg-amber-100 px-1 rounded">if</code> an
+            <code class="bg-amber-100 px-1 rounded">else</code>
+            (<code class="bg-amber-100 px-1 rounded">NoReturn</code>), write
+            exactly one declaration per spending path
+            (<code class="bg-amber-100 px-1 rounded">DeclarationPathMismatch</code>),
+            and use 32-byte x-only keys under
+            <code class="bg-amber-100 px-1 rounded">taproot</code> or 33-byte
+            compressed keys under
+            <code class="bg-amber-100 px-1 rounded">legacy</code>/<code
+              class="bg-amber-100 px-1 rounded"
+              >segwit</code
+            >
+            (<code class="bg-amber-100 px-1 rounded">MalformedPubkey</code>).
+          </p>
         </div>
       </section>
 
@@ -514,9 +678,12 @@ OP_ENDIF</pre>
           <li><strong>Pragmas:</strong> Compiler directives.</li>
           <li>
             <strong>Stack Definitions:</strong> The expected input variables
-            (Witness data).
+            (Witness data), one declaration per spending path.
           </li>
-          <li><strong>Logic Block:</strong> The executable code.</li>
+          <li>
+            <strong>Logic Block:</strong> The executable code, in which every
+            path ends in a <code class="bg-gray-100 px-1 rounded">return</code>.
+          </li>
         </ol>
 
         <h4 class="font-bold text-gray-800 mb-2">Example: Single Signature</h4>
@@ -563,18 +730,24 @@ OP_ENDIF</pre>
         >
           <li>
             <code class="font-bold">legacy</code>: Generates P2SH-compatible
-            script.
+            script. Key literals are 33-byte compressed keys.
           </li>
           <li>
             <code class="font-bold">segwit</code>: Generates P2WSH-compatible
-            script.
+            script. Key literals are 33-byte compressed keys.
           </li>
           <li>
             <code class="font-bold">taproot</code>: Generates P2TR-compatible
             script (uses
-            <code class="bg-gray-100 px-1 rounded">OP_CHECKSIGADD</code>).
+            <code class="bg-gray-100 px-1 rounded">OP_CHECKSIGADD</code>). Key
+            literals are 32-byte x-only keys.
           </li>
         </ul>
+        <p class="mb-6 text-gray-700 text-sm">
+          A key literal in the wrong encoding for the target, or one that is
+          not a point on secp256k1, is rejected with
+          <code class="bg-gray-100 px-1 rounded">MalformedPubkey</code>.
+        </p>
 
         <h3 id="types" class="text-xl font-semibold text-gray-800 mb-3">
           Types
@@ -602,29 +775,97 @@ OP_ENDIF</pre>
                 <td class="px-6 py-4 font-mono font-bold text-blue-600">
                   number
                 </td>
-                <td class="px-6 py-4">Integer values (32-bit signed)</td>
+                <td class="px-6 py-4">
+                  Integer values (32-bit signed, ±2,147,483,647)
+                </td>
                 <td class="px-6 py-4 font-mono">1000</td>
               </tr>
               <tr class="bg-white border-b">
                 <td class="px-6 py-4 font-mono font-bold text-blue-600">
                   string
                 </td>
-                <td class="px-6 py-4">Hex or ASCII string data</td>
+                <td class="px-6 py-4">
+                  Hex or ASCII string data (at most 520 bytes)
+                </td>
                 <td class="px-6 py-4 font-mono">"secret"</td>
               </tr>
               <tr class="bg-white border-b">
                 <td class="px-6 py-4 font-mono font-bold text-blue-600">
                   signature
                 </td>
-                <td class="px-6 py-4">ECDSA or Schnorr signatures</td>
+                <td class="px-6 py-4">
+                  ECDSA (legacy/segwit) or Schnorr (taproot) signatures,
+                  supplied by the witness
+                </td>
                 <td class="px-6 py-4 font-mono">sig_alice</td>
               </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mt-4 mb-6 text-gray-700 text-sm">
+          <strong>Public keys are not a declarable type.</strong> A key must be
+          a string literal such as
+          <code class="bg-gray-100 px-1 rounded">"0245..."</code>, so a spender
+          can never substitute a key of their own; a key taken from the witness
+          is rejected with
+          <code class="bg-gray-100 px-1 rounded">TypeMismatch</code>.
+        </p>
+
+        <h4 class="font-bold text-gray-800 mb-2">Operators</h4>
+        <p class="mb-3 text-gray-700 text-sm">
+          Operands are type-checked at compile time; a mismatch is rejected
+          with <code class="bg-gray-100 px-1 rounded">InvalidOperation</code>.
+        </p>
+        <div class="overflow-x-auto mb-6">
+          <table
+            class="w-full text-sm text-left text-gray-500 border rounded-lg"
+          >
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 border-b">Operators</th>
+                <th scope="col" class="px-6 py-3 border-b">Operands</th>
+                <th scope="col" class="px-6 py-3 border-b">Result</th>
+              </tr>
+            </thead>
+            <tbody>
               <tr class="bg-white border-b">
-                <td class="px-6 py-4 font-mono font-bold text-blue-600">
-                  pubkey
+                <td class="px-6 py-3 font-mono">
+                  + - max(a, b) min(a, b) ++ -- negate abs
                 </td>
-                <td class="px-6 py-4">Valid public key point</td>
-                <td class="px-6 py-4 font-mono">"0245..."</td>
+                <td class="px-6 py-3">number</td>
+                <td class="px-6 py-3 font-mono">number</td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-6 py-3 font-mono">&lt; &lt;= &gt; &gt;=</td>
+                <td class="px-6 py-3">number</td>
+                <td class="px-6 py-3 font-mono">bool</td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-6 py-3 font-mono">== !=</td>
+                <td class="px-6 py-3">
+                  Two operands of the same type: number, string or bool
+                </td>
+                <td class="px-6 py-3 font-mono">bool</td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-6 py-3 font-mono">&amp;&amp; || !</td>
+                <td class="px-6 py-3">bool</td>
+                <td class="px-6 py-3 font-mono">bool</td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-6 py-3 font-mono">sha256 ripemd160</td>
+                <td class="px-6 py-3">number, string or bool (not signature)</td>
+                <td class="px-6 py-3 font-mono">string</td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-6 py-3 font-mono">len</td>
+                <td class="px-6 py-3">string</td>
+                <td class="px-6 py-3 font-mono">number</td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-6 py-3 font-mono">checksig</td>
+                <td class="px-6 py-3">signature and key literal pairs</td>
+                <td class="px-6 py-3 font-mono">bool</td>
               </tr>
             </tbody>
           </table>
@@ -646,12 +887,54 @@ OP_ENDIF</pre>
         >
           (condition: <span class="code-type">bool</span>, sig_alice:
           <span class="code-type">signature</span>)
-          <span class="code-comment">// Path A</span> <br />(condition:
+          <span class="code-comment">// Path A: the if side</span> <br />(condition:
           <span class="code-type">bool</span>, preimage:
           <span class="code-type">string</span>, sig_bob:
           <span class="code-type">signature</span>)
-          <span class="code-comment">// Path B</span>
+          <span class="code-comment">// Path B: the else side</span>
         </div>
+
+        <p class="mt-6 mb-3 text-gray-700">
+          The compiler enforces four rules on declarations:
+        </p>
+        <ul class="space-y-3 text-sm text-gray-700 mb-4">
+          <li>
+            <strong>One declaration per path.</strong> A contract with
+            <em>k</em> conditionals has <em>k</em> + 1 spending paths and needs
+            exactly that many declarations, in the order the paths'
+            <code class="bg-gray-100 px-1 rounded">return</code>s appear in the
+            source (the <code class="bg-gray-100 px-1 rounded">if</code> side
+            before the <code class="bg-gray-100 px-1 rounded">else</code> side).
+            Otherwise:
+            <code class="bg-gray-100 px-1 rounded">DeclarationPathMismatch</code>.
+          </li>
+          <li>
+            <strong>Consumption order.</strong> List items in the order the
+            path consumes them. The first item is the top of the witness stack,
+            so a branch condition comes first. Using an item while one listed
+            before it is still unused is rejected with
+            <code class="bg-gray-100 px-1 rounded">InvalidConsumptionOrder</code>.
+          </li>
+          <li>
+            <strong>Shared prefix.</strong> Paths that split at a branch must
+            declare the items consumed before it with the same names in the
+            same positions (above,
+            <code class="bg-gray-100 px-1 rounded">condition</code>). Otherwise:
+            <code class="bg-gray-100 px-1 rounded">DeclarationPathMismatch</code>.
+          </li>
+          <li>
+            <strong>Exactly once.</strong> Every declared item is consumed
+            exactly once on its path;
+            <code class="bg-gray-100 px-1 rounded">UndefinedVariable</code>,
+            <code class="bg-gray-100 px-1 rounded">VariableConsumed</code> and
+            <code class="bg-gray-100 px-1 rounded">UnusedVariable</code> catch
+            the alternatives.
+          </li>
+        </ul>
+        <p class="text-sm text-gray-600">
+          💡 A witness serializes the stack bottom-to-top, so when spending,
+          the first declared item is the last one pushed.
+        </p>
       </section>
 
       <!-- 5. Control Flow -->
@@ -664,27 +947,33 @@ OP_ENDIF</pre>
           <div>
             <h3 class="text-lg font-bold text-gray-800 mb-2">Conditionals</h3>
             <p class="text-sm text-gray-600 mb-2">
-              Use standard if/else logic.
+              Use standard if/else logic. Every
+              <code class="bg-gray-100 px-1 rounded">if</code> needs an
+              <code class="bg-gray-100 px-1 rounded">else</code>.
             </p>
             <div
-              class="bg-gray-50 border border-gray-200 rounded-lg p-3 font-mono text-xs"
+              class="bg-gray-50 border border-gray-200 rounded-lg p-3 font-mono text-xs overflow-x-auto"
             >
               <span class="code-keyword">if</span> condition {
               <br />&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment"
-                >// Branch A</span
+                >// Path A</span
               >
               <br />&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword"
                 >return</span
               >
-              <span class="code-type">true</span>; <br />}
+              <span class="code-function">checksig</span>(sig_alice,
+              <span class="code-string">"&lt;pk_alice&gt;"</span>);
+              <br />}
               <span class="code-keyword">else</span> {
               <br />&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment"
-                >// Branch B</span
+                >// Path B</span
               >
               <br />&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword"
                 >return</span
               >
-              <span class="code-type">false</span>; <br />}
+              <span class="code-function">checksig</span>(sig_bob,
+              <span class="code-string">"&lt;pk_bob&gt;"</span>);
+              <br />}
             </div>
           </div>
           <div>
@@ -700,6 +989,58 @@ OP_ENDIF</pre>
             </div>
           </div>
         </div>
+
+        <h3 class="text-lg font-bold text-gray-800 mt-8 mb-3">
+          Structural Rules
+        </h3>
+        <p class="mb-3 text-gray-700 text-sm">
+          Script has no loops or jumps, so a contract is a tree of
+          <code class="bg-gray-100 px-1 rounded">if</code>/<code
+            class="bg-gray-100 px-1 rounded"
+            >else</code
+          >
+          branches whose leaves are
+          <code class="bg-gray-100 px-1 rounded">return</code>s. The compiler
+          requires that:
+        </p>
+        <ul class="list-disc list-inside space-y-2 text-sm text-gray-700">
+          <li>
+            Every <code class="bg-gray-100 px-1 rounded">if</code> has an
+            <code class="bg-gray-100 px-1 rounded">else</code>, and an
+            <code class="bg-gray-100 px-1 rounded">if</code>/<code
+              class="bg-gray-100 px-1 rounded"
+              >else</code
+            >
+            is the last statement of its block; put checks shared by both
+            branches before it.
+            (<code class="bg-gray-100 px-1 rounded">NoReturn</code>,
+            <code class="bg-gray-100 px-1 rounded">UnreachableCode</code>)
+          </li>
+          <li>
+            Every path ends in
+            <code class="bg-gray-100 px-1 rounded">return &lt;bool&gt;</code>,
+            and nothing follows a
+            <code class="bg-gray-100 px-1 rounded">return</code>.
+            (<code class="bg-gray-100 px-1 rounded">NoReturn</code>,
+            <code class="bg-gray-100 px-1 rounded">UnreachableCode</code>)
+          </li>
+          <li>
+            The operands of <code class="bg-gray-100 px-1 rounded">if</code>,
+            <code class="bg-gray-100 px-1 rounded">verify</code> and
+            <code class="bg-gray-100 px-1 rounded">return</code> are
+            <code class="bg-gray-100 px-1 rounded">bool</code>.
+            (<code class="bg-gray-100 px-1 rounded">InvalidOperation</code>)
+          </li>
+          <li>
+            Every path requires a valid signature. A branch that can never
+            succeed, such as
+            <code class="bg-gray-100 px-1 rounded">else { return false; }</code>,
+            is fine as long as some path can.
+            (<code class="bg-gray-100 px-1 rounded">NoSigRequired</code>,
+            <code class="bg-gray-100 px-1 rounded">UselessSig</code>,
+            <code class="bg-gray-100 px-1 rounded">DeadPath</code>)
+          </li>
+        </ul>
       </section>
 
       <!-- 6. Bitcoin Primitives -->
@@ -712,7 +1053,9 @@ OP_ENDIF</pre>
           Time Locks
         </h3>
         <p class="mb-4 text-gray-700">
-          Keywords enforce 32-bit limits automatically.
+          The compiler range-checks every locktime literal and rejects one out
+          of range with
+          <code class="bg-gray-100 px-1 rounded text-sm">IntegerOverflow</code>.
         </p>
         <ul class="space-y-4">
           <li class="flex items-start">
@@ -722,7 +1065,8 @@ OP_ENDIF</pre>
             >
             <span class="text-gray-700 text-sm"
               >Relative Timelock (CSV). Input must be older than
-              <code>n</code> blocks.</span
+              <code>n</code> blocks. <code>0 ≤ n ≤ 65,535</code>, the 16 bits
+              BIP-68 gives a relative locktime.</span
             >
           </li>
           <li class="flex items-start">
@@ -732,7 +1076,7 @@ OP_ENDIF</pre>
             >
             <span class="text-gray-700 text-sm"
               >Absolute Timelock (CLTV). Block height must be greater than
-              <code>n</code>.</span
+              <code>n</code>. <code>0 ≤ n ≤ 4,294,967,295</code>.</span
             >
           </li>
         </ul>
@@ -743,12 +1087,31 @@ OP_ENDIF</pre>
         <p class="mb-2 text-gray-700 text-sm">
           <strong>Hashing:</strong>
           <code class="font-mono bg-gray-100 px-1">sha256(data)</code>,
-          <code class="font-mono bg-gray-100 px-1">ripemd160(data)</code>
+          <code class="font-mono bg-gray-100 px-1">ripemd160(data)</code>.
+          Nested hashes compile to single opcodes:
+          <code class="font-mono bg-gray-100 px-1">sha256(sha256(x))</code>
+          becomes <code class="font-mono bg-gray-100 px-1">OP_HASH256</code> and
+          <code class="font-mono bg-gray-100 px-1">ripemd160(sha256(x))</code>
+          becomes <code class="font-mono bg-gray-100 px-1">OP_HASH160</code>.
+        </p>
+        <p class="mb-2 text-gray-700 text-sm">
+          <strong>Length:</strong>
+          <code class="font-mono bg-gray-100 px-1">len(s)</code> returns the byte
+          length of a string.
         </p>
 
         <p class="mb-2 text-gray-700 text-sm mt-4">
           <strong>Signature Checks:</strong> Supports single and multisig via
-          <code class="font-mono text-blue-600 font-bold">checksig</code>.
+          <code class="font-mono text-blue-600 font-bold">checksig</code>. Keys
+          must be literals in the target's encoding. Multisig compiles to
+          <code class="font-mono bg-gray-100 px-1">OP_CHECKMULTISIG</code> under
+          <code class="font-mono bg-gray-100 px-1">legacy</code>/<code
+            class="font-mono bg-gray-100 px-1"
+            >segwit</code
+          >
+          and to a chain of
+          <code class="font-mono bg-gray-100 px-1">OP_CHECKSIGADD</code> under
+          <code class="font-mono bg-gray-100 px-1">taproot</code>.
         </p>
 
         <div
@@ -776,11 +1139,37 @@ OP_ENDIF</pre>
           7. Security Features
         </h2>
         <p class="mb-6 text-gray-700">
-          Bithoven is "Correct-by-Construction." The static analyzer runs during
-          compilation.
+          Bithoven is "Correct-by-Construction." A contract reaches the code
+          generator only after passing all four analysis stages below, and
+          every rejection comes with a diagnostic pointing at the offending
+          line and column.
         </p>
 
-        <div class="grid md:grid-cols-3 gap-6">
+        <!-- Analysis Pipeline -->
+        <h3 id="pipeline" class="text-xl font-semibold text-gray-800 mb-4">
+          Analysis Pipeline
+        </h3>
+        <div class="grid md:grid-cols-2 gap-6 mb-10">
+          <div
+            class="p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition"
+          >
+            <div
+              class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-4"
+            >
+              <i class="fas fa-check-double"></i>
+            </div>
+            <h5 class="mb-2 text-lg font-bold tracking-tight text-gray-900">
+              1. Type Checker
+            </h5>
+            <p class="font-normal text-gray-700 text-sm">
+              Rejects arithmetic on strings or on
+              <code class="bg-gray-100 px-1 rounded">checksig</code> results and
+              comparisons across types. Keys must be on-curve literals in the
+              target's encoding, so a spender cannot supply their own key
+              (<em>uncertain-sig</em>) and no key is impossible to sign for
+              (<em>impossible-key</em>).
+            </p>
+          </div>
           <div
             class="p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition"
           >
@@ -790,11 +1179,30 @@ OP_ENDIF</pre>
               <i class="fas fa-recycle"></i>
             </div>
             <h5 class="mb-2 text-lg font-bold tracking-tight text-gray-900">
-              Liveness Safety
+              2. Liveness &amp; Scope Analyzer
             </h5>
             <p class="font-normal text-gray-700 text-sm">
-              Ensures every variable (especially signatures) is consumed exactly
-              once. Prevents signature reuse and resource exhaustion.
+              Ensures every declared witness item (especially signatures) is
+              consumed exactly once, in stack order, on every path, and that the
+              declarations match the paths. Prevents signature reuse and
+              leftover stack items.
+            </p>
+          </div>
+          <div
+            class="p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition"
+          >
+            <div
+              class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 mb-4"
+            >
+              <i class="fas fa-ruler"></i>
+            </div>
+            <h5 class="mb-2 text-lg font-bold tracking-tight text-gray-900">
+              3. Consensus-Literal Checker
+            </h5>
+            <p class="font-normal text-gray-700 text-sm">
+              Checks literals against Bitcoin's consensus limits: numbers fit
+              the 32-bit script range, byte strings fit the 520-byte push
+              limit, and locktimes fit their BIP-65 and BIP-68 fields.
             </p>
           </div>
           <div
@@ -806,29 +1214,373 @@ OP_ENDIF</pre>
               <i class="fas fa-shield-alt"></i>
             </div>
             <h5 class="mb-2 text-lg font-bold tracking-tight text-gray-900">
-              Semantic Security
+              4. Semantic &amp; Control-Flow Analyzer
             </h5>
             <p class="font-normal text-gray-700 text-sm">
-              Analyzes execution paths to ensure safe termination. Prevents
-              Anyone-Can-Spend bugs.
+              Enumerates every terminating path and asks whether it can succeed
+              with every <code class="bg-gray-100 px-1 rounded">checksig</code>
+              forced to false, whether it can succeed at all, and whether it
+              ends in an explicit
+              <code class="bg-gray-100 px-1 rounded">return</code>. Prevents
+              anyone-can-spend bugs and unspendable outputs.
             </p>
           </div>
-          <div
-            class="p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition"
+        </div>
+
+        <!-- Signature Necessity -->
+        <h3
+          id="signature-necessity"
+          class="text-xl font-semibold text-gray-800 mb-3"
+        >
+          Signature Necessity
+        </h3>
+        <p class="mb-4 text-gray-700">
+          The central security property:
+          <strong
+            >no accepted spending path can succeed unless a
+            <code class="bg-gray-100 px-1 rounded">checksig</code> on that path
+            returns true.</strong
           >
-            <div
-              class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-4"
-            >
-              <i class="fas fa-check-double"></i>
+          Rather than matching syntactic patterns, the analyzer turns each
+          path's success condition into a boolean formula, pins every
+          signature check to false, and asks whether the formula can still be
+          satisfied. Anything it cannot model exactly is treated as
+          attacker-controlled, so it errs toward rejecting a contract, never
+          toward accepting one.
+        </p>
+        <p class="mb-3 text-gray-700 text-sm">
+          This contract looks signature-gated, but its only path succeeds
+          exactly when the signature check <em>fails</em>:
+        </p>
+        <div
+          class="bg-gray-900 rounded-lg p-4 mb-2 text-gray-100 font-mono text-xs overflow-x-auto shadow-lg"
+        >
+          <span class="code-keyword">pragma</span> bithoven version 0.0.1;
+          <br /><span class="code-keyword">pragma</span> bithoven target segwit;
+          <br />
+          <br />(sig_alice: <span class="code-type">signature</span>)
+          <br />{
+          <br />&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span>
+          <span class="code-function">checksig</span>(sig_alice,
+          <span class="code-string"
+            >"0245a6b3f8eeab8e88501a9a25391318dce9bf35e24c377ee82799543606bf5212"</span
+          >) == <span class="code-type">false</span>;
+          <br />}
+        </div>
+        <div
+          class="bg-red-50 border border-red-200 rounded-lg p-3 mb-6 font-mono text-xs text-red-800 overflow-x-auto"
+        >
+          Error at line 6:5: UselessSig("A checksig is present on the top-level
+          path but it does not gate the spend: the return at line 6:5 can
+          succeed without a valid signature.")
+        </div>
+        <p class="mb-3 text-gray-700 text-sm">
+          Because the check reasons about what each path computes rather than
+          how it is spelled, equivalent rewrites get the same verdict
+          (<code class="bg-gray-100 px-1 rounded">..</code> elides the
+          signature and key):
+        </p>
+        <div class="overflow-x-auto mb-4">
+          <table
+            class="w-full text-sm text-left text-gray-500 border rounded-lg"
+          >
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 border-b">Contract body</th>
+                <th scope="col" class="px-6 py-3 border-b">Verdict</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="bg-white border-b">
+                <td class="px-6 py-3 font-mono text-xs">return !checksig(..);</td>
+                <td class="px-6 py-3 text-red-700">❌ UselessSig</td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-6 py-3 font-mono text-xs">
+                  return checksig(..) == false;
+                </td>
+                <td class="px-6 py-3 text-red-700">❌ UselessSig</td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-6 py-3 font-mono text-xs">
+                  return checksig(..) || flag;
+                </td>
+                <td class="px-6 py-3 text-red-700">❌ UselessSig</td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-6 py-3 font-mono text-xs">
+                  if checksig(..) { return false; } else { return true; }
+                </td>
+                <td class="px-6 py-3 text-red-700">❌ UselessSig</td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-6 py-3 font-mono text-xs">
+                  if flag { return true; } else { return checksig(..); }
+                </td>
+                <td class="px-6 py-3 text-red-700">❌ NoSigRequired</td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-6 py-3 font-mono text-xs">
+                  verify false; return checksig(..);
+                </td>
+                <td class="px-6 py-3 text-red-700">❌ DeadPath</td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-6 py-3 font-mono text-xs">
+                  return checksig(..) == true;
+                </td>
+                <td class="px-6 py-3 text-green-700">✅ Compiles</td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-6 py-3 font-mono text-xs">
+                  return !!checksig(..);
+                </td>
+                <td class="px-6 py-3 text-green-700">✅ Compiles</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mb-10 text-sm text-gray-600">
+          The analysis is bounded at 20 attacker-controlled inputs per path; a
+          path above the bound is rejected rather than trusted. Keyless
+          spending paths, such as a bare hash lock or a bare timelock, are
+          outside the guarantee by design and rejected with
+          <code class="bg-gray-100 px-1 rounded">NoSigRequired</code>.
+        </p>
+
+        <!-- Compiler Diagnostics -->
+        <h3 id="diagnostics" class="text-xl font-semibold text-gray-800 mb-3">
+          Compiler Diagnostics
+        </h3>
+        <p class="mb-3 text-gray-700 text-sm">
+          Every diagnostic is reported as
+          <code class="bg-gray-100 px-1 rounded"
+            >Error at line L:C: Kind("message")</code
+          >. Names in italics are the defect classes of BSHunter (Zheng et
+          al., ICSE 2023), a study of defective scripts deployed on Bitcoin.
+        </p>
+        <div class="overflow-x-auto mb-10">
+          <table
+            class="w-full text-sm text-left text-gray-500 border rounded-lg"
+          >
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+              <tr>
+                <th scope="col" class="px-4 py-3 border-b">Diagnostic</th>
+                <th scope="col" class="px-4 py-3 border-b">Stage</th>
+                <th scope="col" class="px-4 py-3 border-b">Rejected when</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="bg-white border-b">
+                <td class="px-4 py-3 font-mono text-xs">InvalidOperation</td>
+                <td class="px-4 py-3">Type checker</td>
+                <td class="px-4 py-3">
+                  An operand has the wrong type: arithmetic on a string or a
+                  <code>checksig</code> result, comparing a number to a string,
+                  a non-<code>bool</code> condition
+                </td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-4 py-3 font-mono text-xs">TypeMismatch</td>
+                <td class="px-4 py-3">Type checker</td>
+                <td class="px-4 py-3">
+                  A public key comes from the witness instead of a literal
+                  (<em>uncertain-sig</em>), or a signature is not a declared
+                  witness item
+                </td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-4 py-3 font-mono text-xs">MalformedPubkey</td>
+                <td class="px-4 py-3">Type checker</td>
+                <td class="px-4 py-3">
+                  A key literal is not on secp256k1 or not in the target's
+                  encoding (<em>impossible-key</em>)
+                </td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-4 py-3 font-mono text-xs">IntegerOverflow</td>
+                <td class="px-4 py-3">Consensus literals</td>
+                <td class="px-4 py-3">
+                  A number outside ±2,147,483,647, a byte string over 520
+                  bytes, or a locktime out of range
+                </td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-4 py-3 font-mono text-xs">
+                  UndefinedVariable<br />DuplicateVariable
+                </td>
+                <td class="px-4 py-3">Liveness &amp; scope</td>
+                <td class="px-4 py-3">
+                  A name is not declared on the path, or is declared twice in
+                  one declaration
+                </td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-4 py-3 font-mono text-xs">
+                  VariableConsumed<br />UnusedVariable
+                </td>
+                <td class="px-4 py-3">Liveness &amp; scope</td>
+                <td class="px-4 py-3">
+                  A witness item is used twice, or never used
+                </td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-4 py-3 font-mono text-xs">
+                  InvalidConsumptionOrder
+                </td>
+                <td class="px-4 py-3">Liveness &amp; scope</td>
+                <td class="px-4 py-3">
+                  An item is used while one declared before it is still unused
+                </td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-4 py-3 font-mono text-xs">
+                  DeclarationPathMismatch
+                </td>
+                <td class="px-4 py-3">Liveness &amp; scope</td>
+                <td class="px-4 py-3">
+                  The declarations do not match the spending paths in number or
+                  in their shared prefix
+                </td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-4 py-3 font-mono text-xs">
+                  NoReturn<br />UnreachableCode
+                </td>
+                <td class="px-4 py-3">Control flow</td>
+                <td class="px-4 py-3">
+                  A path has no <code>return</code> or an <code>if</code> has no
+                  <code>else</code>; or a statement follows a
+                  <code>return</code> or an <code>if</code>/<code>else</code>
+                </td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-4 py-3 font-mono text-xs">NoSigRequired</td>
+                <td class="px-4 py-3">Semantic security</td>
+                <td class="px-4 py-3">
+                  A path with no signature check can succeed
+                  (<em>unbound-txid</em>), or a path exceeds the analysis
+                  bound
+                </td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-4 py-3 font-mono text-xs">UselessSig</td>
+                <td class="px-4 py-3">Semantic security</td>
+                <td class="px-4 py-3">
+                  A path has a <code>checksig</code> but can succeed without a
+                  valid signature (<em>useless-sig</em>)
+                </td>
+              </tr>
+              <tr class="bg-white border-b">
+                <td class="px-4 py-3 font-mono text-xs">DeadPath</td>
+                <td class="px-4 py-3">Semantic security</td>
+                <td class="px-4 py-3">
+                  Every path is provably unsatisfiable (<em>never-true</em>)
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Formal Guarantees -->
+        <h3 id="guarantees" class="text-xl font-semibold text-gray-800 mb-3">
+          Formal Guarantees &amp; Evaluation
+        </h3>
+        <p class="mb-4 text-gray-700">
+          The
+          <a
+            href="https://arxiv.org/abs/2601.01436"
+            class="text-blue-600 hover:underline"
+            >Bithoven paper</a
+          >
+          gives the language a formal syntax, big-step operational semantics
+          and type system, and states two guarantees separately:
+        </p>
+        <ul class="space-y-3 text-sm text-gray-700 mb-4">
+          <li class="border-l-4 border-blue-500 pl-4">
+            <strong>Safety (type soundness):</strong> an accepted program never
+            reaches an undefined state of Bithoven's abstract machine (Progress
+            and Preservation).
+          </li>
+          <li class="border-l-4 border-red-500 pl-4">
+            <strong>Security (refinement and signature necessity):</strong> if
+            the emitted script succeeds on chain, the source program succeeds
+            on a well-typed witness that agrees on every
+            <code class="bg-gray-100 px-1 rounded">checksig</code> outcome.
+            Since no accepted path succeeds with every
+            <code class="bg-gray-100 px-1 rounded">checksig</code> false, some
+            <code class="bg-gray-100 px-1 rounded">checksig</code> must have
+            returned true on chain.
+          </li>
+        </ul>
+        <p class="mb-6 text-gray-700 text-sm">
+          The refinement theorem rests on an explicit trusted base, chiefly
+          that Bitcoin Core implements the modeled fragment of Script. That
+          assumption is tested rather than taken on faith:
+        </p>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+          <div class="border border-gray-200 rounded-lg p-4 text-center bg-white">
+            <div class="text-2xl font-extrabold text-gray-900">0</div>
+            <div class="text-xs text-gray-600 mt-1">
+              of 32,560 executions accepted by Bitcoin Core but rejected by the
+              semantics
             </div>
-            <h5 class="mb-2 text-lg font-bold tracking-tight text-gray-900">
-              Type Safety
-            </h5>
-            <p class="font-normal text-gray-700 text-sm">
-              Strictly validates types. Prevents consensus failures like
-              arithmetic on strings or invalid public key points.
-            </p>
           </div>
+          <div class="border border-gray-200 rounded-lg p-4 text-center bg-white">
+            <div class="text-2xl font-extrabold text-gray-900">11 / 11</div>
+            <div class="text-xs text-gray-600 mt-1">
+              injected compiler faults detected by the harness
+            </div>
+          </div>
+          <div class="border border-gray-200 rounded-lg p-4 text-center bg-white">
+            <div class="text-2xl font-extrabold text-gray-900">5 / 6</div>
+            <div class="text-xs text-gray-600 mt-1">
+              BSHunter defect classes prevented at compile time
+            </div>
+          </div>
+          <div class="border border-gray-200 rounded-lg p-4 text-center bg-white">
+            <div class="text-2xl font-extrabold text-gray-900">17 / 17</div>
+            <div class="text-xs text-gray-600 mt-1">
+              standard signature-gated policies accepted, 0 false positives
+            </div>
+          </div>
+          <div class="border border-gray-200 rounded-lg p-4 text-center bg-white">
+            <div class="text-2xl font-extrabold text-gray-900">+1 byte</div>
+            <div class="text-xs text-gray-600 mt-1">
+              median script size vs. rust-miniscript
+            </div>
+          </div>
+          <div class="border border-gray-200 rounded-lg p-4 text-center bg-white">
+            <div class="text-2xl font-extrabold text-gray-900">0.147 ms</div>
+            <div class="text-xs text-gray-600 mt-1">
+              median compile time per accepted contract (Apple M3 Pro)
+            </div>
+          </div>
+        </div>
+        <p class="mb-4 text-gray-700 text-sm">
+          The sixth BSHunter class, <em>simple-key</em> (a weak private key),
+          is invisible to any analysis of the contract. Every figure can be
+          reproduced with <code class="bg-gray-100 px-1 rounded">cargo test</code>
+          and <code class="bg-gray-100 px-1 rounded">cargo bench</code>; see
+          <a
+            href="https://github.com/ChrisCho-H/bithoven/blob/main/tests/README.md"
+            target="_blank"
+            class="text-blue-600 hover:underline"
+            >tests/README.md</a
+          >.
+        </p>
+        <div
+          class="bg-gray-50 border-l-4 border-gray-400 p-4 text-sm text-gray-700"
+        >
+          <p class="font-bold text-gray-800 mb-1">Scope</p>
+          <p>
+            Script-level resource limits (201 opcodes, 10,000-byte scripts,
+            1,000 stack items, 20 keys per multisig) are not enforced, so a very
+            large contract can compile to an unspendable script. Taproot output
+            is checked against expected opcodes but not executed against
+            consensus, since <code>libbitcoinconsensus</code> has no taproot
+            verification flag.
+          </p>
         </div>
       </section>
 
@@ -881,7 +1633,7 @@ OP_ENDIF</pre>
               <div>
                 <h4 class="text-lg font-semibold text-gray-900 flex items-center">
                   <span class="text-2xl mr-2">✍️</span>
-                  Single Signature (P2PKH)
+                  Single Signature (P2PK)
                   <a href="https://bithoven-lang.github.io/bithoven/ide/?example=singlesig" class="ml-3 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 transition">Try in IDE →</a>
                 </h4>
                 <p class="text-sm text-gray-600 mt-1">The most basic Bitcoin transaction - requires only a signature to spend.</p>
@@ -902,11 +1654,11 @@ OP_ENDIF</pre>
                   Hash Lock
                   <a href="https://bithoven-lang.github.io/bithoven/ide/?example=hashlock" class="ml-3 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 transition">Try in IDE →</a>
                 </h4>
-                <p class="text-sm text-gray-600 mt-1">Spend coins by revealing a secret that matches a SHA256 hash.</p>
+                <p class="text-sm text-gray-600 mt-1">Spend coins by revealing a secret that matches a double-SHA256 hash, together with a signature.</p>
               </div>
             </div>
             <div class="bg-gray-50 border-l-4 border-green-500 p-3 text-sm">
-              <p class="font-semibold text-gray-800 mb-1">💡 Learns: Hash verification, secret reveals</p>
+              <p class="font-semibold text-gray-800 mb-1">💡 Learns: Hash verification, secret reveals, why every path needs a signature</p>
               <p class="text-gray-600">Use case: Atomic swaps, payment channels</p>
             </div>
           </div>
@@ -920,7 +1672,7 @@ OP_ENDIF</pre>
                   Time Lock (CLTV)
                   <a href="https://bithoven-lang.github.io/bithoven/ide/?example=timelock" class="ml-3 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 transition">Try in IDE →</a>
                 </h4>
-                <p class="text-sm text-gray-600 mt-1">Coins locked until a specific block height using absolute timelocks.</p>
+                <p class="text-sm text-gray-600 mt-1">Coins locked until a specific block height using absolute timelocks, then spendable with a signature.</p>
               </div>
             </div>
             <div class="bg-gray-50 border-l-4 border-green-500 p-3 text-sm">
@@ -1159,9 +1911,37 @@ OP_ENDIF</pre>
               <span class="text-blue-600 mr-2">Q:</span> How does Bithoven compare to Miniscript?
             </h4>
             <p class="text-gray-700 pl-6">
-              <strong>A:</strong> Miniscript is a policy language focused on composability and correctness. Bithoven is an imperative programming language 
-              that offers more expressive control flow (nested if/else, early returns) while maintaining formal safety guarantees. 
-              Both compile to Bitcoin Script, but Bithoven targets developers who want imperative syntax.
+              <strong>A:</strong> Miniscript (BIP-379) is a structured, composable subset of Bitcoin Script, best understood as an analyzable
+              assembly language and compiler target. Its grammar has no named witness bindings, arithmetic or imperative control flow, so it obtains
+              safety by excluding them. Bithoven is an imperative source language that admits those constructs and obtains comparable guarantees by
+              analysis instead. On 17 standard Miniscript policies, its output is within a median of one byte of <code class="bg-gray-100 px-1 rounded">rust-miniscript</code>'s.
+              Two Miniscript fragments have no Bithoven counterpart: <code class="bg-gray-100 px-1 rounded">pk_h</code>, because keys must be literals,
+              and <code class="bg-gray-100 px-1 rounded">or_d</code>, because it relies on <code class="bg-gray-100 px-1 rounded">OP_IFDUP</code>.
+            </p>
+          </div>
+
+          <!-- FAQ: NoSigRequired -->
+          <div class="border border-gray-200 rounded-lg p-5">
+            <h4 class="font-bold text-gray-900 mb-2 flex items-center">
+              <span class="text-blue-600 mr-2">Q:</span> Why is my hash lock or timelock rejected with <code class="ml-1">NoSigRequired</code>?
+            </h4>
+            <p class="text-gray-700 pl-6">
+              <strong>A:</strong> By design, every spending path must require a valid signature. A bare hash lock lets anyone who sees the
+              preimage, for example in the mempool, claim the coins, and a bare timelock lets anyone spend once it expires. Add a signature
+              check to the path:
+              <code class="bg-gray-100 px-1 rounded">verify sha256(preimage) == "&lt;hash&gt;"; return checksig(sig, "&lt;pubkey&gt;");</code>
+            </p>
+          </div>
+
+          <!-- FAQ: Upgrading -->
+          <div class="border border-gray-200 rounded-lg p-5">
+            <h4 class="font-bold text-gray-900 mb-2 flex items-center">
+              <span class="text-blue-600 mr-2">Q:</span> My contract compiled with 0.0.x but fails with v0.1.0. Why?
+            </h4>
+            <p class="text-gray-700 pl-6">
+              <strong>A:</strong> v0.1.0 enforces rules that 0.0.x did not. The most common fixes are giving every <code class="bg-gray-100 px-1 rounded">if</code>
+              an <code class="bg-gray-100 px-1 rounded">else</code>, writing exactly one stack declaration per spending path, and using the key encoding the
+              target requires. See <a href="#whats-new" class="text-blue-600 hover:underline">What's New in v0.1.0</a> for the full list.
             </p>
           </div>
 
@@ -1196,9 +1976,10 @@ OP_ENDIF</pre>
               <span class="text-blue-600 mr-2">Q:</span> Is Bithoven production-ready?
             </h4>
             <p class="text-gray-700 pl-6">
-              <strong>A:</strong> Bithoven v0.0.1 is in <strong>beta</strong>. The compiler has formal verification and passes extensive tests, 
-              but has not been independently audited. Use for research, prototyping, and learning. For production deployments, 
-              please conduct thorough testing and security review.
+              <strong>A:</strong> Bithoven v0.1.0 is in <strong>beta</strong>. The paper proves type safety and refinement for the language, and the
+              compiler is differentially tested against Bitcoin Core, but it has not been independently audited. It also does not enforce Bitcoin's
+              script-level resource limits, and its taproot output has not been executed against consensus (see <a href="#guarantees" class="text-blue-600 hover:underline">Scope</a>).
+              Use it for research, prototyping, and learning. For production deployments, test on regtest or signet and conduct a security review.
             </p>
           </div>
 
@@ -1294,6 +2075,16 @@ OP_ENDIF</pre>
           <div class="border-l-4 border-blue-500 pl-4">
             <dt class="font-bold text-gray-900 mb-1">Spending Path</dt>
             <dd class="text-gray-700 text-sm">A distinct execution branch in a contract with its own witness requirements.</dd>
+          </div>
+
+          <div class="border-l-4 border-blue-500 pl-4">
+            <dt class="font-bold text-gray-900 mb-1">Stack Declaration</dt>
+            <dd class="text-gray-700 text-sm">The typed list of witness items one spending path consumes, written top of stack first.</dd>
+          </div>
+
+          <div class="border-l-4 border-blue-500 pl-4">
+            <dt class="font-bold text-gray-900 mb-1">Signature Necessity</dt>
+            <dd class="text-gray-700 text-sm">Bithoven's core security property: no spending path can succeed unless a signature check on it returns true.</dd>
           </div>
         </dl>
       </section>
