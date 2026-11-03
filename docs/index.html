@@ -994,7 +994,7 @@ OP_ENDIF</pre>
           Structural Rules
         </h3>
         <p class="mb-3 text-gray-700 text-sm">
-          Script has no loops or jumps, so a contract is a tree of
+          Bithoven has no loops, recursion or calls, so a contract is a tree of
           <code class="bg-gray-100 px-1 rounded">if</code>/<code
             class="bg-gray-100 px-1 rounded"
             >else</code
@@ -1371,6 +1371,13 @@ OP_ENDIF</pre>
               </tr>
             </thead>
             <tbody>
+              <tr class="bg-white border-b">
+                <td class="px-4 py-3 font-mono text-xs">ParseError</td>
+                <td class="px-4 py-3">Parser</td>
+                <td class="px-4 py-3">
+                  The source does not match the grammar
+                </td>
+              </tr>
               <tr class="bg-white border-b">
                 <td class="px-4 py-3 font-mono text-xs">InvalidOperation</td>
                 <td class="px-4 py-3">Type checker</td>
@@ -1915,8 +1922,10 @@ OP_ENDIF</pre>
               assembly language and compiler target. Its grammar has no named witness bindings, arithmetic or imperative control flow, so it obtains
               safety by excluding them. Bithoven is an imperative source language that admits those constructs and obtains comparable guarantees by
               analysis instead. On 17 standard Miniscript policies, its output is within a median of one byte of <code class="bg-gray-100 px-1 rounded">rust-miniscript</code>'s.
-              Two Miniscript fragments have no Bithoven counterpart: <code class="bg-gray-100 px-1 rounded">pk_h</code>, because keys must be literals,
-              and <code class="bg-gray-100 px-1 rounded">or_d</code>, because it relies on <code class="bg-gray-100 px-1 rounded">OP_IFDUP</code>.
+              A few Miniscript constructs have no Bithoven counterpart: <code class="bg-gray-100 px-1 rounded">pk_h</code>, because keys must be literals;
+              <code class="bg-gray-100 px-1 rounded">or_d</code>, whose <code class="bg-gray-100 px-1 rounded">OP_IFDUP</code> idiom conflicts with linear
+              consumption; and <code class="bg-gray-100 px-1 rounded">thresh</code> over arbitrary sub-policies, which Bithoven expresses only over keys
+              (multisig) or as a conjunction.
             </p>
           </div>
 

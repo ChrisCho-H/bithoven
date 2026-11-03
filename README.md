@@ -98,7 +98,7 @@ bithoven compile htlc.bithoven --format asm
 
 Without `--format`, the CLI writes the ASM, hex and bytes to `htlc.bithoven.json`; `--format hex` and `--format json` print to stdout instead.
 
-**Generated Bitcoin Script (ASM):**
+**Generated Bitcoin Script (ASM, formatted for readability):**
 
 ```text
 OP_IF
