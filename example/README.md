@@ -92,9 +92,9 @@ The repository includes additional examples demonstrating various Bitcoin Script
 - **HTLC** - Basic hash time-locked contract pattern
 - **Multisig** - 2-of-2 multi-signature authorization
 - **Inheritance** - Tiered access with time-based heir progression
-- **Hashlock** - Simple SHA256 hash verification
-- **Timelock** - Absolute time locks using CLTV
-- **Single Sig** - Basic P2PKH-style signature check
+- **Hashlock** - SHA256 preimage check gated by a signature
+- **Timelock** - Absolute time locks using CLTV, gated by a signature
+- **Single Sig** - Basic P2PK-style signature check
 
 ## 🎓 Learning Path
 
@@ -110,9 +110,11 @@ The repository includes additional examples demonstrating various Bitcoin Script
 Bithoven compiles to Bitcoin Script, which has important constraints:
 
 ### Variable Consumption Rules
-- **Each variable can only be consumed once** across all spending paths
-- When designing contracts with multiple paths, use distinct variable names for each path (e.g., `sig_arbitrator_refund` and `sig_arbitrator_dispute` instead of reusing `sig_arbitrator`)
-- Variables are matched by stack position - the witness must provide values that align with the chosen spending path
+- **Each declared item is consumed exactly once on its path.** Consumption is tracked per spending path, so different paths may reuse a name (since v0.1.0)
+- **One declaration per spending path**, in the order the paths' `return`s appear in the source (the `if` side before the `else` side)
+- **Declarations follow consumption order** - the first item is the top of the witness stack, so a branch condition comes first
+- **Items consumed before a branch are shared** - paths that split at an `if` must declare them with the same names in the same positions
+- **Every spending path must require a signature** - a bare hash lock or timelock is rejected with `NoSigRequired`
 
 ### Amount Blindness
 - Scripts cannot know the UTXO value
