@@ -140,6 +140,7 @@ fn kind_name(kind: &ErrorKind) -> &'static str {
         ErrorKind::UselessSig(_) => "UselessSig",
         ErrorKind::MalformedPubkey(_) => "MalformedPubkey",
         ErrorKind::NoSigRequired(_) => "NoSigRequired",
+        ErrorKind::ExtensionDisabled(_) => "ExtensionDisabled",
     }
 }
 

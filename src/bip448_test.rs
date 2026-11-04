@@ -1,7 +1,7 @@
 //! BIP448 (OP_TEMPLATEHASH, OP_CHECKSIGFROMSTACK, OP_INTERNALKEY) under
 //! `pragma bithoven target bip448;`. Opcode bytes, stack order and gating follow
 //! BIP446/348/349 and bitcoin-inquisition's interpreter (29.x).
-#[cfg(test)]
+#[cfg(all(test, feature = "bip448"))]
 mod tests {
     use crate::{compile_program, ErrorKind};
 
@@ -361,5 +361,46 @@ mod tests {
             "verify len(templatehash) + templatehash == 32; return checksig(sig, internalkey);",
         );
         assert!(matches!(k, ErrorKind::InvalidOperation(_)), "{:?}", k);
+    }
+}
+
+/// A default build (no `bip448` feature) behaves as today's consensus: the
+/// extension pack is refused, and plain taproot still compiles.
+#[cfg(all(test, not(feature = "bip448")))]
+mod disabled {
+    use crate::{compile_program, ErrorKind};
+
+    const K: &str = "79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798";
+
+    #[test]
+    fn bip448_target_refused_without_the_feature() {
+        let src = "pragma bithoven version 0.0.1;\npragma bithoven target bip448;\n(sig: signature)\n{ return checksigfromstack(sig, templatehash, internalkey); }\n";
+        match compile_program(src.to_string()) {
+            Err(e) => assert!(
+                matches!(e.kind, ErrorKind::ExtensionDisabled(_)),
+                "{:?}",
+                e.kind
+            ),
+            Ok(out) => panic!("compiled without the feature: {}", out.asm()),
+        }
+    }
+
+    #[test]
+    fn bip448_opcodes_refused_under_taproot_without_the_feature() {
+        let src = "pragma bithoven version 0.0.1;\npragma bithoven target taproot;\n(sig: signature)\n{ return checksig(sig, internalkey); }\n";
+        match compile_program(src.to_string()) {
+            Err(e) => assert!(
+                matches!(e.kind, ErrorKind::InvalidOperation(_)),
+                "{:?}",
+                e.kind
+            ),
+            Ok(out) => panic!("compiled: {}", out.asm()),
+        }
+    }
+
+    #[test]
+    fn plain_taproot_unaffected() {
+        let src = format!("pragma bithoven version 0.0.1;\npragma bithoven target taproot;\n(sig: signature)\n{{ return checksig(sig, \"{}\"); }}\n", K);
+        assert!(compile_program(src).is_ok());
     }
 }

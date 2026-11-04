@@ -23,6 +23,16 @@ exclude = [
     "tests/**"
 ]
 
+[features]
+default = []
+# BIP448 extension pack: OP_TEMPLATEHASH, OP_CHECKSIGFROMSTACK, OP_INTERNALKEY
+# under `pragma bithoven target bip448;`. Off by default: BIP448 is not active
+# on mainnet, so a default build accepts only scripts valid under today's
+# consensus and refuses `target bip448` outright. Enable it where those opcodes
+# are enforced: an emulating co-signer (e.g. a Bark/shepherd engine) or
+# bitcoin-inquisition signet.
+bip448 = []
+
 [lib]
 name = "bithoven"
 path = "src/lib.rs"

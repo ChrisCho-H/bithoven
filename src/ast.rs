@@ -256,6 +256,11 @@ pub enum ErrorKind {
     DeadPath(String),
     DeclarationPathMismatch(String),
 
+    // Build Errors
+    /// The source asks for an extension this build was compiled without
+    /// (`target bip448` needs the `bip448` cargo feature).
+    ExtensionDisabled(String),
+
     // Security Errors
     IntegerOverflow(String),
     UselessSig(String),

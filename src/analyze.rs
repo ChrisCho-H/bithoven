@@ -77,6 +77,24 @@ pub fn analyze(
     // paper's flow analysis describes — rather than being shadowed by the
     // count check reporting `DeclarationPathMismatch("0 paths ...")`. It also
     // guarantees the AST is non-empty before anything unwraps `ast.last()`.
+    // The BIP448 extension pack is a build-time opt-in (cargo feature
+    // `bip448`, off by default), on top of the source-level opt-in
+    // (`target bip448`). A default build compiles for today's consensus only.
+    if matches!(target, Target::Bip448) && !cfg!(feature = "bip448") {
+        return Err(CompileError {
+            loc: Location {
+                start: 0,
+                end: 0,
+                line: 2,
+                column: 1,
+            },
+            kind: ErrorKind::ExtensionDisabled(
+                "`target bip448` needs the BIP448 extension pack, which this build of Bithoven was compiled without (cargo feature `bip448`). BIP448 is not active on mainnet: its scripts are only meaningful where OP_TEMPLATEHASH, OP_CHECKSIGFROMSTACK and OP_INTERNALKEY are enforced, such as an emulating co-signer or bitcoin-inquisition signet."
+                    .to_string(),
+            ),
+        });
+    }
+
     check_flow(ast)?;
 
     // BIP448 opcodes exist only in tapscript under `target bip448`. Checked
@@ -1011,7 +1029,7 @@ pub fn check_target_opcodes(ast: &Vec<Statement>, target: &Target) -> Result<(),
         Some((name, loc)) => Err(CompileError {
             loc,
             kind: ErrorKind::InvalidOperation(format!(
-                "{} is a BIP448 tapscript opcode and requires `pragma bithoven target bip448;`. Under {:?} it is {}.",
+                "{} is a BIP448 tapscript opcode and requires `pragma bithoven target bip448;` (in a build with the `bip448` feature). Under {:?} it is {}.",
                 name,
                 target,
                 if matches!(target, Target::Taproot) {

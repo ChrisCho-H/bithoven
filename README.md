@@ -158,7 +158,16 @@ Names in parentheses are defect classes from BSHunter (Zheng et al., ICSE 2023),
 
 ## 🧩 BIP448: TEMPLATEHASH, CHECKSIGFROMSTACK, INTERNALKEY
 
-`pragma bithoven target bip448;` compiles a tapscript leaf with the [BIP448](https://github.com/bitcoin/bips/blob/master/bip-0448.md) bundle enabled. The opcodes follow BIP446/348/349 and bitcoin-inquisition's interpreter (29.x).
+**Off by default.** BIP448 is not active on mainnet, so a default build of Bithoven (crates.io, npm, the CLI, the web IDE) compiles only for today's consensus and refuses `target bip448` with `ExtensionDisabled`. The extension pack is enabled at build time:
+
+```bash
+cargo install bithoven --features bip448   # CLI
+cargo add bithoven --features bip448       # library
+```
+
+Use it only where the opcodes are enforced: a co-signer that emulates them off-chain (for example a Bark/shepherd engine), or bitcoin-inquisition signet. On mainnet today these bytes are `OP_SUCCESSx`, which makes the output spendable by anyone, so the analyzer also refuses them under plain `taproot` in every build.
+
+In a build with the feature, `pragma bithoven target bip448;` compiles a tapscript leaf with the [BIP448](https://github.com/bitcoin/bips/blob/master/bip-0448.md) bundle enabled. The opcodes follow BIP446/348/349 and bitcoin-inquisition's interpreter (29.x).
 
 | Syntax | Opcode | Type |
 |---|---|---|
@@ -183,7 +192,7 @@ The analyzer treats the bundle the way it treats every other opcode:
 - **What binds a path.** Besides `checksig`, a path is bound by `checksigfromstack(sig, templatehash, key)` (a rebindable signature) or by `templatehash == "<32-byte hex>"` (a commitment to the spending transaction). A `checksigfromstack` over any other message is an attestation that could be replayed into any transaction, so it cannot gate a path by itself (`UselessSig`).
 - **Literals and keys.** A template-hash literal must be 32 bytes, CSFS keys must be x-only literals or `internalkey`, and keys can never come from the witness.
 
-Examples: [`rebindable.bithoven`](./example/rebindable.bithoven), [`covenant_exit.bithoven`](./example/covenant_exit.bithoven), [`oracle_attestation.bithoven`](./example/oracle_attestation.bithoven). BIP448 output is checked against expected bytes in `src/bip448_test.rs`. Like plain taproot, it is not yet executed against a consensus engine.
+Examples: [`rebindable.bithoven`](./example/bip448/rebindable.bithoven), [`covenant_exit.bithoven`](./example/bip448/covenant_exit.bithoven), [`oracle_attestation.bithoven`](./example/bip448/oracle_attestation.bithoven). BIP448 output is checked against expected bytes in `src/bip448_test.rs`. Like plain taproot, it is not yet executed against a consensus engine.
 
 ## 📖 Examples Gallery
 
