@@ -1,0 +1,33 @@
+pragma bithoven version 0.0.1;
+pragma bithoven target bip448;
+
+/*
+ * Template Covenant with Owner Exit (BIP448)
+ *
+ * Path 1: the owner can always leave alone after a relative timelock.
+ * Path 2: anyone can broadcast the one transaction this output committed to.
+ *         OP_TEMPLATEHASH fixes its outputs, so whoever broadcasts it cannot
+ *         redirect the funds. This path needs no signature, which the
+ *         analyzer accepts only because the template commitment binds it.
+ *
+ * This is the shape of a non-interactively received off-chain output: the
+ * tree of transactions is fixed by hashes rather than by signatures collected
+ * from every participant in advance.
+ */
+
+// Path 1: owner exit after 144 blocks
+(exit: bool, sig_owner: signature)
+
+// Path 2: the committed transaction
+(exit: bool)
+
+{
+    if exit {
+        older 144;
+        return checksig(sig_owner, "79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
+    } else {
+        // NOTE: Demonstration value. In practice this is the BIP446 template
+        // hash of the pre-built child transaction.
+        return templatehash == "5f16f3c9c3c660498ddb6d10afc83627cb3ffe67f5cfd9aee0f2a5c1d8b1e8c2";
+    }
+}

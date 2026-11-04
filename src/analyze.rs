@@ -79,6 +79,10 @@ pub fn analyze(
     // guarantees the AST is non-empty before anything unwraps `ast.last()`.
     check_flow(ast)?;
 
+    // BIP448 opcodes exist only in tapscript under `target bip448`. Checked
+    // before anything else looks at them, so no later stage has to.
+    check_target_opcodes(ast, target)?;
+
     // --- Well-formedness condition (w4) -----------------------------------
     // The paper (Section V) makes `n = |Π(P)| = k+1` a premise of every
     // theorem. We check it before walking the statements so that a
@@ -639,6 +643,18 @@ pub fn check_variable(
 
                 return Ok(());
             }
+            // Consumption order follows the emitted stack order: the signature
+            // (a witness item) first, then anything the message reads.
+            Factor::MessageSigFactor {
+                loc: _,
+                sig,
+                msg,
+                pubkey,
+            } => {
+                check_variable(&sig, symbol_table)?;
+                check_variable(&msg, symbol_table)?;
+                check_variable(&pubkey, symbol_table)
+            }
         },
         Expression::UnaryCryptoExpression {
             loc: _,
@@ -748,6 +764,17 @@ pub fn check_type(
 
                 return Ok(());
             }
+            // T-Factor-CSFS: `sig : sig`, `msg : string`, and a key that is a
+            // valid x-only literal or `internalkey`.
+            Factor::MessageSigFactor {
+                loc: _,
+                sig,
+                msg,
+                pubkey,
+            } => {
+                check_type_string(msg, symbol_table, target)?;
+                check_type_sig_pubkey(sig, pubkey, symbol_table, target)
+            }
         },
         Expression::LogicalExpression {
             loc: _,
@@ -761,6 +788,11 @@ pub fn check_type(
         }
         Expression::CompareExpression { loc, lhs, op, rhs } => {
             // compare string/signature to string/signature
+            // A template hash is exactly 32 bytes, so comparing it to a literal of
+            // any other length can never be equal: a `never-true` condition
+            // caught at compile time, like an off-curve key.
+            check_template_hash_literal(lhs, rhs)?;
+            check_template_hash_literal(rhs, lhs)?;
             if check_type_string(&lhs, symbol_table, target).is_ok()
                 && check_type_string(&rhs, symbol_table, target).is_ok()
             {
@@ -860,7 +892,136 @@ pub fn check_type(
         Expression::UnaryCryptoExpression { operand, .. } => {
             check_type_crypto_operand(&operand, symbol_table, target)
         }
+        Expression::IntrospectionExpression {
+            loc,
+            op: IntrospectionOp::InternalKey,
+        } => Err(internal_key_misuse(loc)),
         _ => Ok(()),
+    }
+}
+
+/// `internalkey` has the `pubkey` type: it may only appear where a public key
+/// literal could, as the key of a `checksig` or `checksigfromstack`.
+fn internal_key_misuse(loc: &Location) -> CompileError {
+    CompileError {
+        loc: loc.to_owned(),
+        kind: ErrorKind::InvalidOperation(
+            "internalkey is a public key: it can only be the key operand of checksig or checksigfromstack."
+                .to_string(),
+        ),
+    }
+}
+
+/// When `this` is `templatehash` and `other` a string literal, the literal must
+/// be the 32 bytes OP_TEMPLATEHASH pushes (BIP446).
+fn check_template_hash_literal(this: &Expression, other: &Expression) -> Result<(), CompileError> {
+    if let (
+        Expression::IntrospectionExpression {
+            op: IntrospectionOp::TemplateHash,
+            ..
+        },
+        Expression::StringLiteral(loc, val),
+    ) = (this, other)
+    {
+        match hex::decode(val) {
+            Ok(bytes) if bytes.len() == 32 => Ok(()),
+            _ => Err(CompileError {
+                loc: loc.to_owned(),
+                kind: ErrorKind::InvalidOperation(format!(
+                    "templatehash is a 32-byte hash, so it can only be compared to a 32-byte hex literal but: {:?}.",
+                    val
+                )),
+            }),
+        }
+    } else {
+        Ok(())
+    }
+}
+
+/// Reject BIP448 opcodes outside `pragma bithoven target bip448;`.
+///
+/// Under `legacy` and `segwit` the three bytes are invalid opcodes. Under plain
+/// `taproot` they are OP_SUCCESS203/204/206, which make the whole tapscript
+/// succeed unconditionally: an anyone-can-spend output, the `unbound-txid`
+/// defect in its most extreme form. They are therefore only emitted when the
+/// author has opted into the BIP448 rules.
+pub fn check_target_opcodes(ast: &Vec<Statement>, target: &Target) -> Result<(), CompileError> {
+    if matches!(target, Target::Bip448) {
+        return Ok(());
+    }
+    fn opcode_name(e: &Expression) -> Option<(&'static str, Location)> {
+        match e {
+            Expression::IntrospectionExpression { loc, op } => Some((
+                match op {
+                    IntrospectionOp::TemplateHash => "templatehash (OP_TEMPLATEHASH, BIP446)",
+                    IntrospectionOp::InternalKey => "internalkey (OP_INTERNALKEY, BIP349)",
+                },
+                loc.clone(),
+            )),
+            Expression::CheckSigExpression {
+                loc,
+                op: CheckSigOp::CheckSigFromStack,
+                ..
+            } => Some((
+                "checksigfromstack (OP_CHECKSIGFROMSTACK, BIP348)",
+                loc.clone(),
+            )),
+            _ => None,
+        }
+    }
+    fn walk(e: &Expression) -> Option<(&'static str, Location)> {
+        if let Some(found) = opcode_name(e) {
+            return Some(found);
+        }
+        match e {
+            Expression::LogicalExpression { lhs, rhs, .. }
+            | Expression::CompareExpression { lhs, rhs, .. }
+            | Expression::BinaryMathExpression { lhs, rhs, .. } => walk(lhs).or_else(|| walk(rhs)),
+            Expression::UnaryMathExpression { operand, .. }
+            | Expression::UnaryCryptoExpression { operand, .. }
+            | Expression::ByteExpression { operand, .. } => walk(operand),
+            Expression::CheckSigExpression { operand, .. } => walk_factor(operand),
+            _ => None,
+        }
+    }
+    fn walk_factor(f: &Factor) -> Option<(&'static str, Location)> {
+        match f {
+            Factor::SingleSigFactor { sig, pubkey, .. } => walk(sig).or_else(|| walk(pubkey)),
+            Factor::MultiSigFactor { n, .. } => n.iter().find_map(walk_factor),
+            Factor::MessageSigFactor {
+                sig, msg, pubkey, ..
+            } => walk(sig).or_else(|| walk(msg)).or_else(|| walk(pubkey)),
+        }
+    }
+    fn walk_stmts(stmts: &Vec<Statement>) -> Option<(&'static str, Location)> {
+        stmts.iter().find_map(|stmt| match stmt {
+            Statement::VerifyStatement(_, e) | Statement::ExpressionStatement(_, e) => walk(e),
+            Statement::IfStatement {
+                condition_expr,
+                if_block,
+                else_block,
+                ..
+            } => walk(condition_expr)
+                .or_else(|| walk_stmts(if_block))
+                .or_else(|| else_block.as_ref().and_then(walk_stmts)),
+            Statement::LocktimeStatement { .. } => None,
+        })
+    }
+    match walk_stmts(ast) {
+        Some((name, loc)) => Err(CompileError {
+            loc,
+            kind: ErrorKind::InvalidOperation(format!(
+                "{} is a BIP448 tapscript opcode and requires `pragma bithoven target bip448;`. Under {:?} it is {}.",
+                name,
+                target,
+                if matches!(target, Target::Taproot) {
+                    "an OP_SUCCESS opcode, which would make the output spendable by anyone"
+                } else {
+                    "not a valid opcode"
+                },
+            )),
+        }),
+        None => Ok(()),
     }
 }
 
@@ -926,6 +1087,9 @@ pub fn check_type_numeric(
             }
             check_type_numeric(&operand, symbol_table, target)
         }
+
+        // `templatehash` is a byte string and `internalkey` a key.
+        Expression::IntrospectionExpression { loc, .. } => Err(not_num(loc)),
 
         // The only remaining variant, and the only one that is trivially a num.
         Expression::NumberLiteral(..) => Ok(()),
@@ -1011,6 +1175,17 @@ pub fn check_type_string(
         Expression::UnaryCryptoExpression { operand, .. } => {
             check_type_crypto_operand(&operand, symbol_table, target)
         }
+
+        // OP_TEMPLATEHASH pushes a 32-byte string; `internalkey` is a key, not
+        // a general string.
+        Expression::IntrospectionExpression {
+            op: IntrospectionOp::TemplateHash,
+            ..
+        } => Ok(()),
+        Expression::IntrospectionExpression {
+            loc,
+            op: IntrospectionOp::InternalKey,
+        } => Err(internal_key_misuse(&loc)),
 
         // For variable, look up symbol table.
         // STRICT TYPING: Only `Type::String` is admissible in a byte-string context.
@@ -1134,6 +1309,14 @@ pub fn check_type_sig_pubkey(
     // contract type-check and then fail consensus at spend time (e.g. a 33-byte
     // key under tapscript's OP_CHECKSIGADD, which requires x-only).
     match pubkey {
+        // BIP349: OP_INTERNALKEY pushes the output's own x-only internal key.
+        // It is fixed by the output being spent, never by the spender, so it
+        // cannot introduce `uncertain-sig`. Target gating has already
+        // guaranteed `bip448` here.
+        Expression::IntrospectionExpression {
+            op: IntrospectionOp::InternalKey,
+            ..
+        } => Ok(()),
         Expression::StringLiteral(loc, data) => {
             // The encoding demanded by the active target, used for the error
             // message when validation fails.
@@ -1142,7 +1325,7 @@ pub fn check_type_sig_pubkey(
                     "legacy/segwit",
                     "a 33-byte compressed public key (prefix 02/03)",
                 ),
-                Target::Taproot => ("taproot", "a 32-byte x-only public key"),
+                Target::Taproot | Target::Bip448 => ("taproot", "a 32-byte x-only public key"),
             };
 
             let malformed = |detail: String| CompileError {
@@ -1170,7 +1353,7 @@ pub fn check_type_sig_pubkey(
                         && bitcoin::PublicKey::from_slice(&pubkey_bytes).is_ok()
                 }
                 // x-only: exactly 32 bytes and a valid point.
-                Target::Taproot => {
+                Target::Taproot | Target::Bip448 => {
                     pubkey_bytes.len() == 32
                         && bitcoin::XOnlyPublicKey::from_slice(&pubkey_bytes).is_ok()
                 }
@@ -1181,7 +1364,7 @@ pub fn check_type_sig_pubkey(
             // manuscript's example (a valid 33-byte encoding whose point is not
             // on secp256k1) quotes the third message.
             let expected_len = match target {
-                Target::Taproot => 32,
+                Target::Taproot | Target::Bip448 => 32,
                 _ => 33,
             };
             if pubkey_bytes.len() != expected_len {
@@ -1205,7 +1388,7 @@ pub fn check_type_sig_pubkey(
             return Err(CompileError {
                 loc: pubkey.to_owned().loc(),
                 kind: ErrorKind::TypeMismatch(format!(
-                    "Public Key must be from string literal but: {:?}.",
+                    "Public Key must be from string literal (or internalkey under bip448) but: {:?}.",
                     pubkey
                 )),
             });

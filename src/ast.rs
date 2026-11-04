@@ -19,6 +19,20 @@ pub enum Target {
     Legacy,
     Segwit,
     Taproot,
+    /// Tapscript under BIP448 (Taproot-native (Re)bindable Transactions):
+    /// `taproot` plus OP_TEMPLATEHASH (BIP446), OP_CHECKSIGFROMSTACK (BIP348)
+    /// and OP_INTERNALKEY (BIP349). Opt-in, because until BIP448 activates
+    /// these bytes are OP_SUCCESSx and any tapscript containing one is
+    /// anyone-can-spend.
+    Bip448,
+}
+
+impl Target {
+    /// True for every target whose script is a tapscript leaf (BIP342):
+    /// x-only keys and OP_CHECKSIGADD multisig.
+    pub fn is_tapscript(&self) -> bool {
+        matches!(self, Target::Taproot | Target::Bip448)
+    }
 }
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -110,6 +124,12 @@ pub enum Expression {
         operand: Box<Expression>,
         op: ByteOp,
     },
+    /// Nullary tapscript introspection (BIP448): pushes a value taken from
+    /// the spending context rather than from the witness.
+    IntrospectionExpression {
+        loc: Location,
+        op: IntrospectionOp,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -150,6 +170,18 @@ pub enum UnaryMathOp {
 #[derive(Clone, Debug, PartialEq)]
 pub enum CheckSigOp {
     CheckSig,
+    /// BIP348 OP_CHECKSIGFROMSTACK: BIP340 verification over a message taken
+    /// from the stack. Its operand is always a `Factor::MessageSigFactor`.
+    CheckSigFromStack,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum IntrospectionOp {
+    /// BIP446 OP_TEMPLATEHASH (0xce): the 32-byte template hash of the
+    /// spending transaction.
+    TemplateHash,
+    /// BIP349 OP_INTERNALKEY (0xcb): the 32-byte x-only taproot internal key.
+    InternalKey,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -180,6 +212,13 @@ pub enum Factor {
         loc: Location,
         m: u32,
         n: Vec<Factor>,
+    },
+    /// Operands of `checksigfromstack(sig, msg, pubkey)` (BIP348).
+    MessageSigFactor {
+        loc: Location,
+        sig: Box<Expression>,
+        msg: Box<Expression>,
+        pubkey: Box<Expression>,
     },
 }
 

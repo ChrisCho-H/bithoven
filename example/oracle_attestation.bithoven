@@ -1,0 +1,22 @@
+pragma bithoven version 0.0.1;
+pragma bithoven target bip448;
+
+/*
+ * Oracle Attestation (BIP448)
+ *
+ * The winner spends with the oracle's BIP340 signature over the published
+ * outcome, checked with OP_CHECKSIGFROMSTACK, plus their own signature.
+ *
+ * The attestation alone is not enough: a signature over a message can be
+ * replayed into any transaction, so the analyzer rejects a path whose only
+ * gate is a checksigfromstack over anything but templatehash. The winner's
+ * checksig is what binds this spend.
+ */
+// Items in consumption order: the oracle's signature, the outcome it signed,
+// then the winner's signature.
+(sig_oracle: signature, outcome: string, sig_winner: signature)
+{
+    verify checksigfromstack(sig_oracle, outcome, "c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5");
+    // The winner's key is the output's internal key.
+    return checksig(sig_winner, internalkey);
+}

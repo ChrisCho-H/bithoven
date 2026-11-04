@@ -178,4 +178,21 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn test_bip448_examples() {
+        let rebindable = compile_example("rebindable.bithoven").unwrap();
+        assert_eq!(
+            rebindable.asm(),
+            "OP_TEMPLATEHASH OP_INTERNALKEY OP_CHECKSIGFROMSTACK"
+        );
+
+        let covenant = compile_example("covenant_exit.bithoven").unwrap();
+        assert!(covenant.asm().contains("OP_TEMPLATEHASH"));
+        assert!(covenant.asm().contains("OP_CSV"));
+
+        let oracle = compile_example("oracle_attestation.bithoven").unwrap();
+        assert!(oracle.asm().contains("OP_CHECKSIGFROMSTACK OP_VERIFY"));
+        assert!(oracle.asm().ends_with("OP_INTERNALKEY OP_CHECKSIG"));
+    }
 }

@@ -1,0 +1,23 @@
+pragma bithoven version 0.0.1;
+// BIP448 opcodes (OP_TEMPLATEHASH, OP_CHECKSIGFROMSTACK, OP_INTERNALKEY) are
+// tapscript-only and must be opted into with the bip448 target.
+pragma bithoven target bip448;
+
+/*
+ * Rebindable Signature (BIP448)
+ *
+ * The signature is over the template hash of the spending transaction rather
+ * than over a sighash, so it commits to that transaction's outputs, sequences,
+ * version and locktime but not to which coin it spends. The same signature can
+ * therefore be rebound to any output carrying this leaf, the building block of
+ * LN-Symmetry ("eltoo") updates.
+ *
+ * The key is the output's own taproot internal key (OP_INTERNALKEY), so the
+ * leaf re-keys automatically whenever the internal key changes.
+ *
+ * Compiles to: OP_TEMPLATEHASH OP_INTERNALKEY OP_CHECKSIGFROMSTACK
+ */
+(sig: signature)
+{
+    return checksigfromstack(sig, templatehash, internalkey);
+}

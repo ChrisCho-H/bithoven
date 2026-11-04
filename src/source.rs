@@ -53,6 +53,7 @@ impl Locatable for Expression {
             Expression::UnaryCryptoExpression { loc, .. } => loc,
             Expression::CheckSigExpression { loc, .. } => loc,
             Expression::ByteExpression { loc, .. } => loc,
+            Expression::IntrospectionExpression { loc, .. } => loc,
         }
     }
     fn loc(self) -> Location {
@@ -68,6 +69,7 @@ impl Locatable for Expression {
             Expression::UnaryCryptoExpression { loc, .. } => loc,
             Expression::CheckSigExpression { loc, .. } => loc,
             Expression::ByteExpression { loc, .. } => loc,
+            Expression::IntrospectionExpression { loc, .. } => loc,
         }
     }
 }
@@ -77,12 +79,14 @@ impl Locatable for Factor {
         match self {
             Factor::SingleSigFactor { loc, .. } => loc,
             Factor::MultiSigFactor { loc, .. } => loc,
+            Factor::MessageSigFactor { loc, .. } => loc,
         }
     }
     fn loc(self) -> Location {
         match self {
             Factor::SingleSigFactor { loc, .. } => loc,
             Factor::MultiSigFactor { loc, .. } => loc,
+            Factor::MessageSigFactor { loc, .. } => loc,
         }
     }
 }
@@ -263,6 +267,16 @@ pub fn set_factor_location(factor: &mut Factor, line_index: &[usize]) {
                     _ => continue,
                 }
             }
+        }
+        Factor::MessageSigFactor {
+            loc: _,
+            sig,
+            msg,
+            pubkey,
+        } => {
+            set_expr_location(sig, line_index);
+            set_expr_location(msg, line_index);
+            set_expr_location(pubkey, line_index);
         }
     }
 }

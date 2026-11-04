@@ -156,6 +156,35 @@ Beyond signatures, the analyzer covers these defect classes. Raw Bitcoin Script 
 
 Names in parentheses are defect classes from BSHunter (Zheng et al., ICSE 2023), a study of defective scripts deployed on Bitcoin.
 
+## 🧩 BIP448: TEMPLATEHASH, CHECKSIGFROMSTACK, INTERNALKEY
+
+`pragma bithoven target bip448;` compiles a tapscript leaf with the [BIP448](https://github.com/bitcoin/bips/blob/master/bip-0448.md) bundle enabled. The opcodes follow BIP446/348/349 and bitcoin-inquisition's interpreter (29.x).
+
+| Syntax | Opcode | Type |
+|---|---|---|
+| `templatehash` | `OP_TEMPLATEHASH` (0xce) | 32-byte `string` |
+| `internalkey` | `OP_INTERNALKEY` (0xcb) | public key (only as a `checksig`/`checksigfromstack` key) |
+| `checksigfromstack(sig, msg, key)` | `OP_CHECKSIGFROMSTACK` (0xcc) | `bool` |
+
+```solidity
+pragma bithoven version 0.0.1;
+pragma bithoven target bip448;
+
+(sig: signature)
+{
+    return checksigfromstack(sig, templatehash, internalkey);
+}
+```
+compiles to `OP_TEMPLATEHASH OP_INTERNALKEY OP_CHECKSIGFROMSTACK`.
+
+The analyzer treats the bundle the way it treats every other opcode:
+
+- **Opt-in only.** Under `taproot` these bytes are `OP_SUCCESSx`, which makes a tapscript anyone-can-spend; under `legacy`/`segwit` they are invalid. Using them under any target but `bip448` is an `InvalidOperation`.
+- **What binds a path.** Besides `checksig`, a path is bound by `checksigfromstack(sig, templatehash, key)` (a rebindable signature) or by `templatehash == "<32-byte hex>"` (a commitment to the spending transaction). A `checksigfromstack` over any other message is an attestation that could be replayed into any transaction, so it cannot gate a path by itself (`UselessSig`).
+- **Literals and keys.** A template-hash literal must be 32 bytes, CSFS keys must be x-only literals or `internalkey`, and keys can never come from the witness.
+
+Examples: [`rebindable.bithoven`](./example/rebindable.bithoven), [`covenant_exit.bithoven`](./example/covenant_exit.bithoven), [`oracle_attestation.bithoven`](./example/oracle_attestation.bithoven). BIP448 output is checked against expected bytes in `src/bip448_test.rs`. Like plain taproot, it is not yet executed against a consensus engine.
+
 ## 📖 Examples Gallery
 
 Bithoven comes with a rich collection of examples demonstrating real-world Bitcoin smart contracts:

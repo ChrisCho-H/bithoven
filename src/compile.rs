@@ -6,6 +6,13 @@ use bitcoin::opcodes::all::{
 
 use crate::ast::*;
 
+/// BIP448 tapscript opcodes, at the OP_SUCCESSx positions BIP448 assigns them
+/// (and bitcoin-inquisition's binana definitions use). rust-bitcoin 0.32 still
+/// names these bytes OP_RETURN_203 / _204 / _206.
+pub const OP_INTERNALKEY: u8 = 0xcb; // BIP349, redefines OP_SUCCESS203
+pub const OP_CHECKSIGFROMSTACK: u8 = 0xcc; // BIP348, redefines OP_SUCCESS204
+pub const OP_TEMPLATEHASH: u8 = 0xce; // BIP446, redefines OP_SUCCESS206
+
 /*
     1. Pure Push
     - Don't see the stack item.
@@ -281,6 +288,7 @@ pub enum CheckSigType {
     Single,
     Multi,
     Add,
+    FromStack,
 }
 
 /*
@@ -296,6 +304,7 @@ pub fn push_checksig(script: &mut Vec<u8>, check_sig_ty: CheckSigType) {
         CheckSigType::Single => bitcoin::opcodes::all::OP_CHECKSIG,
         CheckSigType::Multi => bitcoin::opcodes::all::OP_CHECKMULTISIG,
         CheckSigType::Add => bitcoin::opcodes::all::OP_CHECKSIGADD,
+        CheckSigType::FromStack => bitcoin::Opcode::from(OP_CHECKSIGFROMSTACK),
     });
 
     script.extend_from_slice(builder.as_bytes());
@@ -329,6 +338,22 @@ pub fn push_locktime(script: &mut Vec<u8>, operand: i64, op: LocktimeOp) {
             script.extend_from_slice(builder.as_bytes());
         }
     }
+}
+
+/*
+    10. Introspection push (BIP448)
+    - Don't see the stack item.
+    - Push new single stack item taken from the spending context.
+*/
+
+// OP_TEMPLATEHASH and OP_INTERNALKEY
+pub fn push_introspection(script: &mut Vec<u8>, op: IntrospectionOp) {
+    let builder = bitcoin::script::Builder::new().push_opcode(bitcoin::Opcode::from(match op {
+        IntrospectionOp::TemplateHash => OP_TEMPLATEHASH,
+        IntrospectionOp::InternalKey => OP_INTERNALKEY,
+    }));
+
+    script.extend_from_slice(builder.as_bytes());
 }
 
 pub fn push_to_alt_stack(script: &mut Vec<u8>) {
@@ -382,6 +407,28 @@ fn may_exceed_script_num(e: &Expression) -> bool {
         Expression::ByteExpression { operand, .. }
         | Expression::UnaryCryptoExpression { operand, .. } => may_exceed_script_num(operand),
         _ => false,
+    }
+}
+
+/// True when compiling `e` consumes a witness item, i.e. the subtree contains a
+/// variable. Such code reads the stack below its own result; anything else
+/// only pushes.
+fn reads_witness(e: &Expression) -> bool {
+    match e {
+        Expression::Variable(..) => true,
+        Expression::LogicalExpression { lhs, rhs, .. }
+        | Expression::CompareExpression { lhs, rhs, .. }
+        | Expression::BinaryMathExpression { lhs, rhs, .. } => {
+            reads_witness(lhs) || reads_witness(rhs)
+        }
+        Expression::UnaryMathExpression { operand, .. }
+        | Expression::UnaryCryptoExpression { operand, .. }
+        | Expression::ByteExpression { operand, .. } => reads_witness(operand),
+        Expression::CheckSigExpression { .. } => true,
+        Expression::NumberLiteral(..)
+        | Expression::BooleanLiteral(..)
+        | Expression::StringLiteral(..)
+        | Expression::IntrospectionExpression { .. } => false,
     }
 }
 
@@ -458,9 +505,12 @@ pub fn compile_expression(bitcoin_script: &mut Vec<u8>, expr: Expression, target
                 } => {
                     push_checksig(bitcoin_script, CheckSigType::Single);
                 }
+                Factor::MessageSigFactor { .. } => {
+                    push_checksig(bitcoin_script, CheckSigType::FromStack);
+                }
                 Factor::MultiSigFactor { loc: _, m: _, n: _ } => {
                     match *target {
-                        Target::Taproot => {
+                        Target::Taproot | Target::Bip448 => {
                             // Final Key OP_NUMEQUAL
                             // OP_NUMEQUAL
                             push_compare(bitcoin_script, BinaryCompareOp::NumEqual);
@@ -567,6 +617,9 @@ pub fn compile_expression(bitcoin_script: &mut Vec<u8>, expr: Expression, target
         Expression::NumberLiteral(_loc, data) => {
             push_int(bitcoin_script, data);
         }
+        Expression::IntrospectionExpression { loc: _, op } => {
+            push_introspection(bitcoin_script, op);
+        }
         _ => (),
     }
 }
@@ -586,7 +639,12 @@ pub fn compile_factor(bitcoin_script: &mut Vec<u8>, factor: Factor, target: &Tar
                 }
             }
             match *pubkey {
-                Expression::StringLiteral(..) => {
+                // A key literal, or BIP349 `internalkey` (OP_INTERNALKEY).
+                Expression::StringLiteral(..)
+                | Expression::IntrospectionExpression {
+                    op: IntrospectionOp::InternalKey,
+                    ..
+                } => {
                     compile_expression(bitcoin_script, *pubkey, target);
                 }
                 _ => {
@@ -595,9 +653,51 @@ pub fn compile_factor(bitcoin_script: &mut Vec<u8>, factor: Factor, target: &Tar
                 }
             }
         }
+        // BIP348 wants <sig> <msg> <pubkey> with the key on top. The signature
+        // is a witness item, already on top of the stack at this point. When
+        // the message reads witness items, it goes through the same alt-stack
+        // detour every binary operator uses
+        // (`a OP_TOALTSTACK b OP_FROMALTSTACK OP_SWAP`), which leaves
+        // <sig> <msg>. A message with no variable in it (`templatehash`, a
+        // literal, a hash of literals) only pushes and never reads below its
+        // own result, so it lands above <sig> directly and the detour is
+        // skipped: `OP_TEMPLATEHASH OP_INTERNALKEY OP_CHECKSIGFROMSTACK` is the
+        // canonical BIP448 rebindable-signature leaf. The key is pushed last.
+        Factor::MessageSigFactor {
+            loc: _,
+            sig,
+            msg,
+            pubkey,
+        } => {
+            match *sig {
+                Expression::Variable(..) => (),
+                _ => {
+                    panic!("Signature should be from argument(stack).")
+                }
+            }
+            if reads_witness(&msg) {
+                push_to_alt_stack(bitcoin_script);
+                compile_expression(bitcoin_script, *msg, target);
+                push_from_alt_stack(bitcoin_script);
+            } else {
+                compile_expression(bitcoin_script, *msg, target);
+            }
+            match *pubkey {
+                Expression::StringLiteral(..)
+                | Expression::IntrospectionExpression {
+                    op: IntrospectionOp::InternalKey,
+                    ..
+                } => {
+                    compile_expression(bitcoin_script, *pubkey, target);
+                }
+                _ => {
+                    panic!("Public key should be from string literal or internalkey.")
+                }
+            }
+        }
         Factor::MultiSigFactor { loc, m, n } => {
             match target {
-                Target::Taproot => {
+                Target::Taproot | Target::Bip448 => {
                     // push pubkey
                     for (i, e) in n.iter().enumerate() {
                         let data = e.to_owned();
