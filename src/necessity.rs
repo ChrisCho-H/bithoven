@@ -14,6 +14,24 @@
 //! whether that formula is satisfiable with every `Sig` atom pinned to `false`.
 //! If it is, the path can succeed without a valid signature and the program is
 //! rejected.
+//!
+//! # BIP448 (`target bip448`)
+//!
+//! A `Sig` atom stands for anything that binds the spend to someone's consent
+//! or to a fixed transaction, so an attacker cannot make it true. Under BIP448
+//! that is, besides `checksig`:
+//!
+//!   * `checksigfromstack(sig, templatehash, key)`: a BIP340 signature over
+//!     the template hash of the spending transaction, i.e. a rebindable
+//!     transaction signature;
+//!   * `templatehash == "<32-byte literal>"`: an OP_TEMPLATEHASH commitment,
+//!     which fixes the spending transaction's outputs, sequences, version and
+//!     locktime (BIP446). Anyone may broadcast it, but nobody can redirect it.
+//!
+//! A `checksigfromstack` over any other message (a witness value, a hash, a
+//! literal) verifies an attestation, not this spend: a signature over that
+//! message can be replayed into any transaction. It is therefore modelled as a
+//! `Free` atom and cannot by itself gate a path.
 
 use std::collections::HashMap;
 
@@ -160,7 +178,32 @@ impl Translator {
         match e {
             // A checksig yields exactly one Sig atom regardless of whether its
             // factor is single- or multi-sig. An m-of-n check is a single atom.
+            Expression::CheckSigExpression {
+                loc,
+                op: CheckSigOp::CheckSigFromStack,
+                operand,
+            } => {
+                if csfs_over_template_hash(operand) {
+                    Formula::Sig(self.sig_for(loc))
+                } else {
+                    Formula::Free(self.fresh_free())
+                }
+            }
             Expression::CheckSigExpression { loc, .. } => Formula::Sig(self.sig_for(loc)),
+            // OP_TEMPLATEHASH commitment to a fixed transaction. `!=` is the
+            // negation of the same atom, so `templatehash != <H>` is attacker-
+            // satisfiable and rejected exactly like `!checksig(..)`.
+            Expression::CompareExpression { loc, lhs, op, rhs }
+                if matches!(op, BinaryCompareOp::Equal | BinaryCompareOp::NotEqual)
+                    && is_template_commitment(lhs, rhs) =>
+            {
+                let atom = Formula::Sig(self.sig_for(loc));
+                if matches!(op, BinaryCompareOp::Equal) {
+                    atom
+                } else {
+                    Formula::Not(Box::new(atom))
+                }
+            }
             Expression::BooleanLiteral(_, b) => Formula::Const(*b),
             Expression::NumberLiteral(_, n) => Formula::Const(*n != 0),
             Expression::StringLiteral(_, s) => Formula::Const(!s.is_empty()),
@@ -244,6 +287,31 @@ impl Translator {
     }
 }
 
+/// `checksigfromstack(sig, templatehash, key)`: the message is the template
+/// hash itself, so the signature commits to the spending transaction.
+fn csfs_over_template_hash(f: &Factor) -> bool {
+    matches!(
+        f,
+        Factor::MessageSigFactor { msg, .. }
+            if matches!(**msg, Expression::IntrospectionExpression { op: IntrospectionOp::TemplateHash, .. })
+    )
+}
+
+/// `templatehash` compared with a byte-string literal, on either side.
+fn is_template_commitment(lhs: &Expression, rhs: &Expression) -> bool {
+    let is_th = |e: &Expression| {
+        matches!(
+            e,
+            Expression::IntrospectionExpression {
+                op: IntrospectionOp::TemplateHash,
+                ..
+            }
+        )
+    };
+    let is_lit = |e: &Expression| matches!(e, Expression::StringLiteral(..));
+    (is_th(lhs) && is_lit(rhs)) || (is_th(rhs) && is_lit(lhs))
+}
+
 fn is_bool_literal(e: &Expression) -> Option<bool> {
     match e {
         Expression::BooleanLiteral(_, b) => Some(*b),
@@ -319,7 +387,8 @@ fn contains_checksig(e: &Expression) -> bool {
         Expression::Variable(..)
         | Expression::NumberLiteral(..)
         | Expression::BooleanLiteral(..)
-        | Expression::StringLiteral(..) => false,
+        | Expression::StringLiteral(..)
+        | Expression::IntrospectionExpression { .. } => false,
         Expression::LogicalExpression { lhs, rhs, .. }
         | Expression::CompareExpression { lhs, rhs, .. }
         | Expression::BinaryMathExpression { lhs, rhs, .. } => {
@@ -338,7 +407,8 @@ fn contains_variable(e: &Expression) -> bool {
         Expression::CheckSigExpression { .. }
         | Expression::NumberLiteral(..)
         | Expression::BooleanLiteral(..)
-        | Expression::StringLiteral(..) => false,
+        | Expression::StringLiteral(..)
+        | Expression::IntrospectionExpression { .. } => false,
         Expression::LogicalExpression { lhs, rhs, .. }
         | Expression::CompareExpression { lhs, rhs, .. }
         | Expression::BinaryMathExpression { lhs, rhs, .. } => {
@@ -509,6 +579,28 @@ fn path_has_checksig(path: &Path) -> bool {
         || contains_checksig(&path.ret)
 }
 
+/// Does the path contain a `checksigfromstack` whose message is not
+/// `templatehash`? Used only to explain a rejection.
+fn path_has_unbound_csfs(path: &Path) -> bool {
+    fn has(e: &Expression) -> bool {
+        match e {
+            Expression::CheckSigExpression {
+                op: CheckSigOp::CheckSigFromStack,
+                operand,
+                ..
+            } => !csfs_over_template_hash(operand),
+            Expression::LogicalExpression { lhs, rhs, .. }
+            | Expression::CompareExpression { lhs, rhs, .. }
+            | Expression::BinaryMathExpression { lhs, rhs, .. } => has(lhs) || has(rhs),
+            Expression::UnaryMathExpression { operand, .. }
+            | Expression::UnaryCryptoExpression { operand, .. }
+            | Expression::ByteExpression { operand, .. } => has(operand),
+            _ => false,
+        }
+    }
+    path.conditions.iter().any(|(c, _)| has(c)) || path.verifies.iter().any(has) || has(&path.ret)
+}
+
 /// Human-readable description of the branch conditions taken on a path.
 fn describe_path(path: &Path) -> String {
     if path.conditions.is_empty() {
@@ -589,8 +681,13 @@ pub fn check_necessity(ast: &Vec<Statement>) -> Result<(), CompileError> {
             let desc = describe_path(path);
             let kind = if path_has_checksig(path) {
                 ErrorKind::UselessSig(format!(
-                    "A checksig is present on {} but it does not gate the spend: the return at line {}:{} can succeed without a valid signature.",
+                    "A checksig is present on {} but it does not gate the spend: the return at line {}:{} can succeed without a valid signature.{}",
                     desc, path.ret_loc.line, path.ret_loc.column,
+                    if path_has_unbound_csfs(path) {
+                        " A checksigfromstack only binds a spend when its message is templatehash; over any other message it verifies an attestation that can be replayed into any transaction, so pair it with a checksig."
+                    } else {
+                        ""
+                    },
                 ))
             } else {
                 ErrorKind::NoSigRequired(format!(

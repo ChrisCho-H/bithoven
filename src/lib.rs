@@ -1,6 +1,7 @@
 mod analyze;
 mod analyze_test;
 mod ast;
+mod bip448_test;
 mod compile;
 mod examples_test;
 mod necessity;
@@ -133,11 +134,30 @@ pub fn compile_program(source: String) -> Result<BithovenOutput, CompileError> {
     // Compile
     let script = compile(utxo.output_script.clone(), &utxo.pragma.target);
 
+    let mut asm = bitcoin::Script::from_bytes(&script).to_asm_string();
+    if matches!(utxo.pragma.target, Target::Bip448) {
+        asm = bip448_asm(&asm);
+    }
+
     Ok(BithovenOutput::new(
-        bitcoin::Script::from_bytes(&script).to_asm_string(),
+        asm,
         bitcoin::Script::from_bytes(&script).to_hex_string(),
         bitcoin::Script::from_bytes(&script).to_bytes(),
     ))
+}
+
+/// rust-bitcoin 0.32 predates BIP448 and prints 0xcb, 0xcc and 0xce as
+/// `OP_RETURN_203/204/206`; name them as BIP448 (and bitcoin-inquisition) do.
+fn bip448_asm(asm: &str) -> String {
+    asm.split(' ')
+        .map(|tok| match tok {
+            "OP_RETURN_203" => "OP_INTERNALKEY",
+            "OP_RETURN_204" => "OP_CHECKSIGFROMSTACK",
+            "OP_RETURN_206" => "OP_TEMPLATEHASH",
+            other => other,
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
 }
 
 /// The hard ceiling `B` on free atoms per path, above which a path is rejected

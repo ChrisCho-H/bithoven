@@ -31,6 +31,9 @@ pub Target: Target = {
     "legacy" => Target::Legacy,
     "segwit" => Target::Segwit,
     "taproot" => Target::Taproot,
+    // Tapscript with the BIP448 bundle (OP_TEMPLATEHASH, OP_CHECKSIGFROMSTACK,
+    // OP_INTERNALKEY). Opt-in: until activation those opcodes are OP_SUCCESSx.
+    "bip448" => Target::Bip448,
 }
 
 pub Script: Vec<Statement> = {
@@ -143,6 +146,8 @@ pub Expression4: Expression = {
     <l:@L> <e:BooleanLiteral> <r:@R> => Expression::BooleanLiteral(Location{start: l, end: r, line: 0, column: 0}, e),
     <l:@L> <e:StringLiteral> <r:@R> => Expression::StringLiteral(Location{start: l, end: r, line: 0, column: 0}, e),
     <l:@L> <e:NumberLiteral> <r:@R> => Expression::NumberLiteral(Location{start: l, end: r, line: 0, column: 0}, e),
+    // BIP448 nullary introspection: OP_TEMPLATEHASH / OP_INTERNALKEY.
+    <l:@L> <op:IntrospectionOp> <r:@R> => Expression::IntrospectionExpression{loc: Location{start: l, end: r, line: 0, column: 0}, op: op},
     <o: OpenParen> <e: Expression0> <c: CloseParen> => e,
 };
 
@@ -223,6 +228,14 @@ CheckSigExpression: Expression = {
             op: op,
             operand: Box::new(operand),
         }
+    },
+    // BIP348: checksigfromstack(sig, msg, pubkey) => OP_CHECKSIGFROMSTACK
+    <l:@L> "checksigfromstack" <operand:MessageSigFactor> <r:@R> => {
+        Expression::CheckSigExpression {
+            loc: Location{start: l, end: r, line: 0, column: 0},
+            op: CheckSigOp::CheckSigFromStack,
+            operand: Box::new(operand),
+        }
     }
 }
 
@@ -252,6 +265,20 @@ pub SingleSigFactor: Factor = {
         Factor::SingleSigFactor {
             loc: Location{start: l, end: r, line: 0, column: 0},
             sig: Box::new(sig),
+            pubkey: Box::new(pubkey),
+        }
+    }
+}
+
+// For checksigfromstack: (sig, msg, pubkey), in BIP348 stack order
+// (signature third from top, message second, public key on top).
+pub MessageSigFactor: Factor = {
+    <l:@L> <o: OpenParen> <sig:Expression4> <c1:Comma> <msg:Expression3> <c2:Comma>
+    <pubkey:Expression4> <c: CloseParen> <r:@R> => {
+        Factor::MessageSigFactor {
+            loc: Location{start: l, end: r, line: 0, column: 0},
+            sig: Box::new(sig),
+            msg: Box::new(msg),
             pubkey: Box::new(pubkey),
         }
     }
@@ -299,6 +326,11 @@ BinaryCompareOp: BinaryCompareOp = {
 
 CheckSigOp: CheckSigOp = {
     "checksig" => CheckSigOp::CheckSig, // OP_CHECKSIG
+}
+
+IntrospectionOp: IntrospectionOp = {
+    "templatehash" => IntrospectionOp::TemplateHash, // OP_TEMPLATEHASH (BIP446)
+    "internalkey" => IntrospectionOp::InternalKey, // OP_INTERNALKEY (BIP349)
 }
 
 UnaryCryptoOp: UnaryCryptoOp = {
@@ -389,6 +421,7 @@ match {
     "legacy" => "legacy",
     "segwit" => "segwit",
     "taproot" => "taproot",
+    "bip448" => "bip448",
     "if" => "if",
     "else" => "else",
     "return" => "return",
@@ -400,6 +433,9 @@ match {
     "max" => "max",
     "min" => "min",
     "checksig" => "checksig",
+    "checksigfromstack" => "checksigfromstack",
+    "templatehash" => "templatehash",
+    "internalkey" => "internalkey",
     "sha256" => "sha256",
     "ripemd160" => "ripemd160",
     "len" => "len",
